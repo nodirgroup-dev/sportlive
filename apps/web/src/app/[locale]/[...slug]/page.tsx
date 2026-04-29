@@ -11,6 +11,7 @@ import {
 } from '@/lib/db';
 import { PostCard } from '@/components/post-card';
 
+export const dynamic = 'force-dynamic';
 export const revalidate = 60;
 
 const ARTICLE_RE = /^(\d+)-(.+?)(?:\.html)?$/;

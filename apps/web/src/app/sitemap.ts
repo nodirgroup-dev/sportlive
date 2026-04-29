@@ -3,6 +3,7 @@ import { absoluteUrl, localePath } from '@/lib/site';
 import { routing } from '@/i18n/routing';
 import { getAllPostsForSitemap } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
 export const revalidate = 600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

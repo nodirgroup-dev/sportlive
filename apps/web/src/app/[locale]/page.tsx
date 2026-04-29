@@ -6,6 +6,7 @@ import { siteConfig, absoluteUrl, localePath } from '@/lib/site';
 import { getLatestPosts } from '@/lib/db';
 import { PostCard } from '@/components/post-card';
 
+export const dynamic = 'force-dynamic';
 export const revalidate = 60;
 
 export async function generateMetadata({
