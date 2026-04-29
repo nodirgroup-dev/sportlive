@@ -9,7 +9,6 @@ export const routing = defineRouting({
   localePrefix: {
     mode: 'as-needed',
     prefixes: {
-      uz: '/',
       ru: '/ru',
       en: '/en',
     },
