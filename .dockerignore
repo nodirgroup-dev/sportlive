@@ -1,0 +1,11 @@
+**/node_modules
+**/.next
+**/.turbo
+**/dist
+**/.env
+**/.env*.local
+.git
+.gitignore
+*.log
+sportlive.uz/
+docker/postgres-data/
