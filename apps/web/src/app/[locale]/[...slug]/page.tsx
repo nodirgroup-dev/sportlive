@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import { notFound, redirect } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { hasLocale, routing, type Locale } from '@/i18n/routing';
 import { siteConfig, absoluteUrl, localePath } from '@/lib/site';
@@ -107,7 +107,7 @@ export default async function CatchAllPage({
     // If accessed via .html or different slug, 301 to canonical
     if (art.isHtml || requestedPath !== canonical) {
       // canonical is a known dynamic route inside [...slug] — bypass typed routes
-      redirect(canonical as Parameters<typeof redirect>[0]);
+      permanentRedirect(canonical as Parameters<typeof permanentRedirect>[0]);
     }
 
     const articleJsonLd = {
