@@ -1,0 +1,57 @@
+name: sportlive
+
+networks:
+  default:
+    name: sportlive-net
+    external: true
+
+services:
+  web:
+    image: sportlive/web:latest
+    container_name: sportlive-web
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: ${DATABASE_URL}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL}
+      TZ: Asia/Tashkent
+    ports:
+      - "127.0.0.1:3001:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: sportlive-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sportlive
+      POSTGRES_DB: sportlive
+      POSTGRES_INITDB_ARGS: "--data-checksums --auth-host=scram-sha-256 --auth-local=scram-sha-256"
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+      TZ: Asia/Tashkent
+    env_file:
+      - .env.postgres
+    ports:
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - sportlive_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sportlive -d sportlive"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  sportlive_pg_data:
+    name: sportlive_pg_data
+    external: true

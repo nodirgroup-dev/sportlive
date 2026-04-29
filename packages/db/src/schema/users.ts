@@ -1,5 +1,5 @@
 import { pgEnum, pgTable, varchar, text, integer, boolean } from 'drizzle-orm/pg-core';
-import { createdAt, updatedAt } from './_shared.js';
+import { createdAt, updatedAt } from './_shared';
 
 export const userRoleEnum = pgEnum('user_role', ['admin', 'editor', 'author', 'reader']);
 

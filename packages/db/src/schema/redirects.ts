@@ -1,5 +1,5 @@
 import { pgTable, integer, varchar, smallint, uniqueIndex } from 'drizzle-orm/pg-core';
-import { createdAt } from './_shared.js';
+import { createdAt } from './_shared';
 
 export const redirects = pgTable(
   'redirects',

@@ -6,6 +6,8 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  output: 'standalone',
+  outputFileTracingRoot: __dirname + '/../../',
   transpilePackages: ['@sportlive/ui', '@sportlive/db'],
   images: {
     remotePatterns: [

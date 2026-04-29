@@ -1,6 +1,7 @@
-export * from './users.js';
-export * from './categories.js';
-export * from './posts.js';
-export * from './tags.js';
-export * from './media.js';
-export * from './redirects.js';
+export { localeEnum } from './_shared';
+export * from './users';
+export * from './categories';
+export * from './posts';
+export * from './tags';
+export * from './media';
+export * from './redirects';

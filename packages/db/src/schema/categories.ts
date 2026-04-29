@@ -7,7 +7,7 @@ import {
   index,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
-import { localeEnum, createdAt, updatedAt } from './_shared.js';
+import { localeEnum, createdAt, updatedAt } from './_shared';
 
 export const categories = pgTable(
   'categories',

@@ -1,6 +1,6 @@
 import { pgTable, integer, varchar, text, index } from 'drizzle-orm/pg-core';
-import { createdAt } from './_shared.js';
-import { users } from './users.js';
+import { createdAt } from './_shared';
+import { users } from './users';
 
 export const media = pgTable(
   'media',

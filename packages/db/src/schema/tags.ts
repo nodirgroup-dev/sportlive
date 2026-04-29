@@ -6,8 +6,8 @@ import {
   primaryKey,
   index,
 } from 'drizzle-orm/pg-core';
-import { localeEnum, createdAt } from './_shared.js';
-import { posts } from './posts.js';
+import { localeEnum, createdAt } from './_shared';
+import { posts } from './posts';
 
 export const tags = pgTable(
   'tags',

@@ -8,9 +8,9 @@ import {
   index,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
-import { localeEnum, createdAt, updatedAt } from './_shared.js';
-import { users } from './users.js';
-import { categories } from './categories.js';
+import { localeEnum, createdAt, updatedAt } from './_shared';
+import { users } from './users';
+import { categories } from './categories';
 
 export const postStatusEnum = pgEnum('post_status', ['draft', 'published', 'archived']);
 
