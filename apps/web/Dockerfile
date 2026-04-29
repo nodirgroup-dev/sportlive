@@ -2,7 +2,9 @@
 ARG NODE_VERSION=22.13.0
 
 FROM node:${NODE_VERSION}-alpine AS base
-RUN corepack enable && apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat \
+ && npm install -g pnpm@10.33.2 \
+ && pnpm config set store-dir /root/.local/share/pnpm/store
 WORKDIR /app
 
 # ---------- deps ----------
