@@ -1,19 +1,37 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
+import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import postgres, { type Sql } from 'postgres';
 import * as schema from './schema/index';
 
-const databaseUrl = process.env.DATABASE_URL;
+type Schema = typeof schema;
 
-if (!databaseUrl) {
-  throw new Error('DATABASE_URL is not defined');
+let _client: Sql | null = null;
+let _db: PostgresJsDatabase<Schema> | null = null;
+
+function getClient(): Sql {
+  if (_client) return _client;
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    throw new Error('DATABASE_URL is not defined (queried before runtime config loaded)');
+  }
+  _client = postgres(url, {
+    max: 10,
+    idle_timeout: 20,
+    prepare: false,
+  });
+  return _client;
 }
 
-const queryClient = postgres(databaseUrl, {
-  max: 10,
-  idle_timeout: 20,
-  prepare: false,
+function getDb(): PostgresJsDatabase<Schema> {
+  if (_db) return _db;
+  _db = drizzle(getClient(), { schema, casing: 'snake_case' });
+  return _db;
+}
+
+export const db: PostgresJsDatabase<Schema> = new Proxy({} as PostgresJsDatabase<Schema>, {
+  get(_target, prop, receiver) {
+    return Reflect.get(getDb(), prop, receiver);
+  },
 });
 
-export const db = drizzle(queryClient, { schema, casing: 'snake_case' });
-export type Db = typeof db;
+export type Db = PostgresJsDatabase<Schema>;
 export { schema };
