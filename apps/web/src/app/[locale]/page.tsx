@@ -1,8 +1,12 @@
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { hasLocale } from '@/i18n/routing';
+import { hasLocale, type Locale } from '@/i18n/routing';
 import { siteConfig, absoluteUrl, localePath } from '@/lib/site';
+import { getLatestPosts } from '@/lib/db';
+import { PostCard } from '@/components/post-card';
+
+export const revalidate = 60;
 
 export async function generateMetadata({
   params,
@@ -12,10 +16,7 @@ export async function generateMetadata({
   const { locale } = await params;
   if (!hasLocale(locale)) return {};
   const t = await getTranslations({ locale, namespace: 'site' });
-  return {
-    title: `${t('name')} — ${t('tagline')}`,
-    description: t('description'),
-  };
+  return { title: `${t('name')} — ${t('tagline')}`, description: t('description') };
 }
 
 export default async function HomePage({
@@ -27,12 +28,13 @@ export default async function HomePage({
   if (!hasLocale(locale)) notFound();
   setRequestLocale(locale);
   const t = await getTranslations();
+  const posts = await getLatestPosts(locale, 30);
 
   const websiteJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: siteConfig.name,
-    url: absoluteUrl(localePath(locale, '/')),
+    url: absoluteUrl(localePath(locale as Locale, '/')),
     inLanguage: locale,
     publisher: {
       '@type': 'NewsMediaOrganization',
@@ -41,25 +43,36 @@ export default async function HomePage({
       logo: { '@type': 'ImageObject', url: absoluteUrl(siteConfig.publisher.logo) },
       sameAs: siteConfig.publisher.sameAs,
     },
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: `${siteConfig.url}/search?q={query}`,
-      'query-input': 'required name=query',
-    },
+  };
+
+  const itemListJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: posts.map((p, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: absoluteUrl(localePath(locale as Locale, `/${p.category?.path ?? ''}/${p.legacyId}-${p.slug}`)),
+      name: p.title,
+    })),
   };
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-10">
+    <div className="container mx-auto max-w-4xl px-4 py-6 sm:py-10">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
       />
-      <h1 className="text-4xl font-bold tracking-tight">{t('home.hero')}</h1>
-      <p className="mt-3 text-lg text-neutral-600 dark:text-neutral-400">{t('site.tagline')}</p>
-      <div className="mt-8 rounded-lg border border-neutral-200 p-6 dark:border-neutral-800">
-        <p className="text-sm text-neutral-500">
-          {t('home.loading')} — yangi sayt qurilish bosqichida.
-        </p>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+      />
+      <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t('home.hero')}</h1>
+      <div className="mt-4">
+        {posts.length === 0 ? (
+          <p className="text-neutral-500">{t('home.loading')}</p>
+        ) : (
+          posts.map((p) => <PostCard key={p.id} post={p} locale={locale as Locale} />)
+        )}
       </div>
     </div>
   );

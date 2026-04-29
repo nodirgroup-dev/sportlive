@@ -32,3 +32,53 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
+
+/* Minimal article-body styling (replaces typography plugin for now) */
+.article-body {
+  font-size: 1.0625rem;
+  line-height: 1.7;
+}
+.article-body p {
+  margin: 1em 0;
+}
+.article-body h2,
+.article-body h3 {
+  font-weight: 700;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+.article-body h2 {
+  font-size: 1.5rem;
+}
+.article-body h3 {
+  font-size: 1.25rem;
+}
+.article-body img {
+  margin: 1em 0;
+  border-radius: 0.5rem;
+  max-width: 100%;
+  height: auto;
+}
+.article-body a {
+  color: var(--color-brand-700, #2c5e3b);
+  text-decoration: underline;
+}
+.article-body ul,
+.article-body ol {
+  margin: 1em 0;
+  padding-left: 1.5em;
+}
+.article-body li {
+  margin: 0.25em 0;
+}
+.article-body blockquote {
+  border-left: 4px solid var(--color-brand-500, #4a8b5d);
+  padding-left: 1em;
+  margin: 1em 0;
+  color: rgb(115 115 115);
+  font-style: italic;
+}
+.article-body iframe {
+  max-width: 100%;
+  margin: 1em 0;
+}

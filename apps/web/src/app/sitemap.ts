@@ -1,6 +1,9 @@
 import type { MetadataRoute } from 'next';
-import { siteConfig, absoluteUrl, localePath } from '@/lib/site';
+import { absoluteUrl, localePath } from '@/lib/site';
 import { routing } from '@/i18n/routing';
+import { getAllPostsForSitemap } from '@/lib/db';
+
+export const revalidate = 600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
@@ -17,7 +20,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   }));
 
-  // TODO: append article URLs from DB once migration lands
-  void siteConfig;
-  return [...home];
+  const posts = await getAllPostsForSitemap();
+  const articles = posts
+    .filter((p) => p.legacyId && p.categoryPath)
+    .map((p) => {
+      const path = `/${p.categoryPath}/${p.legacyId}-${p.slug}`;
+      return {
+        url: absoluteUrl(localePath(p.locale, path)),
+        lastModified: p.updatedAt,
+        changeFrequency: 'daily' as const,
+        priority: 0.7,
+      };
+    });
+
+  return [...home, ...articles];
 }
