@@ -26,7 +26,7 @@ export type ArticleDetail = ListedPost & {
 async function categoryPath(catId: number | null): Promise<{ slug: string; name: string; path: string } | null> {
   if (!catId) return null;
   const segs: { slug: string; name: string }[] = [];
-  let cur = await db
+  const cur = await db
     .select({ id: categories.id, slug: categories.slug, name: categories.name, parentId: categories.parentId })
     .from(categories)
     .where(eq(categories.id, catId))
