@@ -1,0 +1,25 @@
+{
+  "site": {
+    "name": "Sportlive",
+    "tagline": "Sport va futbol yangiliklari",
+    "description": "Sportlive.uz — O'zbekistondagi eng yangi sport va futbol yangiliklari, jonli natijalar va o'yin jadvallari."
+  },
+  "nav": {
+    "home": "Bosh sahifa",
+    "football": "Futbol",
+    "schedule": "Jadval",
+    "results": "Natijalar",
+    "tags": "Teglar",
+    "search": "Qidiruv"
+  },
+  "home": {
+    "hero": "So'nggi yangiliklar",
+    "latest": "Eng yangi",
+    "popular": "Mashhur",
+    "loading": "Yuklanmoqda…"
+  },
+  "footer": {
+    "rights": "Barcha huquqlar himoyalangan",
+    "language": "Til"
+  }
+}

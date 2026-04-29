@@ -1,0 +1,25 @@
+{
+  "site": {
+    "name": "Sportlive",
+    "tagline": "Sports and football news",
+    "description": "Sportlive.uz — the latest sports and football news in Uzbekistan, live scores and match schedules."
+  },
+  "nav": {
+    "home": "Home",
+    "football": "Football",
+    "schedule": "Schedule",
+    "results": "Results",
+    "tags": "Tags",
+    "search": "Search"
+  },
+  "home": {
+    "hero": "Latest news",
+    "latest": "Latest",
+    "popular": "Popular",
+    "loading": "Loading…"
+  },
+  "footer": {
+    "rights": "All rights reserved",
+    "language": "Language"
+  }
+}
