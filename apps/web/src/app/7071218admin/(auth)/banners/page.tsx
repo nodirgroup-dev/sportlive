@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { db, banners } from '@sportlive/db';
 import { asc } from 'drizzle-orm';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { deleteBanner } from '../_actions/banners';
 
 export const dynamic = 'force-dynamic';
@@ -30,9 +31,7 @@ export default async function BannersPage({
         </div>
         <div className="actions">
           <Link href="/7071218admin/banners/new" className="btn primary">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 14, height: 14 }}>
-              <path d="M12 5v14M5 12h14" />
-            </svg>
+            <Plus size={14} strokeWidth={2.5} />
             Новый баннер
           </Link>
         </div>
@@ -95,9 +94,22 @@ export default async function BannersPage({
                   <td className="num">{b.clicks.toLocaleString('ru-RU')}</td>
                   <td style={{ textAlign: 'right' }}>
                     <div style={{ display: 'inline-flex', gap: 6 }}>
-                      <Link href={`/7071218admin/banners/${b.id}/edit`} className="btn" style={{ height: 28, fontSize: 11.5 }}>Изменить</Link>
+                      <Link
+                        href={`/7071218admin/banners/${b.id}/edit`}
+                        className="btn"
+                        style={{ height: 28, fontSize: 11.5, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                      >
+                        <Pencil size={12} strokeWidth={1.8} />
+                        Изменить
+                      </Link>
                       <form action={deleteBanner.bind(null, b.id)}>
-                        <button className="btn danger" style={{ height: 28, fontSize: 11.5 }}>Удалить</button>
+                        <button
+                          className="btn danger"
+                          style={{ height: 28, fontSize: 11.5, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                        >
+                          <Trash2 size={12} strokeWidth={1.8} />
+                          Удалить
+                        </button>
                       </form>
                     </div>
                   </td>

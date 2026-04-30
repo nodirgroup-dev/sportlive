@@ -1,12 +1,19 @@
 'use client';
 
 import { useState } from 'react';
+import { Zap, Goal, Flag, Sparkles, Send, type LucideIcon } from 'lucide-react';
 
-const TEMPLATES: Array<{ id: string; label: string; title: string; body: string }> = [
-  { id: 'breaking', label: '⚡ Срочно', title: '⚡ СРОЧНО', body: 'Только что: ' },
-  { id: 'goal', label: '⚽ Live: гол', title: '⚽ ГОЛ!', body: 'В матче только что забит гол: ' },
-  { id: 'final', label: '🏁 Финал', title: '🏁 Финальный свисток', body: 'Матч завершён: ' },
-  { id: 'fresh', label: '🆕 Только что', title: '🆕 Только что', body: 'Свежая публикация: ' },
+const TEMPLATES: Array<{
+  id: string;
+  label: string;
+  Icon: LucideIcon;
+  title: string;
+  body: string;
+}> = [
+  { id: 'breaking', label: 'Срочно', Icon: Zap, title: '⚡ СРОЧНО', body: 'Только что: ' },
+  { id: 'goal', label: 'Live: гол', Icon: Goal, title: '⚽ ГОЛ!', body: 'В матче только что забит гол: ' },
+  { id: 'final', label: 'Финал', Icon: Flag, title: '🏁 Финальный свисток', body: 'Матч завершён: ' },
+  { id: 'fresh', label: 'Только что', Icon: Sparkles, title: 'Только что', body: 'Свежая публикация: ' },
 ];
 
 export function PushTemplateForm({ action }: { action: (formData: FormData) => Promise<void> }) {
@@ -27,17 +34,27 @@ export function PushTemplateForm({ action }: { action: (formData: FormData) => P
       </h2>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
-        {TEMPLATES.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => applyTemplate(t.id)}
-            className="btn"
-            style={{ height: 28, fontSize: 11.5 }}
-          >
-            {t.label}
-          </button>
-        ))}
+        {TEMPLATES.map((t) => {
+          const Icon = t.Icon;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => applyTemplate(t.id)}
+              className="btn"
+              style={{
+                height: 28,
+                fontSize: 11.5,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              <Icon size={12} strokeWidth={1.8} />
+              {t.label}
+            </button>
+          );
+        })}
       </div>
 
       <div className="field">
@@ -87,7 +104,12 @@ export function PushTemplateForm({ action }: { action: (formData: FormData) => P
           </select>
         </div>
         <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-          <button type="submit" className="btn primary" style={{ width: '100%' }}>
+          <button
+            type="submit"
+            className="btn primary"
+            style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+          >
+            <Send size={13} strokeWidth={1.8} />
             Отправить
           </button>
         </div>

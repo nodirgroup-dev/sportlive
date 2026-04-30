@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { db, categories, posts } from '@sportlive/db';
 import { asc, sql } from 'drizzle-orm';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { deleteCategory } from '../_actions/categories';
 
 export const dynamic = 'force-dynamic';
@@ -57,9 +58,7 @@ export default async function CategoriesPage({
         </div>
         <div className="actions">
           <Link href="/7071218admin/categories/new" className="btn primary">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 14, height: 14 }}>
-              <path d="M12 5v14M5 12h14" />
-            </svg>
+            <Plus size={14} strokeWidth={2.5} />
             Новая категория
           </Link>
         </div>
@@ -114,11 +113,21 @@ export default async function CategoriesPage({
                 <td className="num">{r.posts}</td>
                 <td style={{ textAlign: 'right' }}>
                   <div style={{ display: 'inline-flex', gap: 6 }}>
-                    <Link href={`/7071218admin/categories/${r.id}/edit`} className="btn" style={{ height: 28, fontSize: 11.5 }}>
+                    <Link
+                      href={`/7071218admin/categories/${r.id}/edit`}
+                      className="btn"
+                      style={{ height: 28, fontSize: 11.5, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                    >
+                      <Pencil size={12} strokeWidth={1.8} />
                       Изменить
                     </Link>
                     <form action={deleteCategory.bind(null, r.id)}>
-                      <button type="submit" className="btn danger" style={{ height: 28, fontSize: 11.5 }}>
+                      <button
+                        type="submit"
+                        className="btn danger"
+                        style={{ height: 28, fontSize: 11.5, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                      >
+                        <Trash2 size={12} strokeWidth={1.8} />
                         Удалить
                       </button>
                     </form>

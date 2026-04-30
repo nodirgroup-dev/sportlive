@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db, posts, postRevisions } from '@sportlive/db';
 import { desc, eq } from 'drizzle-orm';
+import { ArrowLeft, Undo2 } from 'lucide-react';
 import { restorePostRevision } from '../../../_actions/posts';
 
 export const dynamic = 'force-dynamic';
@@ -35,8 +36,13 @@ export default async function RevisionsPage({ params }: { params: Promise<{ id: 
           </div>
         </div>
         <div className="actions">
-          <Link href={`/7071218admin/news/${id}/edit`} className="btn">
-            ← К редактированию
+          <Link
+            href={`/7071218admin/news/${id}/edit`}
+            className="btn"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            <ArrowLeft size={14} strokeWidth={1.8} />
+            К редактированию
           </Link>
         </div>
       </div>
@@ -71,8 +77,13 @@ export default async function RevisionsPage({ params }: { params: Promise<{ id: 
                 <td style={{ textAlign: 'right' }}>
                   <form action={restorePostRevision}>
                     <input type="hidden" name="revisionId" value={r.id} />
-                    <button type="submit" className="btn" style={{ height: 28, fontSize: 11.5 }}>
-                      ↩ Восстановить
+                    <button
+                      type="submit"
+                      className="btn"
+                      style={{ height: 28, fontSize: 11.5, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                    >
+                      <Undo2 size={12} strokeWidth={1.8} />
+                      Восстановить
                     </button>
                   </form>
                 </td>

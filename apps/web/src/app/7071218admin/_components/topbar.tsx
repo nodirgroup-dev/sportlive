@@ -3,6 +3,15 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
+import {
+  Search as SearchIcon,
+  Sun,
+  Moon,
+  Bell,
+  Settings as SettingsIcon,
+  ExternalLink,
+  LogOut,
+} from 'lucide-react';
 import type { AdminUser } from '@/lib/auth';
 import { ADMIN_LANGS, type AdminLang, ADMIN_T, useAdminLang, writeAdminLang, readAdminLang } from '../_lang';
 
@@ -129,10 +138,7 @@ export function AdminTopbar({ user }: { user: AdminUser }) {
       </div>
 
       <form className="topbar-search" onSubmit={submitSearch}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ width: 16, height: 16 }}>
-          <circle cx="11" cy="11" r="7" />
-          <path d="M21 21l-4.3-4.3" />
-        </svg>
+        <SearchIcon size={16} strokeWidth={1.6} />
         <input
           ref={searchRef}
           value={search}
@@ -158,16 +164,7 @@ export function AdminTopbar({ user }: { user: AdminUser }) {
       </div>
 
       <button type="button" className="iconbtn" onClick={toggleTheme} title={t.changeTheme} aria-label="Theme">
-        {theme === 'dark' ? (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ width: 18, height: 18 }}>
-            <circle cx="12" cy="12" r="4" />
-            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
-          </svg>
-        ) : (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ width: 18, height: 18 }}>
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-          </svg>
-        )}
+        {theme === 'dark' ? <Sun size={18} strokeWidth={1.6} /> : <Moon size={18} strokeWidth={1.6} />}
       </button>
 
       <div ref={bellRef} style={{ position: 'relative' }}>
@@ -177,9 +174,7 @@ export function AdminTopbar({ user }: { user: AdminUser }) {
           onClick={() => setBellOpen((o) => !o)}
           title={t.notifications}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ width: 18, height: 18 }}>
-            <path d="M18 16v-5a6 6 0 0 0-12 0v5l-2 3h16l-2-3zM10 21a2 2 0 0 0 4 0" />
-          </svg>
+          <Bell size={18} strokeWidth={1.6} />
         </button>
         {bellOpen ? (
           <div className="menu-pop" style={{ minWidth: 280, padding: 12 }}>
@@ -206,23 +201,16 @@ export function AdminTopbar({ user }: { user: AdminUser }) {
         {profileOpen ? (
           <div className="menu-pop">
             <Link href="/7071218admin/settings" onClick={() => setProfileOpen(false)}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ width: 14, height: 14 }}>
-                <circle cx="12" cy="12" r="3" />
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09c0 .67.39 1.27 1 1.51a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.24.61.84 1 1.51 1H21a2 2 0 1 1 0 4h-.09c-.67 0-1.27.39-1.51 1z" />
-              </svg>
+              <SettingsIcon size={14} strokeWidth={1.6} />
               {t.settings}
             </Link>
             <Link href="/" target="_blank" onClick={() => setProfileOpen(false)}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ width: 14, height: 14 }}>
-                <path d="M14 3h7v7M10 14L21 3M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5" />
-              </svg>
+              <ExternalLink size={14} strokeWidth={1.6} />
               {t.openSite}
             </Link>
             <hr />
             <button className="danger" onClick={logout}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ width: 14, height: 14 }}>
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
-              </svg>
+              <LogOut size={14} strokeWidth={1.6} />
               {t.logout}
             </button>
           </div>

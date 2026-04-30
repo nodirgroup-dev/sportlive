@@ -1,5 +1,6 @@
 import { db, teams } from '@sportlive/db';
 import { asc, sql } from 'drizzle-orm';
+import { CircleDot } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,7 +52,7 @@ export default async function TeamsPage() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={t.logo} alt="" style={{ width: 32, height: 32, objectFit: 'contain' }} />
                 ) : (
-                  <span style={{ fontSize: 18, color: 'var(--text-3)' }}>⚽</span>
+                  <CircleDot size={18} strokeWidth={1.6} style={{ color: 'var(--text-3)' }} />
                 )}
               </div>
               <div style={{ minWidth: 0, flex: 1 }}>

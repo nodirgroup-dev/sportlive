@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { db, posts, categories } from '@sportlive/db';
 import { desc, eq, sql } from 'drizzle-orm';
+import { Plus, Pin, PinOff, Eye, EyeOff, Copy, Pencil, Clock } from 'lucide-react';
 import { bulkPostsAction, togglePostFeature, togglePostStatus, duplicatePost } from '../_actions/posts';
 
 export const dynamic = 'force-dynamic';
@@ -56,9 +57,7 @@ export default async function NewsList({
         </div>
         <div className="actions">
           <Link href="/7071218admin/news/new" className="btn primary">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 14, height: 14 }}>
-              <path d="M12 5v14M5 12h14" />
-            </svg>
+            <Plus size={14} strokeWidth={2.5} />
             Создать статью
           </Link>
         </div>
@@ -88,7 +87,7 @@ export default async function NewsList({
         <select name="status" defaultValue={sp.status ?? ''} className="select" style={{ height: 32, width: 130 }}>
           <option value="">Все статусы</option>
           <option value="published">Опубликовано</option>
-          <option value="scheduled">⏱ Запланировано</option>
+          <option value="scheduled">Запланировано</option>
           <option value="draft">Черновик</option>
           <option value="archived">В архиве</option>
         </select>
@@ -163,8 +162,11 @@ export default async function NewsList({
                 </td>
                 <td style={{ fontWeight: 500 }}>
                   {r.featuredAt ? (
-                    <span title="Закреплено на главной" style={{ marginRight: 6 }}>
-                      📌
+                    <span
+                      title="Закреплено на главной"
+                      style={{ marginRight: 6, color: 'var(--accent)', verticalAlign: '-2px', display: 'inline-flex' }}
+                    >
+                      <Pin size={13} strokeWidth={2} />
                     </span>
                   ) : null}
                   {r.title}
@@ -186,11 +188,13 @@ export default async function NewsList({
                 <td>
                   <span
                     className={`pill ${r.status === 'published' ? 'green' : r.status === 'scheduled' ? 'yellow' : r.status === 'draft' ? 'gray' : 'yellow'}`}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
                   >
+                    {r.status === 'scheduled' ? <Clock size={11} strokeWidth={2} /> : null}
                     {r.status === 'published'
                       ? 'Опубл.'
                       : r.status === 'scheduled'
-                        ? '⏱ Запланир.'
+                        ? 'Запланир.'
                         : r.status === 'draft'
                           ? 'Черн.'
                           : 'Архив'}
@@ -216,11 +220,17 @@ export default async function NewsList({
                       width: 28,
                       padding: 0,
                       marginRight: 4,
-                      fontSize: 14,
-                      opacity: r.status === 'published' ? 1 : 0.4,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      opacity: r.status === 'published' ? 1 : 0.5,
                     }}
                   >
-                    {r.status === 'published' ? '👁' : '⏸'}
+                    {r.status === 'published' ? (
+                      <Eye size={14} strokeWidth={1.8} />
+                    ) : (
+                      <EyeOff size={14} strokeWidth={1.8} />
+                    )}
                   </button>
                   <button
                     type="submit"
@@ -234,11 +244,17 @@ export default async function NewsList({
                       width: 28,
                       padding: 0,
                       marginRight: 6,
-                      fontSize: 14,
-                      opacity: r.featuredAt ? 1 : 0.4,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      opacity: r.featuredAt ? 1 : 0.5,
                     }}
                   >
-                    📌
+                    {r.featuredAt ? (
+                      <Pin size={14} strokeWidth={1.8} />
+                    ) : (
+                      <PinOff size={14} strokeWidth={1.8} />
+                    )}
                   </button>
                   <button
                     type="submit"
@@ -247,11 +263,16 @@ export default async function NewsList({
                     value={r.id}
                     title="Дублировать"
                     className="btn"
-                    style={{ height: 28, width: 28, padding: 0, marginRight: 4, fontSize: 14 }}
+                    style={{ height: 28, width: 28, padding: 0, marginRight: 4, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                   >
-                    📋
+                    <Copy size={14} strokeWidth={1.8} />
                   </button>
-                  <Link href={`/7071218admin/news/${r.id}/edit`} className="btn" style={{ height: 28, fontSize: 11.5 }}>
+                  <Link
+                    href={`/7071218admin/news/${r.id}/edit`}
+                    className="btn"
+                    style={{ height: 28, fontSize: 11.5, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                  >
+                    <Pencil size={12} strokeWidth={1.8} />
                     Изменить
                   </Link>
                 </td>

@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { db, posts } from '@sportlive/db';
 import { eq } from 'drizzle-orm';
+import { CheckCircle2 } from 'lucide-react';
 import { NewsForm } from '../../_form';
 import { updatePost } from '../../../_actions/posts';
 import { getTagsForPost, getAllTagNames } from '@/lib/db';
@@ -41,15 +42,21 @@ export default async function EditPostPage({
             color: '#86efac',
             marginBottom: 14,
             fontSize: 12.5,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
           }}
         >
-          ✓ Сохранено
-          {sp.push ? (
-            <>
-              {' '}
-              · push отправлено <b>{sp.push}</b>
-            </>
-          ) : null}
+          <CheckCircle2 size={14} strokeWidth={1.8} />
+          <span>
+            Сохранено
+            {sp.push ? (
+              <>
+                {' '}
+                · push отправлено <b>{sp.push}</b>
+              </>
+            ) : null}
+          </span>
         </div>
       ) : null}
       <NewsForm

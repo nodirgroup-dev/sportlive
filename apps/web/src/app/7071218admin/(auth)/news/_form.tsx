@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { db, categories } from '@sportlive/db';
 import { eq } from 'drizzle-orm';
+import { Pin, Bell, Sparkles, History } from 'lucide-react';
 import { RichEditor } from '../_components/rich-editor';
 import { CoverUpload } from '../_components/cover-upload';
 import { NewsAiPanel } from '../_components/news-form-side';
@@ -49,8 +50,13 @@ export async function NewsForm({
         </div>
         <div className="actions">
           {post.id ? (
-            <Link href={`/7071218admin/news/${post.id}/revisions`} className="btn">
-              ⏱ История
+            <Link
+              href={`/7071218admin/news/${post.id}/revisions`}
+              className="btn"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            >
+              <History size={14} strokeWidth={1.8} />
+              История
             </Link>
           ) : null}
           <Link href="/7071218admin/news" className="btn">
@@ -131,7 +137,7 @@ export async function NewsForm({
               <label>Статус</label>
               <select name="status" defaultValue={post.status} className="select">
                 <option value="draft">Черновик</option>
-                <option value="scheduled">⏱ Запланировать</option>
+                <option value="scheduled">Запланировать</option>
                 <option value="published">Опубликовать</option>
                 <option value="archived">В архив</option>
               </select>
@@ -183,7 +189,8 @@ export async function NewsForm({
                 }}
               >
                 <input type="checkbox" name="featured" value="1" defaultChecked={post.featured} />
-                <span>📌 Закрепить на главной</span>
+                <Pin size={14} strokeWidth={1.8} />
+                <span>Закрепить на главной</span>
               </label>
               <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2, paddingLeft: 22 }}>
                 Самая свежая закрепленная статья показывается как герой главной
@@ -200,7 +207,8 @@ export async function NewsForm({
                 }}
               >
                 <input type="checkbox" name="sendPush" value="1" />
-                <span>🔔 Отправить push после сохранения</span>
+                <Bell size={14} strokeWidth={1.8} />
+                <span>Отправить push после сохранения</span>
               </label>
               <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2, paddingLeft: 22 }}>
                 Только если статья будет опубликована (status = published)
@@ -209,8 +217,21 @@ export async function NewsForm({
           </div>
 
           <div className="card" style={{ padding: 16 }}>
-            <h3 style={{ margin: '0 0 10px', fontSize: 11.5, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-3)' }}>
-              🤖 AI-помощник
+            <h3
+              style={{
+                margin: '0 0 10px',
+                fontSize: 11.5,
+                fontWeight: 600,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                color: 'var(--text-3)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              <Sparkles size={13} strokeWidth={1.8} />
+              AI-помощник
             </h3>
             <NewsAiPanel postId={post.id} locale={post.locale} />
           </div>

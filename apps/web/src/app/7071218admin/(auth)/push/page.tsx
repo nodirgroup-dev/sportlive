@@ -1,5 +1,6 @@
 import { db, posts } from '@sportlive/db';
 import { desc, eq, sql } from 'drizzle-orm';
+import { CheckCircle2, AlertCircle, Send } from 'lucide-react';
 import { broadcastPostPush, broadcastCustomPush } from '../_actions/push';
 import { PushTemplateForm } from '@/components/push-template-form';
 
@@ -54,16 +55,20 @@ export default async function PushPage({
       </div>
 
       {sp.ok ? (
-        <div style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#86efac', marginBottom: 14, fontSize: 12.5 }}>
-          ✓ Отправлено <b>{sp.sent}</b> из <b>{sp.total}</b>
-          {Number(sp.invalidated) > 0 ? <> · отписано {sp.invalidated}</> : null}
-          {Number(sp.errors) > 0 ? <> · ошибок {sp.errors}</> : null}
-          {sp.id ? <> · пост <code>#{sp.id}</code></> : null}
+        <div style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#86efac', marginBottom: 14, fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <CheckCircle2 size={14} strokeWidth={1.8} />
+          <span>
+            Отправлено <b>{sp.sent}</b> из <b>{sp.total}</b>
+            {Number(sp.invalidated) > 0 ? <> · отписано {sp.invalidated}</> : null}
+            {Number(sp.errors) > 0 ? <> · ошибок {sp.errors}</> : null}
+            {sp.id ? <> · пост <code>#{sp.id}</code></> : null}
+          </span>
         </div>
       ) : null}
       {sp.error ? (
-        <div style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', marginBottom: 14, fontSize: 12.5 }}>
-          ⚠ {sp.error}
+        <div style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', marginBottom: 14, fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <AlertCircle size={14} strokeWidth={1.8} />
+          {sp.error}
         </div>
       ) : null}
 
@@ -113,8 +118,9 @@ export default async function PushPage({
                       type="submit"
                       className="btn primary"
                       disabled={!hasVapid || t.active === 0}
-                      style={{ height: 28, fontSize: 11.5 }}
+                      style={{ height: 28, fontSize: 11.5, display: 'inline-flex', alignItems: 'center', gap: 6 }}
                     >
+                      <Send size={12} strokeWidth={1.8} />
                       Отправить ({t.active})
                     </button>
                   </form>

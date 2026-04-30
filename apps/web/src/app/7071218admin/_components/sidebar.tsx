@@ -2,6 +2,31 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import {
+  LayoutDashboard,
+  Newspaper,
+  Calendar,
+  Folders,
+  FileText,
+  Image as ImageIcon,
+  CircleDot,
+  Zap,
+  Trophy,
+  Users,
+  MessageSquare,
+  UserCog,
+  PenLine,
+  BellRing,
+  Mail,
+  Rss,
+  Megaphone,
+  LineChart,
+  Search,
+  ScrollText,
+  DatabaseBackup,
+  Settings,
+  type LucideIcon,
+} from 'lucide-react';
 import { ADMIN_T, useAdminLang } from '../_lang';
 
 type SidebarSec = { type: 'section'; key: keyof (typeof ADMIN_T)['ru'] };
@@ -9,46 +34,46 @@ type SidebarItem = {
   type: 'item';
   href: string;
   key: keyof (typeof ADMIN_T)['ru'];
-  icon: string;
+  Icon: LucideIcon;
   badge?: string;
 };
 
 const NAV: Array<SidebarSec | SidebarItem> = [
   { type: 'section', key: 'sec_main' },
-  { type: 'item', href: '/7071218admin', key: 'nav_dashboard', icon: 'M3 13h7V3H3v10zm0 8h7v-6H3v6zm11 0h7V11h-7v10zm0-18v6h7V3h-7z' },
+  { type: 'item', href: '/7071218admin', key: 'nav_dashboard', Icon: LayoutDashboard },
 
   { type: 'section', key: 'sec_content' },
-  { type: 'item', href: '/7071218admin/news', key: 'nav_news', icon: 'M4 5h13a2 2 0 0 1 2 2v10a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2V5zM7 9h7M7 13h7M7 17h4' },
-  { type: 'item', href: '/7071218admin/calendar', key: 'nav_calendar', icon: 'M3 4h18v18H3V4zM3 10h18M8 2v4M16 2v4' },
-  { type: 'item', href: '/7071218admin/categories', key: 'nav_categories', icon: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z' },
-  { type: 'item', href: '/7071218admin/static', key: 'nav_static', icon: 'M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm2 4h10v2H7V8Zm0 4h10v2H7v-2Zm0 4h6v2H7v-2Z' },
-  { type: 'item', href: '/7071218admin/media', key: 'nav_media', icon: 'M3 6h18v12H3zM3 10h18M9 14h6' },
+  { type: 'item', href: '/7071218admin/news', key: 'nav_news', Icon: Newspaper },
+  { type: 'item', href: '/7071218admin/calendar', key: 'nav_calendar', Icon: Calendar },
+  { type: 'item', href: '/7071218admin/categories', key: 'nav_categories', Icon: Folders },
+  { type: 'item', href: '/7071218admin/static', key: 'nav_static', Icon: FileText },
+  { type: 'item', href: '/7071218admin/media', key: 'nav_media', Icon: ImageIcon },
 
   { type: 'section', key: 'sec_sport' },
-  { type: 'item', href: '/7071218admin/matches', key: 'nav_matches', icon: 'M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Z' },
-  { type: 'item', href: '/7071218admin/live', key: 'nav_live', icon: 'M13 2L3 14h7l-1 8 10-12h-7l1-8z', badge: 'LIVE' },
-  { type: 'item', href: '/7071218admin/standings', key: 'nav_standings', icon: 'M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4z' },
-  { type: 'item', href: '/7071218admin/teams', key: 'nav_teams', icon: 'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM4 21v-1a6 6 0 0 1 12 0v1H4Z' },
+  { type: 'item', href: '/7071218admin/matches', key: 'nav_matches', Icon: CircleDot },
+  { type: 'item', href: '/7071218admin/live', key: 'nav_live', Icon: Zap, badge: 'LIVE' },
+  { type: 'item', href: '/7071218admin/standings', key: 'nav_standings', Icon: Trophy },
+  { type: 'item', href: '/7071218admin/teams', key: 'nav_teams', Icon: Users },
 
   { type: 'section', key: 'sec_community' },
-  { type: 'item', href: '/7071218admin/comments', key: 'nav_comments', icon: 'M21 11.5a8.5 8.5 0 0 1-13 7.2L3 21l2.3-5A8.5 8.5 0 1 1 21 11.5z' },
-  { type: 'item', href: '/7071218admin/users', key: 'nav_users', icon: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2' },
-  { type: 'item', href: '/7071218admin/authors', key: 'nav_authors', icon: 'M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z' },
+  { type: 'item', href: '/7071218admin/comments', key: 'nav_comments', Icon: MessageSquare },
+  { type: 'item', href: '/7071218admin/users', key: 'nav_users', Icon: UserCog },
+  { type: 'item', href: '/7071218admin/authors', key: 'nav_authors', Icon: PenLine },
 
   { type: 'section', key: 'sec_marketing' },
-  { type: 'item', href: '/7071218admin/push', key: 'nav_push', icon: 'M18 16v-5a6 6 0 0 0-12 0v5l-2 3h16l-2-3zM10 21a2 2 0 0 0 4 0' },
-  { type: 'item', href: '/7071218admin/newsletter', key: 'nav_newsletter', icon: 'M4 4h16v16H4zM4 4l8 8 8-8' },
-  { type: 'item', href: '/7071218admin/rss', key: 'nav_rss', icon: 'M5 11a8 8 0 0 1 8 8M5 5a14 14 0 0 1 14 14M6 19a1 1 0 1 1 0-2 1 1 0 0 1 0 2z' },
-  { type: 'item', href: '/7071218admin/banners', key: 'nav_banners', icon: 'M3 6h18v12H3zM3 10h18M9 14h6' },
+  { type: 'item', href: '/7071218admin/push', key: 'nav_push', Icon: BellRing },
+  { type: 'item', href: '/7071218admin/newsletter', key: 'nav_newsletter', Icon: Mail },
+  { type: 'item', href: '/7071218admin/rss', key: 'nav_rss', Icon: Rss },
+  { type: 'item', href: '/7071218admin/banners', key: 'nav_banners', Icon: Megaphone },
 
   { type: 'section', key: 'sec_analytics' },
-  { type: 'item', href: '/7071218admin/analytics', key: 'nav_analytics', icon: 'M3 21V3h2v16h16v2H3Zm5-3 4-6 4 4 4-8' },
-  { type: 'item', href: '/7071218admin/seo', key: 'nav_seo', icon: 'M11 4a7 7 0 1 1-7 7 7 7 0 0 1 7-7Zm9 18-4-4' },
+  { type: 'item', href: '/7071218admin/analytics', key: 'nav_analytics', Icon: LineChart },
+  { type: 'item', href: '/7071218admin/seo', key: 'nav_seo', Icon: Search },
 
   { type: 'section', key: 'sec_system' },
-  { type: 'item', href: '/7071218admin/audit', key: 'nav_audit', icon: 'M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z' },
-  { type: 'item', href: '/7071218admin/backups', key: 'nav_backups', icon: 'M21 8v13H3V8M1 3h22v5H1zM10 12h4' },
-  { type: 'item', href: '/7071218admin/settings', key: 'nav_settings', icon: 'M12 8a4 4 0 1 0 4 4 4 4 0 0 0-4-4Z' },
+  { type: 'item', href: '/7071218admin/audit', key: 'nav_audit', Icon: ScrollText },
+  { type: 'item', href: '/7071218admin/backups', key: 'nav_backups', Icon: DatabaseBackup },
+  { type: 'item', href: '/7071218admin/settings', key: 'nav_settings', Icon: Settings },
 ];
 
 export function AdminSidebar() {
@@ -79,11 +104,10 @@ export function AdminSidebar() {
             n.href === '/7071218admin'
               ? pathname === '/7071218admin' || pathname === '/7071218admin/'
               : pathname.startsWith(n.href);
+          const Icon = n.Icon;
           return (
             <Link key={n.href} href={n.href} className={`nav-item ${isActive ? 'active' : ''}`}>
-              <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                <path d={n.icon} />
-              </svg>
+              <Icon className="nav-icon" size={18} strokeWidth={1.6} />
               <span className="nav-label">{t[n.key]}</span>
               {n.badge ? <span className="nav-badge">{n.badge}</span> : null}
             </Link>

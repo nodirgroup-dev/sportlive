@@ -1,5 +1,6 @@
 import { db, newsletterSubscribers } from '@sportlive/db';
 import { desc, sql } from 'drizzle-orm';
+import { Download } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,8 +46,10 @@ export default async function NewsletterPage() {
             href="/7071218admin/api/newsletter-export"
             download
             className="btn"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
-            ⬇ Экспорт CSV ({t.active})
+            <Download size={14} strokeWidth={1.8} />
+            Экспорт CSV ({t.active})
           </a>
         </div>
       </div>

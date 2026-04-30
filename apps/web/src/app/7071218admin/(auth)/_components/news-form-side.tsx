@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Languages, Heading, AlignLeft, Sparkles } from 'lucide-react';
 
 type Props = {
   postId: number | null;
@@ -61,16 +62,20 @@ export function NewsAiPanel({ postId, locale }: Props) {
             className="btn"
             disabled={!!busy}
             onClick={() => call('translate', 'ru')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, justifyContent: 'flex-start' }}
           >
-            {busy === 'translate:ru' ? '…' : '🤖 Перевести → RU'}
+            <Languages size={14} strokeWidth={1.8} />
+            {busy === 'translate:ru' ? '…' : 'Перевести → RU'}
           </button>
           <button
             type="button"
             className="btn"
             disabled={!!busy}
             onClick={() => call('translate', 'en')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, justifyContent: 'flex-start' }}
           >
-            {busy === 'translate:en' ? '…' : '🤖 Перевести → EN'}
+            <Languages size={14} strokeWidth={1.8} />
+            {busy === 'translate:en' ? '…' : 'Перевести → EN'}
           </button>
         </>
       ) : null}
@@ -79,16 +84,20 @@ export function NewsAiPanel({ postId, locale }: Props) {
         className="btn"
         disabled={!!busy}
         onClick={() => call('headline')}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, justifyContent: 'flex-start' }}
       >
-        {busy === 'headline' ? '…' : '🤖 Сильный заголовок'}
+        <Heading size={14} strokeWidth={1.8} />
+        {busy === 'headline' ? '…' : 'Сильный заголовок'}
       </button>
       <button
         type="button"
         className="btn"
         disabled={!!busy}
         onClick={() => call('summary')}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, justifyContent: 'flex-start' }}
       >
-        {busy === 'summary' ? '…' : '🤖 Краткий лид (160 симв.)'}
+        <AlignLeft size={14} strokeWidth={1.8} />
+        {busy === 'summary' ? '…' : 'Краткий лид (160 симв.)'}
       </button>
       {msg ? (
         <div

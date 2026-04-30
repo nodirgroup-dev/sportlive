@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { Pin } from 'lucide-react';
 import { getFixtureById, getLiveEntries } from '@/lib/db';
 import { addLiveEntry, deleteLiveEntry, togglePinLiveEntry } from '../../_actions/live';
 
@@ -87,7 +88,15 @@ export default async function LiveBlogPage({ params }: { params: Promise<{ id: s
                       <b style={{ fontFamily: 'var(--font-display)', fontSize: 18 }}>{e.minute}&apos;</b>
                     ) : null}
                     <span style={{ color: 'var(--text-2)', fontWeight: 600 }}>{TYPE_LABEL[e.type] ?? e.type}</span>
-                    {e.pinned ? <span className="pill yellow">📌 Закреплено</span> : null}
+                    {e.pinned ? (
+                      <span
+                        className="pill yellow"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                      >
+                        <Pin size={11} strokeWidth={2} />
+                        Закреплено
+                      </span>
+                    ) : null}
                     <span style={{ marginLeft: 'auto', color: 'var(--text-3)', fontSize: 10.5 }}>
                       {new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }).format(e.occurredAt)}
                     </span>

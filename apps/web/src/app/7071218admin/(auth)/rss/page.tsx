@@ -1,5 +1,6 @@
 import { db, rssSources, categories } from '@sportlive/db';
 import { desc, eq } from 'drizzle-orm';
+import { Sparkles, Play, Trash2, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import {
   createRssSource,
   toggleRssEnabled,
@@ -45,14 +46,18 @@ export default async function RssPage({
       </div>
 
       {sp.ok ? (
-        <div style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#86efac', marginBottom: 14, fontSize: 12.5 }}>
-          ✓ Импорт: получено <b>{sp.fetched}</b>, создано <b>{sp.created}</b>, пропущено <b>{sp.skipped}</b>
-          {Number(sp.errors) > 0 ? <> · ошибок {sp.errors}</> : null}
+        <div style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#86efac', marginBottom: 14, fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <CheckCircle2 size={14} strokeWidth={1.8} />
+          <span>
+            Импорт: получено <b>{sp.fetched}</b>, создано <b>{sp.created}</b>, пропущено <b>{sp.skipped}</b>
+            {Number(sp.errors) > 0 ? <> · ошибок {sp.errors}</> : null}
+          </span>
         </div>
       ) : null}
       {sp.error ? (
-        <div style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', marginBottom: 14, fontSize: 12.5 }}>
-          ⚠ {sp.error}
+        <div style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', marginBottom: 14, fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <AlertTriangle size={14} strokeWidth={1.8} />
+          {sp.error}
         </div>
       ) : null}
 
@@ -96,7 +101,8 @@ export default async function RssPage({
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6 }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5 }}>
               <input type="checkbox" name="rewriteEnabled" value="1" defaultChecked />
-              <span>🤖 AI</span>
+              <Sparkles size={12} strokeWidth={1.8} />
+              <span>AI</span>
             </label>
             <button type="submit" className="btn primary" style={{ flex: 1 }}>
               Добавить
@@ -139,7 +145,19 @@ export default async function RssPage({
                     {s.feedUrl}
                   </div>
                   {s.lastError ? (
-                    <div style={{ fontSize: 11, color: '#fca5a5', marginTop: 2 }}>⚠ {s.lastError}</div>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: '#fca5a5',
+                        marginTop: 2,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                      }}
+                    >
+                      <AlertTriangle size={11} strokeWidth={1.8} />
+                      {s.lastError}
+                    </div>
                   ) : null}
                 </td>
                 <td>
@@ -149,7 +167,13 @@ export default async function RssPage({
                     {s.locale}
                   </span>
                 </td>
-                <td>{s.rewriteEnabled ? '🤖' : '—'}</td>
+                <td>
+                  {s.rewriteEnabled ? (
+                    <Sparkles size={14} strokeWidth={1.8} style={{ color: 'var(--accent)' }} />
+                  ) : (
+                    '—'
+                  )}
+                </td>
                 <td className="t-dim" style={{ fontSize: 12 }}>
                   {s.categoryName ?? '—'}
                 </td>
@@ -166,14 +190,23 @@ export default async function RssPage({
                 <td style={{ textAlign: 'right' }}>
                   <form action={importRssNow} style={{ display: 'inline' }}>
                     <input type="hidden" name="id" value={s.id} />
-                    <button type="submit" className="btn primary" style={{ height: 28, fontSize: 11.5, marginRight: 6 }}>
-                      ▶ Импорт
+                    <button
+                      type="submit"
+                      className="btn primary"
+                      style={{ height: 28, fontSize: 11.5, marginRight: 6, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                    >
+                      <Play size={12} strokeWidth={1.8} />
+                      Импорт
                     </button>
                   </form>
                   <form action={deleteRssSource} style={{ display: 'inline' }}>
                     <input type="hidden" name="id" value={s.id} />
-                    <button type="submit" className="btn" style={{ height: 28, fontSize: 11.5 }}>
-                      🗑
+                    <button
+                      type="submit"
+                      className="btn"
+                      style={{ height: 28, width: 28, padding: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      <Trash2 size={12} strokeWidth={1.8} />
                     </button>
                   </form>
                 </td>
