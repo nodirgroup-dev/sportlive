@@ -42,6 +42,7 @@ const LEAGUES = (args.leagues ?? '39,140,135,78,61,2,3,848')
 const SEASON = parseInt(args.season ?? `${new Date().getFullYear()}`, 10);
 const DAYS = args.range ? parseInt(args.range, 10) : null;
 const LIVE_ONLY = !!args.live;
+const TEAMS_ONLY = !!args['teams-only'];
 
 const sql = postgres(DATABASE_URL, { prepare: false, max: 5, onnotice: () => {} });
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
@@ -172,6 +173,15 @@ async function fetchLeagues() {
   log(`  rate: ${rateLimit?.dayRemain}/${rateLimit?.dayLimit} left today`);
 }
 
+async function fetchTeamsForLeague(leagueId) {
+  const r = await api('/teams', { league: leagueId, season: SEASON });
+  const items = r.response ?? [];
+  log(`  league ${leagueId} → ${items.length} teams`);
+  for (const item of items) {
+    await upsertTeam(item.team, item.venue);
+  }
+}
+
 async function fetchFixturesForLeague(leagueId) {
   if (LIVE_ONLY) {
     const r = await api('/fixtures', { live: 'all' });
@@ -222,6 +232,10 @@ async function main() {
 
   if (LIVE_ONLY) {
     await fetchFixturesForLeague();
+  } else if (TEAMS_ONLY) {
+    for (const lid of LEAGUES) {
+      await fetchTeamsForLeague(lid);
+    }
   } else {
     await fetchLeagues();
     for (const lid of LEAGUES) {

@@ -8,6 +8,7 @@ import {
   getTeamById,
   getTeamUpcoming,
   getTeamRecent,
+  getTeamStandings,
   teamFormFromFixtures,
   type TeamFormResult,
 } from '@/lib/db';
@@ -57,9 +58,10 @@ export default async function TeamPage({
   if (!team) notFound();
 
   const t = await getTranslations({ locale, namespace: 'team' });
-  const [upcoming, recent] = await Promise.all([
+  const [upcoming, recent, standings] = await Promise.all([
     getTeamUpcoming(id, 10),
     getTeamRecent(id, 10),
+    getTeamStandings(id),
   ]);
   const form = teamFormFromFixtures(id, recent);
 
@@ -118,6 +120,52 @@ export default async function TeamPage({
               >
                 {r}
               </span>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {standings.length > 0 ? (
+        <section className="mb-8">
+          <div className="space-y-3">
+            {standings.map((s, i) => (
+              <div
+                key={`${s.league.id}-${s.groupName ?? 'main'}-${i}`}
+                className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-950"
+              >
+                {s.league.logo ? (
+                  <Image
+                    src={s.league.logo}
+                    alt=""
+                    width={28}
+                    height={28}
+                    className="h-7 w-7 flex-shrink-0 object-contain"
+                    unoptimized
+                  />
+                ) : null}
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-semibold">{s.league.name}</div>
+                  {s.groupName ? (
+                    <div className="text-xs text-neutral-500">{s.groupName}</div>
+                  ) : null}
+                </div>
+                <div className="flex items-center gap-4 text-xs">
+                  <div className="text-center">
+                    <div className="text-base font-bold tabular-nums">{s.rank}</div>
+                    <div className="text-[10px] uppercase tracking-wide text-neutral-500">#</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-base font-bold tabular-nums">{s.points}</div>
+                    <div className="text-[10px] uppercase tracking-wide text-neutral-500">pts</div>
+                  </div>
+                  <div className="hidden text-center sm:block">
+                    <div className="font-mono tabular-nums">
+                      {s.won}-{s.drew}-{s.lost}
+                    </div>
+                    <div className="text-[10px] uppercase tracking-wide text-neutral-500">w-d-l</div>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </section>

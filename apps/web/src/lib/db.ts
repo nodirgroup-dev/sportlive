@@ -599,6 +599,54 @@ export async function getTeamRecent(teamId: number, limit = 10): Promise<Fixture
   });
 }
 
+export type TeamStandingPosition = {
+  league: { id: number; name: string; logo: string | null; country: string | null; season: number };
+  groupName: string | null;
+  rank: number;
+  points: number;
+  played: number;
+  won: number;
+  drew: number;
+  lost: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalsDiff: number;
+};
+
+export async function getTeamStandings(teamId: number): Promise<TeamStandingPosition[]> {
+  const rows = (await db.execute(sql`
+    SELECT
+      s.rank, s.group_name AS "groupName", s.points, s.played,
+      s.won, s.drew, s.lost,
+      s.goals_for AS "goalsFor", s.goals_against AS "goalsAgainst", s.goals_diff AS "goalsDiff",
+      s.season,
+      l.id AS "leagueId", l.name AS "leagueName", l.logo AS "leagueLogo", l.country AS "leagueCountry"
+    FROM standings s
+    JOIN leagues l ON l.id = s.league_id
+    WHERE s.team_id = ${teamId}
+    ORDER BY s.season DESC
+  `)) as unknown as Array<Record<string, unknown>>;
+  return rows.map((r) => ({
+    league: {
+      id: Number(r.leagueId),
+      name: String(r.leagueName),
+      logo: (r.leagueLogo as string) ?? null,
+      country: (r.leagueCountry as string) ?? null,
+      season: Number(r.season),
+    },
+    groupName: (r.groupName as string) ?? null,
+    rank: Number(r.rank),
+    points: Number(r.points),
+    played: Number(r.played),
+    won: Number(r.won),
+    drew: Number(r.drew),
+    lost: Number(r.lost),
+    goalsFor: Number(r.goalsFor),
+    goalsAgainst: Number(r.goalsAgainst),
+    goalsDiff: Number(r.goalsDiff),
+  }));
+}
+
 export type TeamFormResult = 'W' | 'D' | 'L';
 
 export function teamFormFromFixtures(teamId: number, recent: FixtureRow[]): TeamFormResult[] {
