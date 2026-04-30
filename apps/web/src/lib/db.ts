@@ -1,5 +1,5 @@
 import { db, posts, categories, users, redirects } from '@sportlive/db';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, sql } from 'drizzle-orm';
 import type { Locale } from '@/i18n/routing';
 
 export type ListedPost = {
@@ -195,4 +195,93 @@ export async function getRecentPostsCount(locale: Locale): Promise<number> {
     .from(posts)
     .where(and(eq(posts.locale, locale), eq(posts.status, 'published')));
   return r[0]?.c ?? 0;
+}
+
+/** Posts published within the last 48 hours — Google News window. */
+export async function getNewsPosts(): Promise<
+  Array<{
+    legacyId: number;
+    slug: string;
+    locale: Locale;
+    title: string;
+    publishedAt: Date;
+    categoryPath: string | null;
+  }>
+> {
+  const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
+  const rows = await db
+    .select({
+      legacyId: posts.legacyId,
+      slug: posts.slug,
+      locale: posts.locale,
+      title: posts.title,
+      publishedAt: posts.publishedAt,
+      categoryId: posts.categoryId,
+    })
+    .from(posts)
+    .where(and(eq(posts.status, 'published'), gte(posts.publishedAt, cutoff)))
+    .orderBy(desc(posts.publishedAt))
+    .limit(1000);
+  return Promise.all(
+    rows
+      .filter((r) => r.publishedAt !== null && r.legacyId !== null)
+      .map(async (r) => ({
+        legacyId: r.legacyId!,
+        slug: r.slug,
+        locale: r.locale as Locale,
+        title: r.title,
+        publishedAt: r.publishedAt!,
+        categoryPath: (await categoryPath(r.categoryId))?.path ?? null,
+      })),
+  );
+}
+
+/** Newest posts in a locale for RSS feed. */
+export async function getRssPosts(
+  locale: Locale,
+  limit = 50,
+): Promise<
+  Array<{
+    legacyId: number;
+    slug: string;
+    title: string;
+    summary: string | null;
+    body: string;
+    coverImage: string | null;
+    publishedAt: Date | null;
+    categoryPath: string | null;
+    categoryName: string | null;
+  }>
+> {
+  const rows = await db
+    .select({
+      legacyId: posts.legacyId,
+      slug: posts.slug,
+      title: posts.title,
+      summary: posts.summary,
+      body: posts.body,
+      coverImage: posts.coverImage,
+      publishedAt: posts.publishedAt,
+      categoryId: posts.categoryId,
+    })
+    .from(posts)
+    .where(and(eq(posts.locale, locale), eq(posts.status, 'published')))
+    .orderBy(desc(posts.publishedAt))
+    .limit(limit);
+  return Promise.all(
+    rows.map(async (r) => {
+      const cp = await categoryPath(r.categoryId);
+      return {
+        legacyId: r.legacyId!,
+        slug: r.slug,
+        title: r.title,
+        summary: r.summary,
+        body: r.body,
+        coverImage: r.coverImage,
+        publishedAt: r.publishedAt,
+        categoryPath: cp?.path ?? null,
+        categoryName: cp?.name ?? null,
+      };
+    }),
+  );
 }
