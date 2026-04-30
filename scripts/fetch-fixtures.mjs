@@ -96,13 +96,6 @@ async function upsertLeague(item) {
 }
 
 async function upsertTeam(team, venue) {
-  await sql`
-    INSERT INTO teams (id, name, code, country, logo, founded)
-    VALUES (${team.id}, ${team.name}, ${team.code ?? null}, ${team.country ?? null}, ${team.logo ?? null}, ${team.founded ?? null})
-    ON CONFLICT (id) DO UPDATE SET
-      name = EXCLUDED.name, code = EXCLUDED.code, country = EXCLUDED.country,
-      logo = EXCLUDED.logo, founded = EXCLUDED.founded, updated_at = now()
-  `;
   if (venue?.id) {
     await sql`
       INSERT INTO venues (id, name, city, country, capacity, surface, image)
@@ -113,6 +106,15 @@ async function upsertTeam(team, venue) {
         capacity = EXCLUDED.capacity, surface = EXCLUDED.surface, image = EXCLUDED.image
     `;
   }
+  await sql`
+    INSERT INTO teams (id, name, code, country, logo, founded, venue_id)
+    VALUES (${team.id}, ${team.name}, ${team.code ?? null}, ${team.country ?? null}, ${team.logo ?? null}, ${team.founded ?? null}, ${venue?.id ?? null})
+    ON CONFLICT (id) DO UPDATE SET
+      name = EXCLUDED.name, code = EXCLUDED.code, country = EXCLUDED.country,
+      logo = EXCLUDED.logo, founded = EXCLUDED.founded,
+      venue_id = COALESCE(EXCLUDED.venue_id, teams.venue_id),
+      updated_at = now()
+  `;
 }
 
 async function upsertFixture(item) {
