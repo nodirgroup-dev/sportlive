@@ -115,7 +115,6 @@ export default async function NewsList({
           <thead>
             <tr>
               <th style={{ width: 32 }} />
-              <th>ID</th>
               <th style={{ width: 64 }}>Фото</th>
               <th>Заголовок</th>
               <th>Категория</th>
@@ -130,9 +129,6 @@ export default async function NewsList({
               <tr key={r.id}>
                 <td>
                   <input type="checkbox" name="ids" value={r.id} className="chk-input" />
-                </td>
-                <td className="num" style={{ color: 'var(--text-3)' }}>
-                  {r.legacyId ?? r.id}
                 </td>
                 <td>
                   {r.coverImage ? (
@@ -200,7 +196,7 @@ export default async function NewsList({
             ))}
             {list.length === 0 ? (
               <tr>
-                <td colSpan={9} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-3)' }}>
+                <td colSpan={8} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-3)' }}>
                   Нет статей по выбранным фильтрам
                 </td>
               </tr>
