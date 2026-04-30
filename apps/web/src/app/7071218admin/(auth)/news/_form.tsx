@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { db, categories } from '@sportlive/db';
 import { eq } from 'drizzle-orm';
+import { RichEditor } from '../_components/rich-editor';
 
 type FormPost = {
   id: number | null;
@@ -77,8 +78,8 @@ export async function NewsForm({
             />
           </div>
           <div className="field">
-            <label htmlFor="body">Тело статьи (HTML)</label>
-            <textarea id="body" name="body" required defaultValue={post.body} className="textarea" style={{ minHeight: 360 }} />
+            <label>Тело статьи</label>
+            <RichEditor name="body" defaultValue={post.body} placeholder="Начните писать…" />
           </div>
         </div>
 

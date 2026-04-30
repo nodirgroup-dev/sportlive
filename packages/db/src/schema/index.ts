@@ -8,3 +8,5 @@ export * from './redirects';
 export * from './fixtures';
 export * from './static_pages';
 export * from './sessions';
+export * from './comments';
+export * from './banners';
