@@ -5,6 +5,7 @@ import { hasLocale, type Locale } from '@/i18n/routing';
 import { siteConfig, absoluteUrl, localePath } from '@/lib/site';
 import { getLatestPosts } from '@/lib/db';
 import { PostCard } from '@/components/post-card';
+import { PostHero, PostGridCard } from '@/components/post-hero';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 60;
@@ -29,7 +30,11 @@ export default async function HomePage({
   if (!hasLocale(locale)) notFound();
   setRequestLocale(locale);
   const t = await getTranslations();
-  const posts = await getLatestPosts(locale, 30);
+  const posts = await getLatestPosts(locale, 31);
+
+  const hero = posts[0];
+  const featured = posts.slice(1, 7); // 6 cards
+  const rest = posts.slice(7);
 
   const websiteJsonLd = {
     '@context': 'https://schema.org',
@@ -58,7 +63,7 @@ export default async function HomePage({
   };
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-6 sm:py-10">
+    <div className="container mx-auto max-w-6xl px-4 py-6 sm:py-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
@@ -67,14 +72,40 @@ export default async function HomePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
       />
-      <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t('home.hero')}</h1>
-      <div className="mt-4">
-        {posts.length === 0 ? (
-          <p className="text-neutral-500">{t('home.loading')}</p>
-        ) : (
-          posts.map((p) => <PostCard key={p.id} post={p} locale={locale as Locale} />)
-        )}
-      </div>
+
+      {posts.length === 0 ? (
+        <p className="py-12 text-center text-neutral-500">{t('home.loading')}</p>
+      ) : (
+        <>
+          {hero ? (
+            <section className="mb-8">
+              <PostHero post={hero} locale={locale as Locale} />
+            </section>
+          ) : null}
+
+          {featured.length > 0 ? (
+            <section className="mb-10">
+              <h2 className="mb-4 text-xl font-bold tracking-tight">{t('home.latest')}</h2>
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {featured.map((p) => (
+                  <PostGridCard key={p.id} post={p} locale={locale as Locale} />
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {rest.length > 0 ? (
+            <section>
+              <h2 className="mb-4 text-xl font-bold tracking-tight">{t('home.popular')}</h2>
+              <div className="rounded-lg border border-neutral-200 bg-white px-4 dark:border-neutral-800 dark:bg-neutral-950">
+                {rest.map((p) => (
+                  <PostCard key={p.id} post={p} locale={locale as Locale} />
+                ))}
+              </div>
+            </section>
+          ) : null}
+        </>
+      )}
     </div>
   );
 }

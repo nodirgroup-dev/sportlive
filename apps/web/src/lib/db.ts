@@ -1,4 +1,4 @@
-import { db, posts, categories, users, redirects } from '@sportlive/db';
+import { db, posts, categories, users, redirects, staticPages } from '@sportlive/db';
 import { and, desc, eq, gte, sql } from 'drizzle-orm';
 import type { Locale } from '@/i18n/routing';
 
@@ -267,6 +267,41 @@ export async function getRecentResults(daysBack = 7, limit = 50): Promise<Fixtur
 
 export async function getLiveFixtures(limit = 30): Promise<FixtureRow[]> {
   return fixturesQuery({ live: true, limit, order: 'asc' });
+}
+
+export type StaticPageDetail = {
+  id: number;
+  slug: string;
+  title: string;
+  body: string;
+  description: string | null;
+  metaTitle: string | null;
+  metaDescription: string | null;
+};
+
+export async function getStaticPage(slug: string, locale: Locale): Promise<StaticPageDetail | null> {
+  const r = await db
+    .select({
+      id: staticPages.id,
+      slug: staticPages.slug,
+      title: staticPages.title,
+      body: staticPages.body,
+      description: staticPages.description,
+      metaTitle: staticPages.metaTitle,
+      metaDescription: staticPages.metaDescription,
+    })
+    .from(staticPages)
+    .where(and(eq(staticPages.slug, slug), eq(staticPages.locale, locale)))
+    .limit(1);
+  return r[0] ?? null;
+}
+
+export async function getFooterPages(locale: Locale): Promise<Array<{ slug: string; title: string }>> {
+  return db
+    .select({ slug: staticPages.slug, title: staticPages.title })
+    .from(staticPages)
+    .where(eq(staticPages.locale, locale))
+    .orderBy(staticPages.sortOrder);
 }
 
 export async function getRecentPostsCount(locale: Locale): Promise<number> {

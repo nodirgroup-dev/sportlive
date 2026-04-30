@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import { notFound, permanentRedirect } from 'next/navigation';
+import { Link } from '@/i18n/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { hasLocale, routing, type Locale } from '@/i18n/routing';
 import { siteConfig, absoluteUrl, localePath } from '@/lib/site';
@@ -8,8 +9,10 @@ import {
   getCategoryBySlugPath,
   getPostByLegacyId,
   getPostsByCategory,
+  getStaticPage,
 } from '@/lib/db';
 import { PostCard } from '@/components/post-card';
+import { PostHero, PostGridCard } from '@/components/post-hero';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 60;
@@ -70,6 +73,21 @@ export async function generateMetadata({
       },
     };
   }
+  // Static page
+  if (slug.length === 1) {
+    const onlySeg = slug[0]!.replace(/\.html$/, '');
+    const sp = await getStaticPage(onlySeg, locale);
+    if (sp) {
+      const url = absoluteUrl(localePath(locale, `/${onlySeg}`));
+      return {
+        title: sp.metaTitle || sp.title,
+        description: sp.metaDescription || sp.description || undefined,
+        alternates: { canonical: url },
+        openGraph: { url, title: sp.title },
+      };
+    }
+  }
+
   // Category page
   const path = slug.join('/');
   const cat = await getCategoryBySlugPath(path, locale);
@@ -169,10 +187,24 @@ export default async function CatchAllPage({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
         />
+        {post.category ? (
+          <nav className="mb-3 flex items-center gap-1 text-xs text-neutral-500">
+            <Link href={'/' as Parameters<typeof permanentRedirect>[0]} className="hover:text-brand-700">
+              {t('nav.home')}
+            </Link>
+            <span>·</span>
+            <Link
+              href={`/${post.category.path}` as Parameters<typeof permanentRedirect>[0]}
+              className="font-medium uppercase tracking-wider text-brand-700"
+            >
+              {post.category.name}
+            </Link>
+          </nav>
+        ) : null}
         <header className="mb-6">
-          <h1 className="text-3xl font-bold leading-tight sm:text-4xl">{post.title}</h1>
+          <h1 className="text-3xl font-bold leading-tight tracking-tight sm:text-4xl">{post.title}</h1>
           <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-neutral-500">
-            {post.author ? <span>{post.author.name}</span> : null}
+            {post.author ? <span className="font-medium">{post.author.name}</span> : null}
             {dateFmt ? (
               <time dateTime={post.publishedAt!.toISOString()}>{dateFmt}</time>
             ) : null}
@@ -184,23 +216,38 @@ export default async function CatchAllPage({
             alt={post.title}
             width={post.coverImageWidth ?? 1200}
             height={post.coverImageHeight ?? 675}
-            className="mb-6 w-full rounded-lg object-cover"
+            className="mb-6 w-full rounded-xl object-cover shadow-sm"
             priority
             sizes="(max-width: 768px) 100vw, 768px"
           />
         ) : null}
         {post.summary ? (
-          <p
-            className="mb-4 text-lg font-medium text-neutral-700 dark:text-neutral-300"
+          <div
+            className="mb-6 border-l-4 border-brand-500 bg-brand-50/40 p-4 text-lg font-medium leading-relaxed text-neutral-800 dark:bg-neutral-900/40 dark:text-neutral-200"
             dangerouslySetInnerHTML={{ __html: post.summary }}
           />
         ) : null}
-        <div
-          className="article-body"
-          dangerouslySetInnerHTML={{ __html: post.body }}
-        />
+        <div className="article-body" dangerouslySetInnerHTML={{ __html: post.body }} />
       </article>
     );
+  }
+
+  // ---- Static page (single segment, e.g. /maxfiylik-siyosati) ----
+  if (slug.length === 1) {
+    const onlySeg = slug[0]!.replace(/\.html$/, '');
+    const staticPage = await getStaticPage(onlySeg, locale);
+    if (staticPage) {
+      // 308 .html legacy → no-html canonical
+      if (slug[0]!.endsWith('.html')) {
+        permanentRedirect(`/${onlySeg}` as Parameters<typeof permanentRedirect>[0]);
+      }
+      return (
+        <article className="container mx-auto max-w-3xl px-4 py-6 sm:py-10">
+          <h1 className="mb-6 text-3xl font-bold leading-tight sm:text-4xl">{staticPage.title}</h1>
+          <div className="article-body" dangerouslySetInnerHTML={{ __html: staticPage.body }} />
+        </article>
+      );
+    }
   }
 
   // ---- Category ----
@@ -208,20 +255,51 @@ export default async function CatchAllPage({
   const cat = await getCategoryBySlugPath(path, locale);
   if (!cat) notFound();
 
-  const posts = await getPostsByCategory(cat.id, locale, 30);
+  const posts = await getPostsByCategory(cat.id, locale, 31);
+  const hero = posts[0];
+  const grid = posts.slice(1, 7);
+  const rest = posts.slice(7);
+
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-6 sm:py-10">
-      <h1 className="text-2xl font-bold sm:text-3xl">{cat.name}</h1>
-      {cat.description ? (
-        <p className="mt-2 text-neutral-600 dark:text-neutral-400">{cat.description}</p>
-      ) : null}
-      <div className="mt-4">
-        {posts.length === 0 ? (
-          <p className="text-neutral-500">{t('home.loading')}</p>
-        ) : (
-          posts.map((p) => <PostCard key={p.id} post={p} locale={locale as Locale} />)
-        )}
-      </div>
+    <div className="container mx-auto max-w-6xl px-4 py-6 sm:py-8">
+      <header className="mb-6">
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{cat.name}</h1>
+        {cat.description ? (
+          <p className="mt-2 max-w-2xl text-neutral-600 dark:text-neutral-400">{cat.description}</p>
+        ) : null}
+      </header>
+
+      {posts.length === 0 ? (
+        <p className="text-neutral-500">{t('home.loading')}</p>
+      ) : (
+        <>
+          {hero ? (
+            <section className="mb-8">
+              <PostHero post={hero} locale={locale} />
+            </section>
+          ) : null}
+
+          {grid.length > 0 ? (
+            <section className="mb-10">
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {grid.map((p) => (
+                  <PostGridCard key={p.id} post={p} locale={locale} />
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {rest.length > 0 ? (
+            <section>
+              <div className="rounded-lg border border-neutral-200 bg-white px-4 dark:border-neutral-800 dark:bg-neutral-950">
+                {rest.map((p) => (
+                  <PostCard key={p.id} post={p} locale={locale} />
+                ))}
+              </div>
+            </section>
+          ) : null}
+        </>
+      )}
     </div>
   );
 }
