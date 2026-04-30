@@ -3,41 +3,76 @@
 import { useState } from 'react';
 import type { Locale } from '@/i18n/routing';
 
-type Tx = { name: string; email: string; body: string; submit: string; sending: string; success: string; error: string; short: string };
+type Tx = {
+  name: string;
+  email: string;
+  body: string;
+  submit: string;
+  reply: string;
+  cancel: string;
+  sending: string;
+  success: string;
+  error: string;
+  short: string;
+  replyingTo: (n: string) => string;
+};
 const T: Record<Locale, Tx> = {
   uz: {
     name: 'Ismingiz',
     email: 'Email (ixtiyoriy)',
     body: "O'z fikringizni yozing…",
     submit: 'Izoh qoldirish',
+    reply: 'Javob yuborish',
+    cancel: 'Bekor qilish',
     sending: 'Yuborilmoqda…',
     success: 'Izohingiz tahririyatga yuborildi va tasdiqdan keyin paydo bo‘ladi',
     error: 'Yuborishda xatolik',
     short: 'Iltimos, kamida 5 ta belgi yozing',
+    replyingTo: (n) => `Javob: ${n}`,
   },
   ru: {
     name: 'Ваше имя',
     email: 'Email (необязательно)',
     body: 'Напишите своё мнение…',
     submit: 'Оставить комментарий',
+    reply: 'Отправить ответ',
+    cancel: 'Отмена',
     sending: 'Отправка…',
     success: 'Комментарий отправлен на модерацию',
     error: 'Ошибка отправки',
     short: 'Пожалуйста, напишите хотя бы 5 символов',
+    replyingTo: (n) => `Ответ: ${n}`,
   },
   en: {
     name: 'Your name',
     email: 'Email (optional)',
     body: 'Share your thoughts…',
     submit: 'Post comment',
+    reply: 'Post reply',
+    cancel: 'Cancel',
     sending: 'Sending…',
     success: 'Submitted for moderation',
     error: 'Failed to submit',
     short: 'Please write at least 5 characters',
+    replyingTo: (n) => `Replying to: ${n}`,
   },
 };
 
-export function CommentForm({ postId, locale }: { postId: number; locale: Locale }) {
+export function CommentForm({
+  postId,
+  locale,
+  parentId = null,
+  parentAuthor = null,
+  onCancel,
+  compact = false,
+}: {
+  postId: number;
+  locale: Locale;
+  parentId?: number | null;
+  parentAuthor?: string | null;
+  onCancel?: () => void;
+  compact?: boolean;
+}) {
   const tx = T[locale]!;
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -57,7 +92,13 @@ export function CommentForm({ postId, locale }: { postId: number; locale: Locale
       const res = await fetch('/api/comments', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ postId, name: name.trim() || null, email: email.trim() || null, body: body.trim() }),
+        body: JSON.stringify({
+          postId,
+          parentId,
+          name: name.trim() || null,
+          email: email.trim() || null,
+          body: body.trim(),
+        }),
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
@@ -82,7 +123,20 @@ export function CommentForm({ postId, locale }: { postId: number; locale: Locale
   }
 
   return (
-    <form onSubmit={submit} className="space-y-3 rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950">
+    <form
+      onSubmit={submit}
+      className={`space-y-3 rounded-lg border border-neutral-200 ${compact ? 'p-3' : 'bg-white p-4 dark:bg-neutral-950'} dark:border-neutral-800`}
+    >
+      {parentAuthor ? (
+        <div className="flex items-center justify-between text-xs text-neutral-500">
+          <span>↳ {tx.replyingTo(parentAuthor)}</span>
+          {onCancel ? (
+            <button type="button" onClick={onCancel} className="text-brand-700 hover:underline">
+              {tx.cancel}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
       <div className="grid gap-3 sm:grid-cols-2">
         <input
           type="text"
@@ -107,7 +161,7 @@ export function CommentForm({ postId, locale }: { postId: number; locale: Locale
         value={body}
         onChange={(e) => setBody(e.target.value)}
         placeholder={tx.body}
-        rows={4}
+        rows={compact ? 3 : 4}
         minLength={5}
         maxLength={4000}
         className="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm leading-relaxed outline-none focus:border-brand-500 dark:border-neutral-800 dark:bg-neutral-900"
@@ -118,7 +172,7 @@ export function CommentForm({ postId, locale }: { postId: number; locale: Locale
         disabled={state === 'sending'}
         className="rounded-md bg-brand-700 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-500 disabled:opacity-60"
       >
-        {state === 'sending' ? tx.sending : tx.submit}
+        {state === 'sending' ? tx.sending : parentId ? tx.reply : tx.submit}
       </button>
     </form>
   );

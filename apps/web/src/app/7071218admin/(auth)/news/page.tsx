@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { db, posts, categories } from '@sportlive/db';
 import { desc, eq, sql } from 'drizzle-orm';
-import { bulkPostsAction, togglePostFeature } from '../_actions/posts';
+import { bulkPostsAction, togglePostFeature, togglePostStatus } from '../_actions/posts';
 
 export const dynamic = 'force-dynamic';
 
@@ -196,6 +196,24 @@ export default async function NewsList({
                     : '—'}
                 </td>
                 <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                  <button
+                    type="submit"
+                    formAction={togglePostStatus}
+                    name="id"
+                    value={r.id}
+                    title={r.status === 'published' ? 'Снять с публикации' : 'Опубликовать'}
+                    className="btn"
+                    style={{
+                      height: 28,
+                      width: 28,
+                      padding: 0,
+                      marginRight: 4,
+                      fontSize: 14,
+                      opacity: r.status === 'published' ? 1 : 0.4,
+                    }}
+                  >
+                    {r.status === 'published' ? '👁' : '⏸'}
+                  </button>
                   <button
                     type="submit"
                     formAction={togglePostFeature}

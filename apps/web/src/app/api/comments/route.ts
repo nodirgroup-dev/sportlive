@@ -11,7 +11,7 @@ const ipFromRequest = (req: NextRequest) =>
   null;
 
 export async function POST(req: NextRequest) {
-  let body: { postId?: number; name?: string | null; email?: string | null; body?: string };
+  let body: { postId?: number; parentId?: number | null; name?: string | null; email?: string | null; body?: string };
   try {
     body = await req.json();
   } catch {
@@ -22,6 +22,8 @@ export async function POST(req: NextRequest) {
   const text = (body.body ?? '').trim();
   const authorName = body.name?.toString().trim().slice(0, 100) || null;
   const authorEmail = body.email?.toString().trim().slice(0, 255) || null;
+  const rawParentId = body.parentId === null || body.parentId === undefined ? null : Number(body.parentId);
+  const parentId = Number.isFinite(rawParentId) && rawParentId !== null ? rawParentId : null;
 
   if (!Number.isFinite(postId) || text.length < 5 || text.length > 4000) {
     return NextResponse.json({ error: 'invalid input' }, { status: 400 });
@@ -30,16 +32,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'name required' }, { status: 400 });
   }
 
-  // Sanity: post exists
   const exists = await db.select({ id: posts.id }).from(posts).where(eq(posts.id, postId)).limit(1);
   if (exists.length === 0) {
     return NextResponse.json({ error: 'post not found' }, { status: 404 });
+  }
+
+  // If a parent is provided, verify it belongs to the same post and is approved.
+  if (parentId !== null) {
+    const parent = await db
+      .select({ postId: comments.postId, status: comments.status })
+      .from(comments)
+      .where(eq(comments.id, parentId))
+      .limit(1);
+    if (parent.length === 0 || parent[0]!.postId !== postId || parent[0]!.status !== 'approved') {
+      return NextResponse.json({ error: 'invalid parent' }, { status: 400 });
+    }
   }
 
   const ip = ipFromRequest(req)?.slice(0, 45) ?? null;
 
   await db.insert(comments).values({
     postId,
+    parentId,
     authorName,
     authorEmail,
     authorIp: ip,

@@ -664,23 +664,45 @@ export function teamFormFromFixtures(teamId: number, recent: FixtureRow[]): Team
     });
 }
 
-export async function searchPosts(q: string, locale: Locale, limit = 30): Promise<ListedPost[]> {
-  const term = `%${q.trim().replace(/[%_]/g, '\\$&')}%`;
-  if (!term || term.length < 4) return [];
-  const rows = await db.execute(sql`
-    SELECT p.id, p.legacy_id AS "legacyId", p.slug, p.title, p.summary,
-           p.cover_image AS "coverImage", p.cover_image_width AS "coverImageWidth",
-           p.cover_image_height AS "coverImageHeight", p.published_at AS "publishedAt",
-           p.category_id AS "categoryId"
-      FROM posts p
-     WHERE p.locale = ${locale}
-       AND p.status = 'published'
-       AND (p.title ILIKE ${term} OR p.body ILIKE ${term})
-     ORDER BY p.published_at DESC
-     LIMIT ${limit}
-  `);
-  const arr = (rows as unknown as Array<Record<string, unknown>>) ?? [];
-  return Promise.all(
+export async function searchPosts(
+  q: string,
+  locale: Locale,
+  opts: { page?: number; pageSize?: number } = {},
+): Promise<{ items: ListedPost[]; total: number; page: number; pageSize: number }> {
+  const trimmed = q.trim();
+  const term = `%${trimmed.replace(/[%_]/g, '\\$&')}%`;
+  const pageSize = Math.max(1, Math.min(opts.pageSize ?? 20, 50));
+  const page = Math.max(1, opts.page ?? 1);
+  if (trimmed.length < 4) return { items: [], total: 0, page, pageSize };
+
+  const offset = (page - 1) * pageSize;
+
+  const [items, totalRows] = await Promise.all([
+    db.execute(sql`
+      SELECT p.id, p.legacy_id AS "legacyId", p.slug, p.title, p.summary,
+             p.cover_image AS "coverImage", p.cover_image_width AS "coverImageWidth",
+             p.cover_image_height AS "coverImageHeight", p.published_at AS "publishedAt",
+             p.category_id AS "categoryId"
+        FROM posts p
+       WHERE p.locale = ${locale}
+         AND p.status = 'published'
+         AND (p.title ILIKE ${term} OR p.body ILIKE ${term})
+       ORDER BY p.published_at DESC
+       LIMIT ${pageSize} OFFSET ${offset}
+    `),
+    db.execute(sql`
+      SELECT count(*)::int AS c
+        FROM posts p
+       WHERE p.locale = ${locale}
+         AND p.status = 'published'
+         AND (p.title ILIKE ${term} OR p.body ILIKE ${term})
+    `),
+  ]);
+  const arr = (items as unknown as Array<Record<string, unknown>>) ?? [];
+  const totalArr = (totalRows as unknown as Array<{ c: number }>) ?? [];
+  const total = Number(totalArr[0]?.c ?? 0);
+
+  const mapped = await Promise.all(
     arr.map(async (r) => ({
       id: Number(r.id),
       legacyId: r.legacyId === null ? null : Number(r.legacyId),
@@ -694,6 +716,7 @@ export async function searchPosts(q: string, locale: Locale, limit = 30): Promis
       category: await categoryPath(r.categoryId === null ? null : Number(r.categoryId)),
     })),
   );
+  return { items: mapped, total, page, pageSize };
 }
 
 export async function getStandings(): Promise<StandingsTable[]> {

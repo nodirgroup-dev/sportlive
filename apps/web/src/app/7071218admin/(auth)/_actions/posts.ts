@@ -167,6 +167,43 @@ export async function deletePost(id: number) {
   redirect('/7071218admin/news');
 }
 
+export async function togglePostStatus(formData: FormData) {
+  const user = await getCurrentUser();
+  if (!user) redirect('/7071218admin/login');
+
+  const id = parseInt((formData.get('id') as string) || '', 10);
+  if (!Number.isFinite(id)) redirect('/7071218admin/news');
+
+  const existing = await db
+    .select({ status: posts.status, publishedAt: posts.publishedAt, title: posts.title })
+    .from(posts)
+    .where(eq(posts.id, id))
+    .limit(1);
+  if (existing.length === 0) redirect('/7071218admin/news');
+
+  const wasPublished = existing[0]!.status === 'published';
+  const nextStatus = wasPublished ? 'draft' : 'published';
+  const publishedAt = !wasPublished
+    ? existing[0]!.publishedAt ?? new Date()
+    : existing[0]!.publishedAt;
+
+  await db
+    .update(posts)
+    .set({ status: nextStatus, publishedAt, updatedAt: new Date() })
+    .where(eq(posts.id, id));
+
+  await recordAudit({
+    action: wasPublished ? 'post.unpublish' : 'post.publish',
+    entityType: 'post',
+    entityId: id,
+    summary: existing[0]!.title.slice(0, 200),
+    meta: { fromStatus: existing[0]!.status, toStatus: nextStatus },
+  });
+
+  revalidatePath('/7071218admin/news');
+  revalidatePath('/');
+}
+
 export async function togglePostFeature(formData: FormData) {
   const user = await getCurrentUser();
   if (!user) redirect('/7071218admin/login');
