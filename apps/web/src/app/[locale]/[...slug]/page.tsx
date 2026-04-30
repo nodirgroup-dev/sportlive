@@ -13,7 +13,27 @@ import {
   getStaticPage,
 } from '@/lib/db';
 import { CommentsSection } from '@/components/comments-section';
+import { ShareButtons } from '@/components/share-buttons';
+import { ArticleTracker } from '@/components/article-tracker';
 import { PostCard } from '@/components/post-card';
+
+const READING_LABEL: Record<Locale, (n: number) => string> = {
+  uz: (n) => `${n} daqiqa o'qish`,
+  ru: (n) => `${n} мин чтения`,
+  en: (n) => `${n} min read`,
+};
+
+const VIEWS_LABEL: Record<Locale, (n: number) => string> = {
+  uz: (n) => `${n.toLocaleString('uz-UZ')} ko'rishlar`,
+  ru: (n) => `${n.toLocaleString('ru-RU')} просмотров`,
+  en: (n) => `${n.toLocaleString('en-US')} views`,
+};
+
+function readingMinutes(html: string): number {
+  const text = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  const words = text ? text.split(' ').length : 0;
+  return Math.max(1, Math.round(words / 220));
+}
 import { PostHero, PostGridCard } from '@/components/post-hero';
 import { BannerSlot } from '@/components/banner-slot';
 
@@ -218,8 +238,17 @@ export default async function CatchAllPage({
             {dateFmt ? (
               <time dateTime={post.publishedAt!.toISOString()}>{dateFmt}</time>
             ) : null}
+            <span>·</span>
+            <span>{READING_LABEL[locale](readingMinutes(post.body))}</span>
+            {post.viewCount > 0 ? (
+              <>
+                <span>·</span>
+                <span>{VIEWS_LABEL[locale](post.viewCount)}</span>
+              </>
+            ) : null}
           </div>
         </header>
+        <ArticleTracker postId={post.id} />
         {post.coverImage ? (
           <Image
             src={post.coverImage}
@@ -266,6 +295,7 @@ export default async function CatchAllPage({
                 />
               ) : null}
               <div className="article-body" dangerouslySetInnerHTML={{ __html: cleanedBody }} />
+              <ShareButtons url={absoluteUrl(canonical)} title={post.title} />
               <div className="my-6 flex justify-center">
                 <BannerSlot position="in_article_bottom" />
               </div>

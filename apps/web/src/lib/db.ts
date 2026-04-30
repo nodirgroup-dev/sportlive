@@ -22,6 +22,7 @@ export type ArticleDetail = ListedPost & {
   metaKeywords: string | null;
   author: { id: number; name: string } | null;
   categoryId: number | null;
+  viewCount: number;
 };
 
 async function categoryPath(catId: number | null): Promise<{ slug: string; name: string; path: string } | null> {
@@ -97,6 +98,7 @@ export async function getPostByLegacyId(legacyId: number, locale: Locale): Promi
       metaKeywords: posts.metaKeywords,
       categoryId: posts.categoryId,
       authorId: posts.authorId,
+      viewCount: posts.viewCount,
     })
     .from(posts)
     .where(and(eq(posts.legacyId, legacyId), eq(posts.locale, locale), eq(posts.status, 'published')))
@@ -625,6 +627,28 @@ export async function getActiveBanners(
      ORDER BY sort_order ASC, id ASC
      LIMIT 5
   `) as unknown as Promise<BannerView[]>;
+}
+
+export async function getMostPopular(locale: Locale, limit = 5): Promise<ListedPost[]> {
+  const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const rows = await db
+    .select({
+      id: posts.id,
+      legacyId: posts.legacyId,
+      slug: posts.slug,
+      title: posts.title,
+      summary: posts.summary,
+      coverImage: posts.coverImage,
+      coverImageWidth: posts.coverImageWidth,
+      coverImageHeight: posts.coverImageHeight,
+      publishedAt: posts.publishedAt,
+      categoryId: posts.categoryId,
+    })
+    .from(posts)
+    .where(and(eq(posts.locale, locale), eq(posts.status, 'published'), gte(posts.publishedAt, cutoff)))
+    .orderBy(desc(posts.viewCount), desc(posts.publishedAt))
+    .limit(limit);
+  return Promise.all(rows.map(async (r) => ({ ...r, category: await categoryPath(r.categoryId) })));
 }
 
 export async function getRecentPostsCount(locale: Locale): Promise<number> {
