@@ -11,6 +11,7 @@ import {
   getPostsByCategory,
   getRelatedPosts,
   getAdjacentPosts,
+  getTagsForPost,
   getStaticPage,
 } from '@/lib/db';
 import { CommentsSection } from '@/components/comments-section';
@@ -311,6 +312,25 @@ export default async function CatchAllPage({
                 <BannerSlot position="in_article_bottom" />
               </div>
             </>
+          );
+        })()}
+
+        {/* Tags */}
+        {await (async () => {
+          const t = await getTagsForPost(post.id);
+          if (t.length === 0) return null;
+          return (
+            <div className="mt-6 flex flex-wrap gap-2">
+              {t.map((tag) => (
+                <Link
+                  key={tag.id}
+                  href={`/tag/${tag.slug}` as never}
+                  className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700 hover:bg-brand-100 hover:text-brand-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-brand-900/30 dark:hover:text-brand-300"
+                >
+                  #{tag.name}
+                </Link>
+              ))}
+            </div>
           );
         })()}
 

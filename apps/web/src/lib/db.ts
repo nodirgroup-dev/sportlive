@@ -1,5 +1,5 @@
-import { db, posts, categories, users, redirects, staticPages, banners, comments } from '@sportlive/db';
-import { and, asc, desc, eq, gte, ne, sql } from 'drizzle-orm';
+import { db, posts, categories, users, redirects, staticPages, banners, comments, tags, postTags } from '@sportlive/db';
+import { and, asc, desc, eq, gte, inArray, ne, sql } from 'drizzle-orm';
 import type { Locale } from '@/i18n/routing';
 
 export type ListedPost = {
@@ -597,6 +597,104 @@ export async function getTeamRecent(teamId: number, limit = 10): Promise<Fixture
     limit,
     order: 'desc',
   });
+}
+
+export type TagRow = { id: number; slug: string; name: string };
+
+export async function getTagsForPost(postId: number): Promise<TagRow[]> {
+  const rows = await db
+    .select({ id: tags.id, slug: tags.slug, name: tags.name })
+    .from(postTags)
+    .innerJoin(tags, eq(tags.id, postTags.tagId))
+    .where(eq(postTags.postId, postId))
+    .orderBy(asc(tags.name));
+  return rows;
+}
+
+export async function getTagBySlug(slug: string, locale: Locale): Promise<TagRow | null> {
+  const rows = await db
+    .select({ id: tags.id, slug: tags.slug, name: tags.name })
+    .from(tags)
+    .where(and(eq(tags.locale, locale), eq(tags.slug, slug)))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function getPostsByTag(tagId: number, locale: Locale, limit = 30): Promise<ListedPost[]> {
+  const rows = (await db.execute(sql`
+    SELECT p.id, p.legacy_id AS "legacyId", p.slug, p.title, p.summary,
+           p.cover_image AS "coverImage", p.cover_image_width AS "coverImageWidth",
+           p.cover_image_height AS "coverImageHeight", p.published_at AS "publishedAt",
+           p.category_id AS "categoryId"
+      FROM posts p
+      JOIN post_tags pt ON pt.post_id = p.id
+     WHERE pt.tag_id = ${tagId}
+       AND p.locale = ${locale}
+       AND p.status = 'published'
+     ORDER BY p.published_at DESC NULLS LAST
+     LIMIT ${limit}
+  `)) as unknown as Array<Record<string, unknown>>;
+  return Promise.all(
+    rows.map(async (r) => ({
+      id: Number(r.id),
+      legacyId: r.legacyId === null ? null : Number(r.legacyId),
+      slug: String(r.slug),
+      title: String(r.title),
+      summary: (r.summary as string) ?? null,
+      coverImage: (r.coverImage as string) ?? null,
+      coverImageWidth: r.coverImageWidth === null ? null : Number(r.coverImageWidth),
+      coverImageHeight: r.coverImageHeight === null ? null : Number(r.coverImageHeight),
+      publishedAt: r.publishedAt ? new Date(r.publishedAt as string) : null,
+      category: await categoryPath(r.categoryId === null ? null : Number(r.categoryId)),
+    })),
+  );
+}
+
+function tagSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/['ʻ`]/g, '')
+    .replace(/[^a-z0-9а-яёЀ-ӿ]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 200);
+}
+
+/**
+ * Replace a post's tags with the given names. Names are split externally
+ * (comma-separated), so this just upserts each tag and rewrites the join table.
+ */
+export async function setPostTags(postId: number, locale: Locale, names: string[]): Promise<void> {
+  const cleaned = Array.from(
+    new Set(names.map((n) => n.trim()).filter((n) => n.length > 0 && n.length <= 100)),
+  );
+
+  // Delete existing links for this post.
+  await db.delete(postTags).where(eq(postTags.postId, postId));
+
+  if (cleaned.length === 0) return;
+
+  const tagIds: number[] = [];
+  for (const name of cleaned) {
+    const slug = tagSlug(name);
+    if (!slug) continue;
+    const found = await db
+      .select({ id: tags.id })
+      .from(tags)
+      .where(and(eq(tags.locale, locale), eq(tags.slug, slug)))
+      .limit(1);
+    if (found.length > 0) {
+      tagIds.push(found[0]!.id);
+    } else {
+      const inserted = await db
+        .insert(tags)
+        .values({ locale, slug, name })
+        .returning({ id: tags.id });
+      if (inserted[0]) tagIds.push(inserted[0].id);
+    }
+  }
+
+  if (tagIds.length === 0) return;
+  await db.insert(postTags).values(tagIds.map((tagId) => ({ postId, tagId })));
 }
 
 export type TeamStandingPosition = {

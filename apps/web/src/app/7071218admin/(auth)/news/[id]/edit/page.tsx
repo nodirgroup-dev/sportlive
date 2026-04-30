@@ -3,6 +3,7 @@ import { db, posts } from '@sportlive/db';
 import { eq } from 'drizzle-orm';
 import { NewsForm } from '../../_form';
 import { updatePost } from '../../../_actions/posts';
+import { getTagsForPost } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +15,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
   const rows = await db.select().from(posts).where(eq(posts.id, id)).limit(1);
   if (rows.length === 0) notFound();
   const p = rows[0]!;
+  const tags = await getTagsForPost(p.id);
 
   const action = updatePost.bind(null, id);
 
@@ -30,6 +32,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
         status: p.status as 'draft' | 'published' | 'archived',
         coverImage: p.coverImage,
         featured: p.featuredAt !== null,
+        tags: tags.map((t) => t.name).join(', '),
       }}
       action={action}
     />

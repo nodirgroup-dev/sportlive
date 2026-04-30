@@ -16,6 +16,7 @@ type FormPost = {
   status: 'draft' | 'published' | 'archived';
   coverImage: string | null;
   featured: boolean;
+  tags: string;
 };
 
 export async function NewsForm({
@@ -78,6 +79,21 @@ export async function NewsForm({
               defaultValue={post.summary ?? ''}
               className="textarea"
               style={{ minHeight: 80 }}
+            />
+            <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>
+              Если оставить пустым — автоматически возьмётся первый абзац статьи
+            </div>
+          </div>
+          <div className="field">
+            <label htmlFor="tags">Теги (через запятую)</label>
+            <input
+              id="tags"
+              name="tags"
+              type="text"
+              defaultValue={post.tags}
+              placeholder="Реал Мадрид, Лига чемпионов, трансферы"
+              className="input"
+              maxLength={500}
             />
           </div>
           <div className="field">

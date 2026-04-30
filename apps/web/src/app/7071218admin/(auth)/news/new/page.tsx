@@ -17,6 +17,7 @@ export default function NewPostPage() {
         status: 'draft',
         coverImage: '',
         featured: false,
+        tags: '',
       }}
       action={createPost}
     />

@@ -3,6 +3,8 @@ import { Link } from '@/i18n/navigation';
 import type { Route } from 'next';
 import { hasLocale } from '@/i18n/routing';
 import { getFooterPages } from '@/lib/db';
+import { NewsletterForm } from './newsletter-form';
+import { PushButton } from './push-button';
 
 const FOOTER_HEADINGS = {
   uz: { sections: 'Bo\'limlar', info: "Ma'lumot", lang: 'Til' },
@@ -61,6 +63,14 @@ export async function SiteFooter() {
                 </svg>
               </a>
             </div>
+            <div className="mt-6 max-w-md">
+              <NewsletterForm locale={locale} />
+            </div>
+            {process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ? (
+              <div className="mt-4">
+                <PushButton locale={locale} vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY} />
+              </div>
+            ) : null}
           </div>
 
           <div>

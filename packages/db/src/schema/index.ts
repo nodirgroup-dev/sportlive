@@ -12,3 +12,5 @@ export * from './comments';
 export * from './banners';
 export * from './live_entries';
 export * from './audit_log';
+export * from './push_subscriptions';
+export * from './newsletter';

@@ -6,6 +6,8 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
 import { recordAudit } from '@/lib/audit';
+import { autoSummary } from '@/lib/text';
+import { setPostTags } from '@/lib/db';
 
 function slugify(s: string): string {
   return s
@@ -35,6 +37,9 @@ export async function createPost(formData: FormData) {
   }
   const slug = slugRaw ? slugify(slugRaw) : slugify(title);
   const categoryId = categoryIdRaw ? parseInt(categoryIdRaw, 10) : null;
+  const finalSummary = summary ?? autoSummary(body);
+  const tagsRaw = ((formData.get('tags') as string) || '').trim();
+  const tagNames = tagsRaw ? tagsRaw.split(',').map((s) => s.trim()).filter(Boolean) : [];
 
   // groupId: pick max + 1 to avoid collision with legacy_id range
   const maxGroup = await db
@@ -50,19 +55,23 @@ export async function createPost(formData: FormData) {
       locale: locale as 'uz' | 'ru' | 'en',
       slug,
       title,
-      summary,
+      summary: finalSummary,
       body,
       authorId: user.id,
       categoryId,
       status,
       publishedAt: status === 'published' ? new Date() : null,
       metaTitle: title.slice(0, 300),
-      metaDescription: summary ? summary.replace(/<[^>]*>/g, '').slice(0, 500) : null,
+      metaDescription: finalSummary
+        ? finalSummary.replace(/<[^>]*>/g, '').slice(0, 500)
+        : null,
       groupId: newGroupId,
       coverImage,
       featuredAt: featured ? new Date() : null,
     })
     .returning({ id: posts.id });
+
+  await setPostTags(row!.id, locale as 'uz' | 'ru' | 'en', tagNames);
 
   await recordAudit({
     action: status === 'published' ? 'post.publish' : 'post.create',
@@ -93,6 +102,9 @@ export async function updatePost(id: number, formData: FormData) {
   if (!title || !body) throw new Error('title and body required');
   const slug = slugRaw ? slugify(slugRaw) : slugify(title);
   const categoryId = categoryIdRaw ? parseInt(categoryIdRaw, 10) : null;
+  const finalSummary = summary ?? autoSummary(body);
+  const tagsRaw = ((formData.get('tags') as string) || '').trim();
+  const tagNames = tagsRaw ? tagsRaw.split(',').map((s) => s.trim()).filter(Boolean) : [];
 
   const existing = await db.select().from(posts).where(eq(posts.id, id)).limit(1);
   if (existing.length === 0) throw new Error('post not found');
@@ -117,18 +129,22 @@ export async function updatePost(id: number, formData: FormData) {
     .set({
       slug,
       title,
-      summary,
+      summary: finalSummary,
       body,
       categoryId,
       status,
       publishedAt,
       metaTitle: title.slice(0, 300),
-      metaDescription: summary ? summary.replace(/<[^>]*>/g, '').slice(0, 500) : null,
+      metaDescription: finalSummary
+        ? finalSummary.replace(/<[^>]*>/g, '').slice(0, 500)
+        : null,
       coverImage,
       featuredAt,
       updatedAt: new Date(),
     })
     .where(eq(posts.id, id));
+
+  await setPostTags(id, existing[0]!.locale, tagNames);
 
   const statusFlippedToPublished = status === 'published' && !wasPublished;
   await recordAudit({
