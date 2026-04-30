@@ -10,3 +10,4 @@ export * from './static_pages';
 export * from './sessions';
 export * from './comments';
 export * from './banners';
+export * from './live_entries';

@@ -20,7 +20,7 @@ export type ArticleDetail = ListedPost & {
   metaTitle: string | null;
   metaDescription: string | null;
   metaKeywords: string | null;
-  author: { name: string } | null;
+  author: { id: number; name: string } | null;
   categoryId: number | null;
 };
 
@@ -104,10 +104,10 @@ export async function getPostByLegacyId(legacyId: number, locale: Locale): Promi
   if (rows.length === 0) return null;
   const r = rows[0]!;
   const cat = await categoryPath(r.categoryId);
-  let author: { name: string } | null = null;
+  let author: { id: number; name: string } | null = null;
   if (r.authorId) {
-    const a = await db.select({ name: users.name }).from(users).where(eq(users.id, r.authorId)).limit(1);
-    if (a[0]) author = { name: a[0].name };
+    const a = await db.select({ id: users.id, name: users.name }).from(users).where(eq(users.id, r.authorId)).limit(1);
+    if (a[0]) author = { id: a[0].id, name: a[0].name };
   }
   return { ...r, category: cat, author };
 }
@@ -260,6 +260,20 @@ export async function getUpcomingFixtures(daysAhead = 7, limit = 50): Promise<Fi
   return fixturesQuery({ from, to, statusIn: ['NS', 'TBD'], limit, order: 'asc' });
 }
 
+/** For homepage widget: live first, then nearest upcoming. */
+export async function getMatchSnapshot(limit = 6): Promise<FixtureRow[]> {
+  const live = await fixturesQuery({ live: true, limit: 6, order: 'asc' });
+  if (live.length >= limit) return live.slice(0, limit);
+  const upcoming = await fixturesQuery({
+    from: new Date(),
+    to: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    statusIn: ['NS', 'TBD'],
+    limit: limit - live.length,
+    order: 'asc',
+  });
+  return [...live, ...upcoming];
+}
+
 export async function getRecentResults(daysBack = 7, limit = 50): Promise<FixtureRow[]> {
   const from = new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000);
   const to = new Date();
@@ -327,6 +341,43 @@ export async function getApprovedComments(postId: number): Promise<CommentView[]
     .orderBy(asc(comments.createdAt));
 }
 
+export type AuthorPublic = {
+  id: number;
+  name: string;
+  bio: string | null;
+  avatar: string | null;
+};
+
+export async function getAuthorById(id: number): Promise<AuthorPublic | null> {
+  const r = await db
+    .select({ id: users.id, name: users.name, bio: users.bio, avatar: users.avatar })
+    .from(users)
+    .where(eq(users.id, id))
+    .limit(1);
+  return r[0] ?? null;
+}
+
+export async function getPostsByAuthor(authorId: number, locale: Locale, limit = 30): Promise<ListedPost[]> {
+  const rows = await db
+    .select({
+      id: posts.id,
+      legacyId: posts.legacyId,
+      slug: posts.slug,
+      title: posts.title,
+      summary: posts.summary,
+      coverImage: posts.coverImage,
+      coverImageWidth: posts.coverImageWidth,
+      coverImageHeight: posts.coverImageHeight,
+      publishedAt: posts.publishedAt,
+      categoryId: posts.categoryId,
+    })
+    .from(posts)
+    .where(and(eq(posts.locale, locale), eq(posts.status, 'published'), eq(posts.authorId, authorId)))
+    .orderBy(desc(posts.publishedAt))
+    .limit(limit);
+  return Promise.all(rows.map(async (r) => ({ ...r, category: await categoryPath(r.categoryId) })));
+}
+
 export type StandingsRow = {
   rank: number;
   groupName: string | null;
@@ -347,6 +398,39 @@ export type StandingsTable = {
   league: { id: number; name: string; logo: string | null; country: string | null; season: number };
   groups: Array<{ name: string | null; rows: StandingsRow[] }>;
 };
+
+export type LiveEntryView = {
+  id: number;
+  minute: number | null;
+  type: string;
+  body: string;
+  embedUrl: string | null;
+  pinned: number;
+  occurredAt: Date;
+  author: { id: number; name: string } | null;
+};
+
+export async function getLiveEntries(fixtureId: number): Promise<LiveEntryView[]> {
+  const rows = (await db.execute(sql`
+    SELECT le.id, le.minute, le.type, le.body, le.embed_url AS "embedUrl",
+           le.pinned, le.occurred_at AS "occurredAt",
+           u.id AS "authorId", u.name AS "authorName"
+      FROM live_entries le
+      LEFT JOIN users u ON u.id = le.author_id
+     WHERE le.fixture_id = ${fixtureId}
+     ORDER BY le.pinned DESC, le.occurred_at DESC
+  `)) as unknown as Array<Record<string, unknown>>;
+  return rows.map((r) => ({
+    id: Number(r.id),
+    minute: r.minute === null ? null : Number(r.minute),
+    type: String(r.type),
+    body: String(r.body),
+    embedUrl: (r.embedUrl as string) ?? null,
+    pinned: Number(r.pinned),
+    occurredAt: new Date(r.occurredAt as string),
+    author: r.authorId ? { id: Number(r.authorId), name: String(r.authorName) } : null,
+  }));
+}
 
 export type FixtureDetail = FixtureRow & {
   round: string | null;

@@ -7,6 +7,7 @@ import { getLatestPosts } from '@/lib/db';
 import { PostCard } from '@/components/post-card';
 import { PostHero, PostGridCard } from '@/components/post-hero';
 import { BannerSlot } from '@/components/banner-slot';
+import { MatchWidget } from '@/components/match-widget';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 60;
@@ -83,6 +84,10 @@ export default async function HomePage({
               <PostHero post={hero} locale={locale as Locale} />
             </section>
           ) : null}
+
+          <section className="mb-8">
+            <MatchWidget locale={locale as Locale} />
+          </section>
 
           <div className="mb-6 flex justify-center">
             <BannerSlot position="header" />

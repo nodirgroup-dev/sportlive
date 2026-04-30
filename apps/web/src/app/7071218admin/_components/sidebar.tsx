@@ -12,12 +12,14 @@ const NAV: Array<
 
   { type: 'section', label: 'Контент' },
   { type: 'item', href: '/7071218admin/news', label: 'Новости', icon: 'M4 5h13a2 2 0 0 1 2 2v10a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2V5zM7 9h7M7 13h7M7 17h4' },
+  { type: 'item', href: '/7071218admin/calendar', label: 'Календарь', icon: 'M3 4h18v18H3V4zM3 10h18M8 2v4M16 2v4' },
   { type: 'item', href: '/7071218admin/categories', label: 'Категории', icon: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z' },
   { type: 'item', href: '/7071218admin/static', label: 'Статические страницы', icon: 'M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm2 4h10v2H7V8Zm0 4h10v2H7v-2Zm0 4h6v2H7v-2Z' },
   { type: 'item', href: '/7071218admin/media', label: 'Медиатека', icon: 'M3 6h18v12H3zM3 10h18M9 14h6' },
 
   { type: 'section', label: 'Спорт' },
   { type: 'item', href: '/7071218admin/matches', label: 'Матчи', icon: 'M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Z' },
+  { type: 'item', href: '/7071218admin/live', label: 'Live blog', icon: 'M13 2L3 14h7l-1 8 10-12h-7l1-8z', badge: 'LIVE' },
   { type: 'item', href: '/7071218admin/standings', label: 'Турнирные таблицы', icon: 'M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4z' },
   { type: 'item', href: '/7071218admin/teams', label: 'Команды', icon: 'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM4 21v-1a6 6 0 0 1 12 0v1H4Z' },
 

@@ -207,7 +207,14 @@ export default async function CatchAllPage({
         <header className="mb-6">
           <h1 className="text-3xl font-bold leading-tight tracking-tight sm:text-4xl">{post.title}</h1>
           <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-neutral-500">
-            {post.author ? <span className="font-medium">{post.author.name}</span> : null}
+            {post.author ? (
+              <Link
+                href={`/author/${post.author.id}` as Parameters<typeof permanentRedirect>[0]}
+                className="font-medium hover:text-brand-700"
+              >
+                {post.author.name}
+              </Link>
+            ) : null}
             {dateFmt ? (
               <time dateTime={post.publishedAt!.toISOString()}>{dateFmt}</time>
             ) : null}

@@ -4,7 +4,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { hasLocale, type Locale } from '@/i18n/routing';
 import { absoluteUrl, localePath } from '@/lib/site';
-import { getFixtureById } from '@/lib/db';
+import { getFixtureById, getLiveEntries } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 30;
@@ -75,6 +75,27 @@ export default async function MatchPage({
 
   const eventsRaw = (f.raw as { events?: unknown[] } | null)?.events ?? [];
   const events = Array.isArray(eventsRaw) ? eventsRaw : [];
+  const liveEntries = await getLiveEntries(id);
+
+  const TYPE_LABEL: Record<string, string> = {
+    comment: '💬',
+    goal: '⚽',
+    yellow_card: '🟨',
+    red_card: '🟥',
+    sub: '🔄',
+    var: '📺',
+    kickoff: '🟢',
+    half_time: '⏸',
+    full_time: '🏁',
+    general: '📢',
+  };
+  const TYPE_TINT: Record<string, string> = {
+    goal: 'bg-green-50 border-green-200 dark:bg-green-900/10 dark:border-green-900/30',
+    yellow_card: 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/10 dark:border-yellow-900/30',
+    red_card: 'bg-red-50 border-red-200 dark:bg-red-900/10 dark:border-red-900/30',
+    sub: 'bg-blue-50 border-blue-200 dark:bg-blue-900/10 dark:border-blue-900/30',
+    var: 'bg-purple-50 border-purple-200 dark:bg-purple-900/10 dark:border-purple-900/30',
+  };
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-6 sm:py-10">
@@ -125,6 +146,48 @@ export default async function MatchPage({
         ) : null}
         {f.refereeName ? <div className="mt-1 text-xs text-neutral-500">🟡 {f.refereeName}</div> : null}
       </header>
+
+      {liveEntries.length > 0 ? (
+        <section className="mt-6">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-neutral-500">
+            {locale === 'uz' ? 'Jonli sharh' : locale === 'ru' ? 'Live-блог' : 'Live blog'}
+          </h2>
+          <div className="space-y-3">
+            {liveEntries.map((e) => (
+              <article
+                key={e.id}
+                className={`rounded-lg border p-4 ${TYPE_TINT[e.type] ?? 'bg-white border-neutral-200 dark:bg-neutral-950 dark:border-neutral-800'}`}
+              >
+                <header className="mb-1 flex items-center gap-2 text-sm">
+                  {e.minute !== null ? (
+                    <span className="font-mono text-base font-bold">{e.minute}&apos;</span>
+                  ) : null}
+                  <span className="text-base">{TYPE_LABEL[e.type] ?? '·'}</span>
+                  {e.pinned ? (
+                    <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300">
+                      📌 Pinned
+                    </span>
+                  ) : null}
+                  <time className="ml-auto text-xs text-neutral-500" dateTime={e.occurredAt.toISOString()}>
+                    {new Intl.DateTimeFormat(localeFmt[locale], { hour: '2-digit', minute: '2-digit' }).format(e.occurredAt)}
+                  </time>
+                </header>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed">{e.body}</p>
+                {e.embedUrl ? (
+                  <a
+                    href={e.embedUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1 inline-block text-xs text-brand-700 hover:underline"
+                  >
+                    ↗ {e.embedUrl}
+                  </a>
+                ) : null}
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {events.length > 0 ? (
         <section className="mt-6 rounded-lg border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-950">
