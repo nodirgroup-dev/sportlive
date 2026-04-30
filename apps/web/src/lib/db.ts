@@ -805,6 +805,78 @@ export async function getActiveBanners(
   `) as unknown as Promise<BannerView[]>;
 }
 
+export type AdjacentPost = {
+  legacyId: number | null;
+  slug: string;
+  title: string;
+  category: { path: string } | null;
+};
+
+/** Previous and next published posts, scoped to the same category if provided, else locale-wide. */
+export async function getAdjacentPosts(
+  postId: number,
+  categoryId: number | null,
+  locale: Locale,
+): Promise<{ prev: AdjacentPost | null; next: AdjacentPost | null }> {
+  const cur = await db
+    .select({ publishedAt: posts.publishedAt })
+    .from(posts)
+    .where(eq(posts.id, postId))
+    .limit(1);
+  const at = cur[0]?.publishedAt;
+  if (!at) return { prev: null, next: null };
+
+  const baseConds = [
+    eq(posts.locale, locale),
+    eq(posts.status, 'published'),
+    sql`${posts.publishedAt} IS NOT NULL`,
+  ];
+  if (categoryId) baseConds.push(eq(posts.categoryId, categoryId));
+
+  const [prevRows, nextRows] = await Promise.all([
+    db
+      .select({
+        id: posts.id,
+        legacyId: posts.legacyId,
+        slug: posts.slug,
+        title: posts.title,
+        categoryId: posts.categoryId,
+      })
+      .from(posts)
+      .where(and(...baseConds, sql`${posts.publishedAt} < ${at.toISOString()}::timestamptz`))
+      .orderBy(desc(posts.publishedAt))
+      .limit(1),
+    db
+      .select({
+        id: posts.id,
+        legacyId: posts.legacyId,
+        slug: posts.slug,
+        title: posts.title,
+        categoryId: posts.categoryId,
+      })
+      .from(posts)
+      .where(and(...baseConds, sql`${posts.publishedAt} > ${at.toISOString()}::timestamptz`))
+      .orderBy(asc(posts.publishedAt))
+      .limit(1),
+  ]);
+
+  const enrich = async (r: typeof prevRows[number] | undefined): Promise<AdjacentPost | null> => {
+    if (!r) return null;
+    const cat = await categoryPath(r.categoryId);
+    return {
+      legacyId: r.legacyId,
+      slug: r.slug,
+      title: r.title,
+      category: cat ? { path: cat.path } : null,
+    };
+  };
+
+  return {
+    prev: await enrich(prevRows[0]),
+    next: await enrich(nextRows[0]),
+  };
+}
+
 /** Most recently featured published post for the locale; null if none. */
 export async function getFeaturedHero(locale: Locale): Promise<ListedPost | null> {
   const rows = await db

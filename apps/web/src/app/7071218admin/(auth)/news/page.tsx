@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { db, posts, categories } from '@sportlive/db';
 import { desc, eq, sql } from 'drizzle-orm';
-import { bulkPostsAction } from '../_actions/posts';
+import { bulkPostsAction, togglePostFeature } from '../_actions/posts';
 
 export const dynamic = 'force-dynamic';
 
@@ -195,7 +195,25 @@ export default async function NewsList({
                       )
                     : '—'}
                 </td>
-                <td style={{ textAlign: 'right' }}>
+                <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                  <button
+                    type="submit"
+                    formAction={togglePostFeature}
+                    name="id"
+                    value={r.id}
+                    title={r.featuredAt ? 'Снять с главной' : 'Закрепить на главной'}
+                    className="btn"
+                    style={{
+                      height: 28,
+                      width: 28,
+                      padding: 0,
+                      marginRight: 6,
+                      fontSize: 14,
+                      opacity: r.featuredAt ? 1 : 0.4,
+                    }}
+                  >
+                    📌
+                  </button>
                   <Link href={`/7071218admin/news/${r.id}/edit`} className="btn" style={{ height: 28, fontSize: 11.5 }}>
                     Изменить
                   </Link>

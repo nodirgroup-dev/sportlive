@@ -10,6 +10,7 @@ import {
   getPostByLegacyId,
   getPostsByCategory,
   getRelatedPosts,
+  getAdjacentPosts,
   getStaticPage,
 } from '@/lib/db';
 import { CommentsSection } from '@/components/comments-section';
@@ -300,6 +301,49 @@ export default async function CatchAllPage({
                 <BannerSlot position="in_article_bottom" />
               </div>
             </>
+          );
+        })()}
+
+        {/* Prev / Next */}
+        {await (async () => {
+          const { prev, next } = await getAdjacentPosts(post.id, post.categoryId, locale);
+          if (!prev && !next) return null;
+          const labels: Record<Locale, { prev: string; next: string }> = {
+            uz: { prev: '← Oldingi', next: 'Keyingi →' },
+            ru: { prev: '← Предыдущая', next: 'Следующая →' },
+            en: { prev: '← Previous', next: 'Next →' },
+          };
+          const href = (p: NonNullable<typeof prev>) =>
+            `/${p.category?.path ?? ''}/${p.legacyId}-${p.slug}` as never;
+          return (
+            <nav className="mt-10 grid gap-3 border-t border-neutral-200 pt-6 sm:grid-cols-2 dark:border-neutral-800">
+              {prev ? (
+                <Link
+                  href={href(prev)}
+                  className="block rounded-lg border border-neutral-200 p-4 transition-colors hover:border-brand-500 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:border-brand-400 dark:hover:bg-neutral-900"
+                >
+                  <div className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                    {labels[locale].prev}
+                  </div>
+                  <div className="mt-1 line-clamp-2 text-sm font-medium">{prev.title}</div>
+                </Link>
+              ) : (
+                <div />
+              )}
+              {next ? (
+                <Link
+                  href={href(next)}
+                  className="block rounded-lg border border-neutral-200 p-4 text-right transition-colors hover:border-brand-500 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:border-brand-400 dark:hover:bg-neutral-900"
+                >
+                  <div className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                    {labels[locale].next}
+                  </div>
+                  <div className="mt-1 line-clamp-2 text-sm font-medium">{next.title}</div>
+                </Link>
+              ) : (
+                <div />
+              )}
+            </nav>
           );
         })()}
 

@@ -167,6 +167,37 @@ export async function deletePost(id: number) {
   redirect('/7071218admin/news');
 }
 
+export async function togglePostFeature(formData: FormData) {
+  const user = await getCurrentUser();
+  if (!user) redirect('/7071218admin/login');
+
+  const id = parseInt((formData.get('id') as string) || '', 10);
+  if (!Number.isFinite(id)) redirect('/7071218admin/news');
+
+  const existing = await db
+    .select({ featuredAt: posts.featuredAt, title: posts.title })
+    .from(posts)
+    .where(eq(posts.id, id))
+    .limit(1);
+  if (existing.length === 0) redirect('/7071218admin/news');
+
+  const wasFeatured = existing[0]!.featuredAt !== null;
+  await db
+    .update(posts)
+    .set({ featuredAt: wasFeatured ? null : new Date(), updatedAt: new Date() })
+    .where(eq(posts.id, id));
+
+  await recordAudit({
+    action: wasFeatured ? 'post.unfeature' : 'post.feature',
+    entityType: 'post',
+    entityId: id,
+    summary: existing[0]!.title.slice(0, 200),
+  });
+
+  revalidatePath('/7071218admin/news');
+  revalidatePath('/');
+}
+
 export async function bulkPostsAction(formData: FormData) {
   const user = await getCurrentUser();
   if (!user || (user.role !== 'admin' && user.role !== 'editor')) redirect('/7071218admin/login');
