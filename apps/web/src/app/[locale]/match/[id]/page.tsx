@@ -4,6 +4,8 @@ import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { hasLocale, type Locale } from '@/i18n/routing';
 import { absoluteUrl, localePath } from '@/lib/site';
+import { Link } from '@/i18n/navigation';
+import type { Route } from 'next';
 import { getFixtureById, getLiveEntries } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -109,12 +111,15 @@ export default async function MatchPage({
         </div>
 
         <div className="mb-3 grid grid-cols-[1fr_auto_1fr] items-center gap-4 sm:gap-8">
-          <div className="flex flex-col items-center gap-2 text-center">
+          <Link
+            href={`/team/${f.homeTeam.id}` as Route}
+            className="flex flex-col items-center gap-2 text-center hover:text-brand-700"
+          >
             {f.homeTeam.logo ? (
               <Image src={f.homeTeam.logo} alt="" width={64} height={64} className="h-12 w-12 object-contain sm:h-16 sm:w-16" />
             ) : null}
             <span className="text-sm font-bold sm:text-lg">{f.homeTeam.name}</span>
-          </div>
+          </Link>
 
           <div className="text-center">
             {showScore ? (
@@ -129,12 +134,15 @@ export default async function MatchPage({
             </div>
           </div>
 
-          <div className="flex flex-col items-center gap-2 text-center">
+          <Link
+            href={`/team/${f.awayTeam.id}` as Route}
+            className="flex flex-col items-center gap-2 text-center hover:text-brand-700"
+          >
             {f.awayTeam.logo ? (
               <Image src={f.awayTeam.logo} alt="" width={64} height={64} className="h-12 w-12 object-contain sm:h-16 sm:w-16" />
             ) : null}
             <span className="text-sm font-bold sm:text-lg">{f.awayTeam.name}</span>
-          </div>
+          </Link>
         </div>
 
         <div className="text-sm text-neutral-500">{date}</div>

@@ -488,6 +488,134 @@ export async function getFixtureById(id: number): Promise<FixtureDetail | null> 
   };
 }
 
+export type TeamDetail = {
+  id: number;
+  name: string;
+  code: string | null;
+  country: string | null;
+  logo: string | null;
+  founded: number | null;
+  venue: { id: number; name: string; city: string | null; capacity: number | null } | null;
+};
+
+export async function getTeamById(id: number): Promise<TeamDetail | null> {
+  const rows = (await db.execute(sql`
+    SELECT
+      t.id, t.name, t.code, t.country, t.logo, t.founded,
+      v.id AS "venueId", v.name AS "venueName", v.city AS "venueCity", v.capacity AS "venueCapacity"
+    FROM teams t
+    LEFT JOIN venues v ON v.id = t.venue_id
+    WHERE t.id = ${id}
+    LIMIT 1
+  `)) as unknown as Array<Record<string, unknown>>;
+  if (rows.length === 0) return null;
+  const r = rows[0]!;
+  return {
+    id: Number(r.id),
+    name: String(r.name),
+    code: (r.code as string) ?? null,
+    country: (r.country as string) ?? null,
+    logo: (r.logo as string) ?? null,
+    founded: r.founded === null ? null : Number(r.founded),
+    venue: r.venueId
+      ? {
+          id: Number(r.venueId),
+          name: String(r.venueName),
+          city: (r.venueCity as string) ?? null,
+          capacity: r.venueCapacity === null ? null : Number(r.venueCapacity),
+        }
+      : null,
+  };
+}
+
+async function teamFixturesQuery(opts: {
+  teamId: number;
+  from?: Date;
+  to?: Date;
+  statusIn?: string[];
+  limit: number;
+  order: 'asc' | 'desc';
+}): Promise<FixtureRow[]> {
+  const { teamId, from, to, statusIn, limit, order } = opts;
+  const conds: ReturnType<typeof sql>[] = [
+    sql`(f.home_team_id = ${teamId} OR f.away_team_id = ${teamId})`,
+  ];
+  if (from) conds.push(sql`f.kickoff_at >= ${from.toISOString()}::timestamptz`);
+  if (to) conds.push(sql`f.kickoff_at < ${to.toISOString()}::timestamptz`);
+  if (statusIn && statusIn.length > 0) {
+    conds.push(sql`f.status_short IN (${sql.join(statusIn.map((s) => sql`${s}`), sql`, `)})`);
+  }
+  const rows = (await db.execute(sql`
+    SELECT
+      f.id, f.kickoff_at AS "kickoffAt", f.status_short AS "statusShort",
+      f.status_long AS "statusLong", f.elapsed,
+      f.home_goals AS "homeGoals", f.away_goals AS "awayGoals",
+      l.id AS "leagueId", l.name AS "leagueName", l.logo AS "leagueLogo", l.country AS "leagueCountry",
+      ht.id AS "homeId", ht.name AS "homeName", ht.logo AS "homeLogo",
+      at.id AS "awayId", at.name AS "awayName", at.logo AS "awayLogo"
+    FROM fixtures f
+    JOIN leagues l ON l.id = f.league_id
+    JOIN teams ht ON ht.id = f.home_team_id
+    JOIN teams at ON at.id = f.away_team_id
+    WHERE ${sql.join(conds, sql` AND `)}
+    ORDER BY f.kickoff_at ${sql.raw(order === 'asc' ? 'ASC' : 'DESC')}
+    LIMIT ${limit}
+  `)) as unknown as Array<Record<string, unknown>>;
+  return rows.map((r) => ({
+    id: Number(r.id),
+    kickoffAt: new Date(r.kickoffAt as string),
+    statusShort: String(r.statusShort),
+    statusLong: (r.statusLong as string) ?? null,
+    elapsed: r.elapsed === null ? null : Number(r.elapsed),
+    homeGoals: r.homeGoals === null ? null : Number(r.homeGoals),
+    awayGoals: r.awayGoals === null ? null : Number(r.awayGoals),
+    league: {
+      id: Number(r.leagueId),
+      name: String(r.leagueName),
+      logo: (r.leagueLogo as string) ?? null,
+      country: (r.leagueCountry as string) ?? null,
+    },
+    homeTeam: { id: Number(r.homeId), name: String(r.homeName), logo: (r.homeLogo as string) ?? null },
+    awayTeam: { id: Number(r.awayId), name: String(r.awayName), logo: (r.awayLogo as string) ?? null },
+  }));
+}
+
+export async function getTeamUpcoming(teamId: number, limit = 10): Promise<FixtureRow[]> {
+  return teamFixturesQuery({
+    teamId,
+    from: new Date(),
+    statusIn: ['NS', 'TBD'],
+    limit,
+    order: 'asc',
+  });
+}
+
+export async function getTeamRecent(teamId: number, limit = 10): Promise<FixtureRow[]> {
+  return teamFixturesQuery({
+    teamId,
+    statusIn: ['FT', 'AET', 'PEN', 'AWD', 'WO'],
+    limit,
+    order: 'desc',
+  });
+}
+
+export type TeamFormResult = 'W' | 'D' | 'L';
+
+export function teamFormFromFixtures(teamId: number, recent: FixtureRow[]): TeamFormResult[] {
+  return recent
+    .slice(0, 5)
+    .reverse()
+    .map((f) => {
+      const isHome = f.homeTeam.id === teamId;
+      const my = isHome ? f.homeGoals : f.awayGoals;
+      const their = isHome ? f.awayGoals : f.homeGoals;
+      if (my === null || their === null) return 'D';
+      if (my > their) return 'W';
+      if (my < their) return 'L';
+      return 'D';
+    });
+}
+
 export async function searchPosts(q: string, locale: Locale, limit = 30): Promise<ListedPost[]> {
   const term = `%${q.trim().replace(/[%_]/g, '\\$&')}%`;
   if (!term || term.length < 4) return [];

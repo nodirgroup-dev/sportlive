@@ -26,5 +26,15 @@
   "footer": {
     "rights": "All rights reserved",
     "language": "Language"
+  },
+  "team": {
+    "founded": "Founded",
+    "country": "Country",
+    "stadium": "Stadium",
+    "form": "Form",
+    "upcoming": "Upcoming",
+    "recent": "Recent results",
+    "noUpcoming": "No upcoming matches",
+    "noRecent": "No recent matches"
   }
 }

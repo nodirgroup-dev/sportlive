@@ -26,5 +26,15 @@
   "footer": {
     "rights": "Barcha huquqlar himoyalangan",
     "language": "Til"
+  },
+  "team": {
+    "founded": "Tashkil etilgan",
+    "country": "Mamlakat",
+    "stadium": "Stadion",
+    "form": "So'nggi natijalar",
+    "upcoming": "Bo'lajak o'yinlar",
+    "recent": "So'nggi o'yinlar",
+    "noUpcoming": "Bo'lajak o'yinlar yo'q",
+    "noRecent": "So'nggi o'yinlar yo'q"
   }
 }
