@@ -120,7 +120,7 @@ async function upsertFixture(item) {
   const tm = item.teams;
   const goals = item.goals;
   const score = item.score;
-  const venueId = f.venue?.id ?? null;
+  const venueId = f.venue?.id && f.venue.id > 0 ? f.venue.id : null;
 
   if (venueId && f.venue?.name) {
     await sql`
