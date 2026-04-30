@@ -123,6 +123,120 @@ export type AdminStrings = {
   crumb_admin: string;
 };
 
+// =================== Per-page info banners ===================
+
+export type PageInfoEntry = { title: string; sub?: string; info: string };
+export type PageId =
+  | 'dashboard'
+  | 'news'
+  | 'news_new'
+  | 'news_edit'
+  | 'news_revisions'
+  | 'calendar'
+  | 'categories'
+  | 'static'
+  | 'media'
+  | 'matches'
+  | 'live'
+  | 'standings'
+  | 'teams'
+  | 'comments'
+  | 'users'
+  | 'authors'
+  | 'push'
+  | 'newsletter'
+  | 'rss'
+  | 'banners'
+  | 'analytics'
+  | 'seo'
+  | 'audit'
+  | 'backups'
+  | 'settings';
+
+export const PAGE_INFO: Record<AdminLang, Record<PageId, PageInfoEntry>> = {
+  ru: {
+    dashboard: { title: 'Дашборд', sub: 'Обзор контента и аудитории', info: 'Сводка по сайту: просмотры, очередь модерации, подписки, ТОП-статьи. Сюда смотрите утром, чтобы понять, что нужно срочно сделать.' },
+    news: { title: 'Новости', info: 'Все статьи во всех языках. Здесь можно создать новую, опубликовать, закрепить на главной, продублировать, или массово обработать выделенные.' },
+    news_new: { title: 'Новая статья', info: 'Заголовок, лид и тело — обязательные поля. Если оставить лид пустым, он сгенерируется из первого абзаца. Шорткоды [fixture id=N], [team id=N], [youtube id=...], [tweet id=...], [bet match=N] заменяются на карточки на сайте.' },
+    news_edit: { title: 'Редактирование статьи', info: 'Все изменения сохраняются как новая ревизия — можно откатить через «История». Чтобы запланировать публикацию, поставьте статус «Запланировать» и укажите дату.' },
+    news_revisions: { title: 'История изменений', info: 'Снимки тела/заголовка перед каждым сохранением. «Восстановить» сначала сохранит текущую версию (откат сам обратим), затем вернёт выбранную.' },
+    calendar: { title: 'Календарь', info: 'Все опубликованные и запланированные статьи по дням. Цветная полоска слева: зелёный — опубликовано, оранжевый — запланировано, серый — черновик.' },
+    categories: { title: 'Категории', info: 'Иерархия рубрик. Slug категории формирует URL статьи, поэтому переименование сломает существующие ссылки — используйте редиректы.' },
+    static: { title: 'Статические страницы', info: 'Страницы вроде «О сайте» или «Политика конфиденциальности». Включите «Показать в подвале», чтобы ссылка появилась внизу сайта.' },
+    media: { title: 'Медиатека', info: 'Загруженные изображения. Все картинки автоматически конвертируются в WebP и уменьшаются до 1600px ширины при загрузке.' },
+    matches: { title: 'Матчи', info: 'Календарь матчей из API-Football. Cron «*/30 * * * *» обновляет статус и счёт. Откройте матч, чтобы вести live-блог.' },
+    live: { title: 'Live blog', info: 'Список ближайших матчей с количеством записей. Откройте, чтобы добавлять минутные комментарии: гол, карточки, замены.' },
+    standings: { title: 'Турнирные таблицы', info: 'Текущие таблицы лиг (премьер-лига, ла лига и т.д.). Cron «15 */6 * * *» обновляет очки и места.' },
+    teams: { title: 'Команды', info: 'Команды из API-Football. Логотип, страна, год основания и стадион подтягиваются автоматически. Cron «0 4 * * 0» обновляет данные.' },
+    comments: { title: 'Комментарии', info: 'Очередь модерации. AI-фильтр автоматически помечает спам (score ≥ 80) и одобряет чистые (< 30). Между ними — на ручной модерации.' },
+    users: { title: 'Пользователи', info: 'Учётные записи администраторов и редакторов. Роль admin может всё, editor — публиковать, author — только свои статьи.' },
+    authors: { title: 'Авторы', info: 'Метрики продуктивности авторов: за 7 дней, всего опубликовано, суммарные просмотры. Биографии и аватары видны на странице автора.' },
+    push: { title: 'Push-уведомления', info: 'Активные подписчики на push в браузере. Кнопка «Отправить» рассылает уведомление с заголовком и обложкой статьи на их устройства.' },
+    newsletter: { title: 'Email рассылка', info: 'Подписчики на еженедельный дайджест. Cron «0 9 * * 1» (понедельник 9:00) рассылает письма. Кнопка «Экспорт CSV» — скачать список.' },
+    rss: { title: 'RSS импорт', info: 'Импорт статей из RSS-источников конкурентов в виде черновиков. Если включён AI — текст переписывается через Claude, чтобы избежать дублирования.' },
+    banners: { title: 'Баннеры', info: 'Рекламные блоки. Позиции: header, sidebar, in_article_top/bottom. Можно загрузить картинку или вставить HTML (для AdSense слотов).' },
+    analytics: { title: 'Аналитика', info: 'Метрики просмотров, источников трафика, популярных статей. Подтягивается из Cloudflare Web Analytics, если настроен токен.' },
+    seo: { title: 'SEO', info: 'Карта сайта, sitemap.xml, RSS, Google News XML, robots.txt — статус генерации и индекс покрытия.' },
+    audit: { title: 'Журнал действий', info: 'Все действия редакторов: публикации, удаления, модерация комментариев, push-рассылки, входы в систему. Используйте поиск, чтобы найти конкретное действие.' },
+    backups: { title: 'Бэкапы', info: 'Ежедневные дампы базы (cron «30 3 * * *»). Хранятся 14 дней локально на VPS. Если настроен offsite-target, дублируются на S3/B2/rsync.' },
+    settings: { title: 'Настройки', info: 'Глобальные параметры сайта: название, описание, контакты, ключи API. Изменения применяются после перезапуска контейнера.' },
+  },
+  uz: {
+    dashboard: { title: 'Boshqaruv paneli', sub: 'Kontent va auditoriya umumiy ko‘rinishi', info: 'Sayt bo‘yicha umumiy: ko‘rishlar, moderatsiya navbati, obunalar, eng ko‘p o‘qilgan maqolalar. Ertalab nimaga e’tibor berish kerakligini ko‘rish uchun shu yerga kiring.' },
+    news: { title: 'Yangiliklar', info: 'Barcha tilllardagi maqolalar. Yangi maqola yaratish, nashr etish, bosh sahifaga biriktirish, dublikat qilish yoki tanlanganlarni ommaviy boshqarish.' },
+    news_new: { title: 'Yangi maqola', info: 'Sarlavha, lid va asosiy matn — majburiy. Lidni bo‘sh qoldirsangiz, birinchi xatboshidan avtomatik olinadi. Shortcodelar: [fixture id=N], [team id=N], [youtube id=...], [tweet id=...], [bet match=N] saytda kartochkalarga aylanadi.' },
+    news_edit: { title: 'Maqolani tahrirlash', info: 'Har bir saqlash yangi reviziya yaratadi — «Tarix» orqali qaytarish mumkin. Nashrni rejalashtirish uchun statusni «Запланировать»ga qo‘ying va sanani belgilang.' },
+    news_revisions: { title: 'Tahrirlar tarixi', info: 'Har saqlashdan oldingi tan/sarlavha snapshotlari. «Qayta tiklash» avval joriy versiyani saqlaydi (qaytarish ham reversible), keyin tanlanganini tiklaydi.' },
+    calendar: { title: 'Kalendar', info: 'Barcha nashr qilingan va rejalashtirilgan maqolalar kun bo‘yicha. Chap chiziq rangi: yashil — nashr qilingan, sariq — rejalashtirilgan, kulrang — qoralama.' },
+    categories: { title: 'Kategoriyalar', info: 'Rubrikalar ierarxiyasi. Kategoriya slug-i maqola URL’ini shakllantiradi, shu sababli nomini o‘zgartirish eski havolalarni buzadi — redirektlardan foydalaning.' },
+    static: { title: 'Statik sahifalar', info: 'Sayt haqida yoki Maxfiylik siyosati kabi sahifalar. Saytning quyi qismida ko‘rinishi uchun «Подвалда ko‘rsatish»ni yoqing.' },
+    media: { title: 'Mediakitoblar', info: 'Yuklangan rasmlar. Barcha rasmlar avtomatik WebP formatiga o‘tkaziladi va 1600px gacha kichraytiriladi.' },
+    matches: { title: 'O‘yinlar', info: 'API-Football’dan o‘yin kalendari. Cron «*/30 * * * *» status va hisobni yangilaydi. Live blog yuritish uchun matchni oching.' },
+    live: { title: 'Jonli blog', info: 'Yaqin o‘yinlar va yozuvlar soni. Daqiqalik sharhlar qo‘shish uchun matchni oching: gol, kartochkalar, almashuvlar.' },
+    standings: { title: 'Turnir jadvallari', info: 'Liga jadvallari (Premier liga, La liga va h.k.). Cron «15 */6 * * *» ochkolar va o‘rinlarni yangilaydi.' },
+    teams: { title: 'Jamoalar', info: 'API-Football’dan jamoalar. Logotip, mamlakat, asos solingan yili va stadion avtomatik tortiladi. Cron «0 4 * * 0» ma’lumotni yangilaydi.' },
+    comments: { title: 'Izohlar', info: 'Moderatsiya navbati. AI-filtr avtomatik spam belgilaydi (score ≥ 80) va toza bo‘lganlarni tasdiqlaydi (< 30). Oraliqdagilar — qo‘l moderatsiyasida.' },
+    users: { title: 'Foydalanuvchilar', info: 'Adminstratorlar va muharrirlar. admin roli — barchasi mumkin, editor — nashr etish, author — faqat o‘z maqolalari.' },
+    authors: { title: 'Mualliflar', info: 'Mualliflarning produktivlik metriklari: 7 kunda, jami nashr qilingan, jami ko‘rishlar. Bio va avatar sayt muallif sahifasida ko‘rinadi.' },
+    push: { title: 'Push-bildirishnomalar', info: 'Brauzerda push uchun faol obunachilar. «Yuborish» tugmasi maqola sarlavhasi va muqovasini ularning qurilmasiga yuboradi.' },
+    newsletter: { title: 'Email yuborish', info: 'Haftalik dayjest obunachilari. Cron «0 9 * * 1» (Du 9:00) yuboradi. «CSV eksport» tugmasi ro‘yxatni yuklaydi.' },
+    rss: { title: 'RSS import', info: 'Raqobatchilar RSS’idan maqolalarni qoralama sifatida import qilish. AI yoqilgan bo‘lsa — matn Claude orqali qayta yoziladi.' },
+    banners: { title: 'Bannerlar', info: 'Reklama bloklari. Pozitsiyalar: header, sidebar, in_article_top/bottom. Rasm yuklash yoki HTML (AdSense slotlari uchun) qo‘yish mumkin.' },
+    analytics: { title: 'Analitika', info: 'Ko‘rishlar, trafik manbalari, mashhur maqolalar. Cloudflare Web Analytics token sozlangan bo‘lsa, undan tortiladi.' },
+    seo: { title: 'SEO', info: 'Sayt xaritasi, sitemap.xml, RSS, Google News XML, robots.txt — generatsiya holati va indekslash qoplama.' },
+    audit: { title: 'Harakatlar jurnali', info: 'Muharrirlar barcha harakatlari: nashr, o‘chirish, izoh moderatsiyasi, push yuborish, kirishlar. Aniq harakatni topish uchun qidiruvdan foydalaning.' },
+    backups: { title: 'Zaxira nusxalar', info: 'Bazaning kunlik dampi (cron «30 3 * * *»). VPS’da 14 kun saqlanadi. Offsite-target sozlangan bo‘lsa, S3/B2/rsync’ga ham yuboriladi.' },
+    settings: { title: 'Sozlamalar', info: 'Sayt umumiy parametrlari: nom, tavsif, aloqalar, API kalitlar. O‘zgarishlar konteyner qayta ishga tushgandan keyin qo‘llaniladi.' },
+  },
+  en: {
+    dashboard: { title: 'Dashboard', sub: 'Content & audience overview', info: 'Site-wide summary: views, moderation queue, subscriptions, top stories. Check here in the morning to see what needs attention.' },
+    news: { title: 'News', info: 'All articles across all locales. Create new ones, publish, pin to homepage, duplicate, or run bulk actions on selections.' },
+    news_new: { title: 'New article', info: 'Title, lede and body are required. If you leave the lede empty, the first paragraph is used. Shortcodes [fixture id=N], [team id=N], [youtube id=...], [tweet id=...], [bet match=N] render rich cards on the public site.' },
+    news_edit: { title: 'Edit article', info: 'Every save creates a revision — roll back via "History". To schedule publication, set status to "Schedule" and pick a date.' },
+    news_revisions: { title: 'Revision history', info: 'Snapshots of body/title before each save. "Restore" first snapshots the current version (so restore is reversible), then applies the chosen one.' },
+    calendar: { title: 'Calendar', info: 'All published & scheduled articles by day. Left stripe colour: green — published, amber — scheduled, gray — draft.' },
+    categories: { title: 'Categories', info: 'Section hierarchy. Category slug shapes the article URL, so renaming will break old links — use redirects.' },
+    static: { title: 'Static pages', info: 'Pages like "About" or "Privacy". Toggle "Show in footer" to surface the link at the bottom of the public site.' },
+    media: { title: 'Media library', info: 'Uploaded images. All uploads are auto-converted to WebP and resized to 1600px wide.' },
+    matches: { title: 'Matches', info: 'Fixture calendar from API-Football. Cron "*/30 * * * *" updates status and score. Open a match to run a live blog.' },
+    live: { title: 'Live blog', info: 'Upcoming matches with entry counts. Open a match to post minute-by-minute commentary: goals, cards, subs.' },
+    standings: { title: 'Standings', info: 'Current league tables (Premier League, La Liga…). Cron "15 */6 * * *" updates points and positions.' },
+    teams: { title: 'Teams', info: 'Teams from API-Football. Logo, country, founding year and stadium are auto-pulled. Cron "0 4 * * 0" refreshes metadata.' },
+    comments: { title: 'Comments', info: 'Moderation queue. AI filter marks spam (score ≥ 80) and auto-approves clean ones (< 30). Anything in between waits for human review.' },
+    users: { title: 'Users', info: 'Admin and editor accounts. admin can do anything, editor can publish, author can manage their own articles only.' },
+    authors: { title: 'Authors', info: 'Author productivity metrics: last 7 days, total published, total views. Bios & avatars show on the public author page.' },
+    push: { title: 'Push notifications', info: 'Active browser-push subscribers. "Send" pushes a notification with the article title and cover image to their devices.' },
+    newsletter: { title: 'Newsletter', info: 'Weekly digest subscribers. Cron "0 9 * * 1" (Mon 9:00) sends the digest. "Export CSV" downloads the list.' },
+    rss: { title: 'RSS import', info: 'Import articles from competitor RSS feeds as drafts. If AI is enabled, text is rewritten via Claude to avoid duplication.' },
+    banners: { title: 'Banners', info: 'Ad slots. Positions: header, sidebar, in_article_top/bottom. Upload an image or paste HTML (for AdSense slots).' },
+    analytics: { title: 'Analytics', info: 'Pageviews, traffic sources, top stories. Pulled from Cloudflare Web Analytics if a token is configured.' },
+    seo: { title: 'SEO', info: 'Sitemap, sitemap.xml, RSS, Google News XML, robots.txt — generation status and indexing coverage.' },
+    audit: { title: 'Audit log', info: 'Every editor action: publishes, deletes, comment moderation, push broadcasts, sign-ins. Use search to find a specific action.' },
+    backups: { title: 'Backups', info: 'Daily DB dumps (cron "30 3 * * *"). Kept 14 days locally on VPS. If an offsite target is set, also pushed to S3/B2/rsync.' },
+    settings: { title: 'Settings', info: 'Site-wide parameters: name, description, contacts, API keys. Changes apply after the container restarts.' },
+  },
+};
+
 export const ADMIN_T: Record<AdminLang, AdminStrings> = {
   ru: {
     searchPlaceholder: 'Поиск по новостям…',

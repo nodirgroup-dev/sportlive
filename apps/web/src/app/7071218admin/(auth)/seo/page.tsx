@@ -1,5 +1,6 @@
 import { db, posts, redirects, staticPages } from '@sportlive/db';
 import { and, eq, gte, sql } from 'drizzle-orm';
+import { AdminPageHeader } from '../../_components/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,12 +31,7 @@ export default async function SeoPage() {
 
   return (
     <>
-      <div className="page-h">
-        <div>
-          <h1>SEO</h1>
-          <div className="sub">Sitemap, RSS, Google News, robots</div>
-        </div>
-      </div>
+      <AdminPageHeader pageId="seo" />
 
       <div className="grid-4">
         <div className="tile">

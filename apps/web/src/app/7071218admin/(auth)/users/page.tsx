@@ -1,5 +1,6 @@
 import { db, users, posts } from '@sportlive/db';
 import { eq, sql, asc } from 'drizzle-orm';
+import { AdminPageHeader } from '../../_components/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,12 +47,7 @@ export default async function UsersPage() {
 
   return (
     <>
-      <div className="page-h">
-        <div>
-          <h1>Пользователи</h1>
-          <div className="sub">{list.length} аккаунтов</div>
-        </div>
-      </div>
+      <AdminPageHeader pageId="users">{list.length} аккаунтов</AdminPageHeader>
 
       <div className="table-wrap">
         <table className="table">

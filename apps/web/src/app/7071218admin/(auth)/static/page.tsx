@@ -3,6 +3,7 @@ import { db, staticPages } from '@sportlive/db';
 import { asc } from 'drizzle-orm';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { deleteStaticPage } from '../_actions/static';
+import { AdminPageHeader } from '../../_components/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,18 +20,17 @@ export default async function StaticPagesList({
 
   return (
     <>
-      <div className="page-h">
-        <div>
-          <h1>Статические страницы</h1>
-          <div className="sub">{list.length} страниц</div>
-        </div>
-        <div className="actions">
+      <AdminPageHeader
+        pageId="static"
+        actions={
           <Link href="/7071218admin/static/new" className="btn primary">
             <Plus size={14} strokeWidth={2.5} />
             Новая страница
           </Link>
-        </div>
-      </div>
+        }
+      >
+        {list.length} страниц
+      </AdminPageHeader>
 
       {sp.saved ? (
         <div style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#86efac', marginBottom: 14, fontSize: 12.5 }}>

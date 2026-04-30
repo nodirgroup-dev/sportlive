@@ -1,5 +1,6 @@
 import { db, posts } from '@sportlive/db';
 import { desc, isNotNull, sql } from 'drizzle-orm';
+import { AdminPageHeader } from '../../_components/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,12 +43,9 @@ export default async function MediaPage({
 
   return (
     <>
-      <div className="page-h">
-        <div>
-          <h1>Медиатека</h1>
-          <div className="sub">{total.toLocaleString('ru-RU')} обложек статей · стр. {page}/{totalPages}</div>
-        </div>
-      </div>
+      <AdminPageHeader pageId="media">
+        {total.toLocaleString('ru-RU')} обложек статей · стр. {page}/{totalPages}
+      </AdminPageHeader>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 'var(--gap)' }}>
         {rows.map((r) => (

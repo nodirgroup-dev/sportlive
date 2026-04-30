@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { db, posts, categories, staticPages } from '@sportlive/db';
 import { eq, sql } from 'drizzle-orm';
 import { Plus } from 'lucide-react';
+import { AdminPageHeader } from '../_components/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -79,18 +80,15 @@ export default async function Dashboard() {
 
   return (
     <>
-      <div className="page-h">
-        <div>
-          <h1>Дашборд</h1>
-          <div className="sub">Обзор контента и аудитории</div>
-        </div>
-        <div className="actions">
+      <AdminPageHeader
+        pageId="dashboard"
+        actions={
           <Link href="/7071218admin/news/new" className="btn primary">
             <Plus size={14} strokeWidth={2.5} />
             Создать статью
           </Link>
-        </div>
-      </div>
+        }
+      />
 
       <div className="grid-4">
         <div className="tile">

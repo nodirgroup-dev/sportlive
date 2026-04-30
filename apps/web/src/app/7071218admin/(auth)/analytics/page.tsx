@@ -1,5 +1,6 @@
 import { db, posts, categories, comments } from '@sportlive/db';
 import { eq, sql, and, gte, desc } from 'drizzle-orm';
+import { AdminPageHeader } from '../../_components/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -85,12 +86,7 @@ export default async function AnalyticsPage() {
 
   return (
     <>
-      <div className="page-h">
-        <div>
-          <h1>Аналитика</h1>
-          <div className="sub">Активность контента и аудитории</div>
-        </div>
-      </div>
+      <AdminPageHeader pageId="analytics" />
 
       <div className="grid-4">
         <div className="tile">

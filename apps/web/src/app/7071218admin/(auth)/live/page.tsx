@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { db, fixtures, leagues, teams } from '@sportlive/db';
 import { and, asc, eq, gte, lt, sql } from 'drizzle-orm';
+import { AdminPageHeader } from '../../_components/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,14 +39,7 @@ export default async function LiveBlogIndex() {
 
   return (
     <>
-      <div className="page-h">
-        <div>
-          <h1>Live blog</h1>
-          <div className="sub">
-            Минутные комментарии — выберите матч, чтобы открыть live-blog
-          </div>
-        </div>
-      </div>
+      <AdminPageHeader pageId="live" />
 
       <div className="table-wrap">
         <table className="table">

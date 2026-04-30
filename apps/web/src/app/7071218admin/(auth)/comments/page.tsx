@@ -1,6 +1,7 @@
 import { db, comments, posts } from '@sportlive/db';
 import { desc, eq, sql } from 'drizzle-orm';
 import { setCommentStatus, deleteComment } from '../_actions/comments';
+import { AdminPageHeader } from '../../_components/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,12 +58,7 @@ export default async function CommentsPage({
 
   return (
     <>
-      <div className="page-h">
-        <div>
-          <h1>Комментарии</h1>
-          <div className="sub">Модерация пользовательских комментариев</div>
-        </div>
-      </div>
+      <AdminPageHeader pageId="comments" />
 
       <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--line)', marginBottom: 16 }}>
         {TABS.map((t) => {

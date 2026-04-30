@@ -7,6 +7,7 @@ import {
   deleteRssSource,
   importRssNow,
 } from '../_actions/rss';
+import { AdminPageHeader } from '../../_components/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,12 +39,7 @@ export default async function RssPage({
 
   return (
     <>
-      <div className="page-h">
-        <div>
-          <h1>RSS импорт</h1>
-          <div className="sub">{sources.length} источников</div>
-        </div>
-      </div>
+      <AdminPageHeader pageId="rss">{sources.length} источников</AdminPageHeader>
 
       {sp.ok ? (
         <div style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#86efac', marginBottom: 14, fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 8 }}>

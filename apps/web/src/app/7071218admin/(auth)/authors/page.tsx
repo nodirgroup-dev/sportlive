@@ -1,5 +1,6 @@
 import { db, users, posts } from '@sportlive/db';
 import { asc, sql, inArray, max } from 'drizzle-orm';
+import { AdminPageHeader } from '../../_components/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,12 +56,7 @@ export default async function AuthorsPage() {
 
   return (
     <>
-      <div className="page-h">
-        <div>
-          <h1>Авторы</h1>
-          <div className="sub">{list.length} журналистов и редакторов</div>
-        </div>
-      </div>
+      <AdminPageHeader pageId="authors">{list.length} журналистов и редакторов</AdminPageHeader>
 
       <div className="grid-3">
         {list.map((a) => (

@@ -1,6 +1,7 @@
 import { db, teams } from '@sportlive/db';
 import { asc, sql } from 'drizzle-orm';
 import { CircleDot } from 'lucide-react';
+import { AdminPageHeader } from '../../_components/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,14 +12,9 @@ export default async function TeamsPage() {
 
   return (
     <>
-      <div className="page-h">
-        <div>
-          <h1>Команды</h1>
-          <div className="sub">
-            Показано {list.length} из {total.toLocaleString('ru-RU')}
-          </div>
-        </div>
-      </div>
+      <AdminPageHeader pageId="teams">
+        Показано {list.length} из {total.toLocaleString('ru-RU')}
+      </AdminPageHeader>
 
       {total === 0 ? (
         <div className="stub">

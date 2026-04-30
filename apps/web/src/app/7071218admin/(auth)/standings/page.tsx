@@ -1,5 +1,6 @@
 import { db, leagues, fixtures } from '@sportlive/db';
 import { asc, eq, sql } from 'drizzle-orm';
+import { AdminPageHeader } from '../../_components/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,12 +24,7 @@ export default async function StandingsPage() {
 
   return (
     <>
-      <div className="page-h">
-        <div>
-          <h1>Турниры и таблицы</h1>
-          <div className="sub">{list.length} чемпионатов</div>
-        </div>
-      </div>
+      <AdminPageHeader pageId="standings">{list.length} чемпионатов</AdminPageHeader>
 
       {list.length === 0 ? (
         <div className="stub">

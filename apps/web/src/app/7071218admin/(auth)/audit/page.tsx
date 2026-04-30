@@ -1,5 +1,6 @@
 import { db, auditLog } from '@sportlive/db';
 import { desc, eq, sql } from 'drizzle-orm';
+import { AdminPageHeader } from '../../_components/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,12 +61,7 @@ export default async function AuditLogPage({
 
   return (
     <>
-      <div className="page-h">
-        <div>
-          <h1>Журнал действий</h1>
-          <div className="sub">{list.length} последних записей</div>
-        </div>
-      </div>
+      <AdminPageHeader pageId="audit">{list.length} последних записей</AdminPageHeader>
 
       <form className="card" style={{ padding: 12, display: 'flex', gap: 10, marginBottom: 14, alignItems: 'center' }}>
         <input

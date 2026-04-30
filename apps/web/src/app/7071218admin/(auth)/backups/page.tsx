@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
+import { AdminPageHeader } from '../../_components/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,15 +44,10 @@ export default async function BackupsPage() {
 
   return (
     <>
-      <div className="page-h">
-        <div>
-          <h1>Бэкапы</h1>
-          <div className="sub">
-            {files.length} файлов · {fmtBytes(totalSize)} ·{' '}
-            <span style={{ fontFamily: 'var(--font-mono)' }}>{BACKUP_DIR}</span>
-          </div>
-        </div>
-      </div>
+      <AdminPageHeader pageId="backups">
+        {files.length} файлов · {fmtBytes(totalSize)} ·{' '}
+        <span style={{ fontFamily: 'var(--font-mono)' }}>{BACKUP_DIR}</span>
+      </AdminPageHeader>
 
       <div className="card" style={{ padding: 14, marginBottom: 14, fontSize: 12.5, color: 'var(--text-2)' }}>
         Бэкапы создаются ежедневно в 03:30 UTC через{' '}

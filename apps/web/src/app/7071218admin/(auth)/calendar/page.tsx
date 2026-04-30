@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { db, posts } from '@sportlive/db';
 import { and, gte, lt, desc } from 'drizzle-orm';
+import { AdminPageHeader } from '../../_components/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -77,25 +78,24 @@ export default async function EditorialCalendar({
 
   return (
     <>
-      <div className="page-h">
-        <div>
-          <h1>Календарь</h1>
-          <div className="sub">
-            {fmtMonth} · {list.length} статей за месяц
-          </div>
-        </div>
-        <div className="actions">
-          <Link href={`?m=${prevM}`} className="btn">
-            ← {prevM}
-          </Link>
-          <Link href="/7071218admin/calendar" className="btn">
-            Сегодня
-          </Link>
-          <Link href={`?m=${nextM}`} className="btn">
-            {nextM} →
-          </Link>
-        </div>
-      </div>
+      <AdminPageHeader
+        pageId="calendar"
+        actions={
+          <>
+            <Link href={`?m=${prevM}`} className="btn">
+              ← {prevM}
+            </Link>
+            <Link href="/7071218admin/calendar" className="btn">
+              Сегодня
+            </Link>
+            <Link href={`?m=${nextM}`} className="btn">
+              {nextM} →
+            </Link>
+          </>
+        }
+      >
+        {fmtMonth} · {list.length} статей за месяц
+      </AdminPageHeader>
 
       <div className="card" style={{ padding: 12 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6, marginBottom: 6 }}>

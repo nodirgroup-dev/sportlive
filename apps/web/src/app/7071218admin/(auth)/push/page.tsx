@@ -3,6 +3,7 @@ import { desc, eq, sql } from 'drizzle-orm';
 import { CheckCircle2, AlertCircle, Send } from 'lucide-react';
 import { broadcastPostPush, broadcastCustomPush } from '../_actions/push';
 import { PushTemplateForm } from '@/components/push-template-form';
+import { AdminPageHeader } from '../../_components/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,14 +46,9 @@ export default async function PushPage({
 
   return (
     <>
-      <div className="page-h">
-        <div>
-          <h1>Push-уведомления</h1>
-          <div className="sub">
-            {t.active} активных подписчиков · UZ {t.uz} · RU {t.ru} · EN {t.en}
-          </div>
-        </div>
-      </div>
+      <AdminPageHeader pageId="push">
+        {t.active} активных подписчиков · UZ {t.uz} · RU {t.ru} · EN {t.en}
+      </AdminPageHeader>
 
       {sp.ok ? (
         <div style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#86efac', marginBottom: 14, fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 8 }}>

@@ -3,6 +3,7 @@ import { db, posts, categories } from '@sportlive/db';
 import { desc, eq, sql } from 'drizzle-orm';
 import { Plus, Pin, PinOff, Eye, EyeOff, Copy, Pencil, Clock } from 'lucide-react';
 import { bulkPostsAction, togglePostFeature, togglePostStatus, duplicatePost } from '../_actions/posts';
+import { AdminPageHeader } from '../../_components/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,18 +51,17 @@ export default async function NewsList({
 
   return (
     <>
-      <div className="page-h">
-        <div>
-          <h1>Новости</h1>
-          <div className="sub">{list.length} статей</div>
-        </div>
-        <div className="actions">
+      <AdminPageHeader
+        pageId="news"
+        actions={
           <Link href="/7071218admin/news/new" className="btn primary">
             <Plus size={14} strokeWidth={2.5} />
             Создать статью
           </Link>
-        </div>
-      </div>
+        }
+      >
+        {list.length} статей
+      </AdminPageHeader>
 
       {sp.bulk ? (
         <div style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#86efac', marginBottom: 14, fontSize: 12.5 }}>

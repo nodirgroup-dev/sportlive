@@ -1,6 +1,7 @@
 import { db, newsletterSubscribers } from '@sportlive/db';
 import { desc, sql } from 'drizzle-orm';
 import { Download } from 'lucide-react';
+import { AdminPageHeader } from '../../_components/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,14 +35,9 @@ export default async function NewsletterPage() {
 
   return (
     <>
-      <div className="page-h">
-        <div>
-          <h1>Newsletter</h1>
-          <div className="sub">
-            {t.active} активных · {t.unsub} отписались · {t.total} всего
-          </div>
-        </div>
-        <div className="actions">
+      <AdminPageHeader
+        pageId="newsletter"
+        actions={
           <a
             href="/7071218admin/api/newsletter-export"
             download
@@ -51,8 +47,10 @@ export default async function NewsletterPage() {
             <Download size={14} strokeWidth={1.8} />
             Экспорт CSV ({t.active})
           </a>
-        </div>
-      </div>
+        }
+      >
+        {t.active} активных · {t.unsub} отписались · {t.total} всего
+      </AdminPageHeader>
 
       <div className="table-wrap">
         <table className="table">

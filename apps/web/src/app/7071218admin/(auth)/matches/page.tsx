@@ -1,5 +1,6 @@
 import { db, fixtures, leagues, teams } from '@sportlive/db';
 import { desc, eq, sql } from 'drizzle-orm';
+import { AdminPageHeader } from '../../_components/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,12 +48,7 @@ export default async function MatchesPage() {
 
   return (
     <>
-      <div className="page-h">
-        <div>
-          <h1>Матчи</h1>
-          <div className="sub">{total.toLocaleString('ru-RU')} матчей в базе</div>
-        </div>
-      </div>
+      <AdminPageHeader pageId="matches">{total.toLocaleString('ru-RU')} матчей в базе</AdminPageHeader>
 
       {total === 0 ? (
         <div className="stub">

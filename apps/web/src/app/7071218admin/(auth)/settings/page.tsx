@@ -2,6 +2,7 @@ import { getCurrentUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { changePassword } from '../_actions/account';
 import { siteConfig } from '@/lib/site';
+import { AdminPageHeader } from '../../_components/page-header';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,12 +24,7 @@ export default async function SettingsPage({
 
   return (
     <>
-      <div className="page-h">
-        <div>
-          <h1>Настройки</h1>
-          <div className="sub">Аккаунт и параметры сайта</div>
-        </div>
-      </div>
+      <AdminPageHeader pageId="settings" />
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap)' }}>
         <div className="card" style={{ padding: 22 }}>
