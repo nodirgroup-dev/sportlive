@@ -205,8 +205,8 @@ export type FixtureRow = {
 async function fixturesQuery(opts: { from?: Date; to?: Date; statusIn?: string[]; live?: boolean; limit?: number; order?: 'asc' | 'desc' }): Promise<FixtureRow[]> {
   const { from, to, statusIn, live, limit = 50, order = 'asc' } = opts;
   const conds: ReturnType<typeof sql>[] = [];
-  if (from) conds.push(sql`f.kickoff_at >= ${from}`);
-  if (to) conds.push(sql`f.kickoff_at < ${to}`);
+  if (from) conds.push(sql`f.kickoff_at >= ${from.toISOString()}::timestamptz`);
+  if (to) conds.push(sql`f.kickoff_at < ${to.toISOString()}::timestamptz`);
   if (statusIn && statusIn.length > 0) {
     conds.push(sql`f.status_short IN (${sql.join(statusIn.map((s) => sql`${s}`), sql`, `)})`);
   }
