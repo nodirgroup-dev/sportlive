@@ -1,5 +1,5 @@
-import { db, posts, categories, users, redirects, leagues, teams, fixtures } from '@sportlive/db';
-import { and, asc, desc, eq, gte, lt, lte, inArray, sql } from 'drizzle-orm';
+import { db, posts, categories, users, redirects } from '@sportlive/db';
+import { and, desc, eq, gte, sql } from 'drizzle-orm';
 import type { Locale } from '@/i18n/routing';
 
 export type ListedPost = {
@@ -202,16 +202,13 @@ export type FixtureRow = {
   awayTeam: { id: number; name: string; logo: string | null };
 };
 
-const homeTeams = sql.raw('home_teams');
-const awayTeams = sql.raw('away_teams');
-
 async function fixturesQuery(opts: { from?: Date; to?: Date; statusIn?: string[]; live?: boolean; limit?: number; order?: 'asc' | 'desc' }): Promise<FixtureRow[]> {
   const { from, to, statusIn, live, limit = 50, order = 'asc' } = opts;
-  const conds = [];
-  if (from) conds.push(gte(fixtures.kickoffAt, from));
-  if (to) conds.push(lt(fixtures.kickoffAt, to));
-  if (statusIn && statusIn.length > 0) conds.push(inArray(fixtures.statusShort, statusIn));
-  if (live) conds.push(inArray(fixtures.statusShort, ['1H', '2H', 'HT', 'ET', 'P', 'BT', 'LIVE']));
+  const conds: ReturnType<typeof sql>[] = [];
+  if (from) conds.push(sql`f.kickoff_at >= ${from}`);
+  if (to) conds.push(sql`f.kickoff_at < ${to}`);
+  if (statusIn && statusIn.length > 0) conds.push(sql`f.status_short = ANY(${statusIn})`);
+  if (live) conds.push(sql`f.status_short = ANY(${['1H', '2H', 'HT', 'ET', 'P', 'BT', 'LIVE']})`);
 
   const rows = await db.execute(sql`
     SELECT
@@ -229,8 +226,6 @@ async function fixturesQuery(opts: { from?: Date; to?: Date; statusIn?: string[]
     ORDER BY f.kickoff_at ${sql.raw(order === 'asc' ? 'ASC' : 'DESC')}
     LIMIT ${limit}
   `);
-  void homeTeams;
-  void awayTeams;
 
   // postgres-js returns rows in r as the array directly when using sql.execute
   const arr = (rows as unknown as Array<Record<string, unknown>>) ?? [];
