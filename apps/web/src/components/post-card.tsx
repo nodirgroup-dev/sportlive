@@ -32,6 +32,7 @@ export function PostCard({ post, locale }: { post: ListedPost; locale: Locale })
             width={post.coverImageWidth ?? 200}
             height={post.coverImageHeight ?? 150}
             className="h-24 w-32 rounded object-cover sm:h-28 sm:w-40"
+            unoptimized
             sizes="(max-width: 640px) 128px, 160px"
           />
         </Link>

@@ -218,6 +218,7 @@ export default async function CatchAllPage({
             height={post.coverImageHeight ?? 675}
             className="mb-6 w-full rounded-xl object-cover shadow-sm"
             priority
+            unoptimized
             sizes="(max-width: 768px) 100vw, 768px"
           />
         ) : null}

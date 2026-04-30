@@ -33,6 +33,7 @@ export function PostHero({ post, locale }: { post: ListedPost; locale: Locale })
           height={post.coverImageHeight ?? 675}
           className="aspect-[16/9] w-full object-cover opacity-80 transition-opacity group-hover:opacity-90"
           priority
+          unoptimized
           sizes="(max-width: 768px) 100vw, 1024px"
         />
       ) : (
@@ -81,6 +82,7 @@ export function PostGridCard({ post, locale }: { post: ListedPost; locale: Local
             width={post.coverImageWidth ?? 600}
             height={post.coverImageHeight ?? 375}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            unoptimized
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
         </div>
