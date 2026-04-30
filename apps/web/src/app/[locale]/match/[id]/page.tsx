@@ -137,7 +137,7 @@ export default async function MatchPage({
               return (
                 <li key={i} className="flex items-baseline gap-3">
                   <span className="w-12 font-mono text-xs text-neutral-500">
-                    {ev.time?.elapsed}'{ev.time?.extra ? `+${ev.time.extra}` : ''}
+                    {ev.time?.elapsed}&#39;{ev.time?.extra ? `+${ev.time.extra}` : ''}
                   </span>
                   <span className="flex-1">
                     <b>{ev.player?.name ?? ''}</b>
