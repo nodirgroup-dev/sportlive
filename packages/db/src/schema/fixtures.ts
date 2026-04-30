@@ -110,7 +110,42 @@ export const fixtures = pgTable(
   ],
 );
 
+export const standings = pgTable(
+  'standings',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    leagueId: integer()
+      .notNull()
+      .references(() => leagues.id, { onDelete: 'cascade' }),
+    season: integer().notNull(),
+    teamId: integer()
+      .notNull()
+      .references(() => teams.id, { onDelete: 'cascade' }),
+    rank: smallint().notNull(),
+    /** Group letter for cup competitions (e.g. "A", "B"); NULL for flat leagues. */
+    groupName: varchar({ length: 50 }),
+    points: smallint().notNull().default(0),
+    played: smallint().notNull().default(0),
+    won: smallint().notNull().default(0),
+    drew: smallint().notNull().default(0),
+    lost: smallint().notNull().default(0),
+    goalsFor: smallint().notNull().default(0),
+    goalsAgainst: smallint().notNull().default(0),
+    goalsDiff: smallint().notNull().default(0),
+    /** Last 5 results pattern, e.g. "WWDLW". */
+    form: varchar({ length: 10 }),
+    /** Status hint from API, e.g. "Promotion - Champions League". */
+    description: varchar({ length: 200 }),
+    updatedAt,
+  },
+  (t) => [
+    uniqueIndex('standings_unique_idx').on(t.leagueId, t.season, t.teamId, t.groupName),
+    index('standings_league_rank_idx').on(t.leagueId, t.season, t.rank),
+  ],
+);
+
 export type League = typeof leagues.$inferSelect;
 export type Team = typeof teams.$inferSelect;
 export type Venue = typeof venues.$inferSelect;
 export type Fixture = typeof fixtures.$inferSelect;
+export type Standing = typeof standings.$inferSelect;

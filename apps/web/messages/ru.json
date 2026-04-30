@@ -10,6 +10,9 @@
     "schedule": "Расписание",
     "results": "Результаты",
     "live": "Онлайн",
+    "standings": "Таблицы",
+    "search": "Поиск",
+    "searchPlaceholder": "Поиск по статьям…",
     "tags": "Теги",
     "search": "Поиск"
   },

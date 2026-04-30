@@ -1,5 +1,6 @@
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
+import type { Route } from 'next';
 import { LanguageSwitcher } from './language-switcher';
 import { MobileMenu } from './mobile-menu';
 
@@ -7,6 +8,7 @@ const NAV = [
   { href: '/football', tk: 'football' },
   { href: '/schedule', tk: 'schedule' },
   { href: '/results', tk: 'results' },
+  { href: '/standings', tk: 'standings' },
   { href: '/live', tk: 'live' },
 ] as const;
 
@@ -47,8 +49,18 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <Link
+            href={'/search' as Route}
+            aria-label={t('search')}
+            className="hidden h-9 w-9 items-center justify-center rounded-md text-neutral-600 hover:bg-neutral-100 hover:text-brand-700 dark:text-neutral-400 dark:hover:bg-neutral-800 md:flex"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M21 21l-4.3-4.3" />
+            </svg>
+          </Link>
           <LanguageSwitcher />
-          <MobileMenu items={NAV.map((n) => ({ href: n.href, label: t(n.tk) }))} />
+          <MobileMenu items={[...NAV.map((n) => ({ href: n.href, label: t(n.tk) })), { href: '/search', label: t('search') }]} />
         </div>
       </div>
     </header>

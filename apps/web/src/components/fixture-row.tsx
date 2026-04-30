@@ -1,4 +1,6 @@
 import Image from 'next/image';
+import { Link } from '@/i18n/navigation';
+import type { Route } from 'next';
 import type { FixtureRow as FixtureRowT } from '@/lib/db';
 import type { Locale } from '@/i18n/routing';
 
@@ -44,7 +46,10 @@ export function FixtureRowItem({ fixture, locale }: { fixture: FixtureRowT; loca
   }).format(fixture.kickoffAt);
 
   return (
-    <div className="grid grid-cols-[120px_1fr_60px_1fr] items-center gap-3 border-b border-neutral-200 py-3 text-sm dark:border-neutral-800 sm:gap-4">
+    <Link
+      href={`/match/${fixture.id}` as Route}
+      className="grid grid-cols-[120px_1fr_60px_1fr] items-center gap-3 border-b border-neutral-200 py-3 text-sm transition-colors hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-900 sm:gap-4"
+    >
       <div className="flex flex-col text-xs text-neutral-500">
         <time dateTime={fixture.kickoffAt.toISOString()}>{dateLabel}</time>
         <span className={STATUS_CLASS[fixture.statusShort] ?? ''}>
@@ -87,7 +92,7 @@ export function FixtureRowItem({ fixture, locale }: { fixture: FixtureRowT; loca
         ) : null}
         <span className="truncate font-medium">{fixture.awayTeam.name}</span>
       </div>
-    </div>
+    </Link>
   );
 }
 

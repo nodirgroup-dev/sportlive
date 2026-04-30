@@ -10,6 +10,9 @@
     "schedule": "Schedule",
     "results": "Results",
     "live": "Live",
+    "standings": "Standings",
+    "search": "Search",
+    "searchPlaceholder": "Search articles…",
     "tags": "Tags",
     "search": "Search"
   },

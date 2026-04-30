@@ -327,6 +327,170 @@ export async function getApprovedComments(postId: number): Promise<CommentView[]
     .orderBy(asc(comments.createdAt));
 }
 
+export type StandingsRow = {
+  rank: number;
+  groupName: string | null;
+  points: number;
+  played: number;
+  won: number;
+  drew: number;
+  lost: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalsDiff: number;
+  form: string | null;
+  description: string | null;
+  team: { id: number; name: string; logo: string | null };
+};
+
+export type StandingsTable = {
+  league: { id: number; name: string; logo: string | null; country: string | null; season: number };
+  groups: Array<{ name: string | null; rows: StandingsRow[] }>;
+};
+
+export type FixtureDetail = FixtureRow & {
+  round: string | null;
+  refereeName: string | null;
+  venue: { name: string; city: string | null } | null;
+  scoreDetail: unknown;
+  raw: unknown;
+};
+
+export async function getFixtureById(id: number): Promise<FixtureDetail | null> {
+  const rows = (await db.execute(sql`
+    SELECT
+      f.id, f.kickoff_at AS "kickoffAt", f.status_short AS "statusShort",
+      f.status_long AS "statusLong", f.elapsed,
+      f.home_goals AS "homeGoals", f.away_goals AS "awayGoals",
+      f.round, f.referee_name AS "refereeName",
+      f.score_detail AS "scoreDetail", f.raw,
+      l.id AS "leagueId", l.name AS "leagueName", l.logo AS "leagueLogo", l.country AS "leagueCountry",
+      ht.id AS "homeId", ht.name AS "homeName", ht.logo AS "homeLogo",
+      at.id AS "awayId", at.name AS "awayName", at.logo AS "awayLogo",
+      v.name AS "venueName", v.city AS "venueCity"
+    FROM fixtures f
+    JOIN leagues l ON l.id = f.league_id
+    JOIN teams ht ON ht.id = f.home_team_id
+    JOIN teams at ON at.id = f.away_team_id
+    LEFT JOIN venues v ON v.id = f.venue_id
+    WHERE f.id = ${id}
+    LIMIT 1
+  `)) as unknown as Array<Record<string, unknown>>;
+  if (rows.length === 0) return null;
+  const r = rows[0]!;
+  return {
+    id: Number(r.id),
+    kickoffAt: new Date(r.kickoffAt as string),
+    statusShort: String(r.statusShort),
+    statusLong: (r.statusLong as string) ?? null,
+    elapsed: r.elapsed === null ? null : Number(r.elapsed),
+    homeGoals: r.homeGoals === null ? null : Number(r.homeGoals),
+    awayGoals: r.awayGoals === null ? null : Number(r.awayGoals),
+    round: (r.round as string) ?? null,
+    refereeName: (r.refereeName as string) ?? null,
+    league: {
+      id: Number(r.leagueId),
+      name: String(r.leagueName),
+      logo: (r.leagueLogo as string) ?? null,
+      country: (r.leagueCountry as string) ?? null,
+    },
+    homeTeam: { id: Number(r.homeId), name: String(r.homeName), logo: (r.homeLogo as string) ?? null },
+    awayTeam: { id: Number(r.awayId), name: String(r.awayName), logo: (r.awayLogo as string) ?? null },
+    venue: r.venueName ? { name: String(r.venueName), city: (r.venueCity as string) ?? null } : null,
+    scoreDetail: r.scoreDetail,
+    raw: r.raw,
+  };
+}
+
+export async function searchPosts(q: string, locale: Locale, limit = 30): Promise<ListedPost[]> {
+  const term = `%${q.trim().replace(/[%_]/g, '\\$&')}%`;
+  if (!term || term.length < 4) return [];
+  const rows = await db.execute(sql`
+    SELECT p.id, p.legacy_id AS "legacyId", p.slug, p.title, p.summary,
+           p.cover_image AS "coverImage", p.cover_image_width AS "coverImageWidth",
+           p.cover_image_height AS "coverImageHeight", p.published_at AS "publishedAt",
+           p.category_id AS "categoryId"
+      FROM posts p
+     WHERE p.locale = ${locale}
+       AND p.status = 'published'
+       AND (p.title ILIKE ${term} OR p.body ILIKE ${term})
+     ORDER BY p.published_at DESC
+     LIMIT ${limit}
+  `);
+  const arr = (rows as unknown as Array<Record<string, unknown>>) ?? [];
+  return Promise.all(
+    arr.map(async (r) => ({
+      id: Number(r.id),
+      legacyId: r.legacyId === null ? null : Number(r.legacyId),
+      slug: String(r.slug),
+      title: String(r.title),
+      summary: (r.summary as string) ?? null,
+      coverImage: (r.coverImage as string) ?? null,
+      coverImageWidth: r.coverImageWidth === null ? null : Number(r.coverImageWidth),
+      coverImageHeight: r.coverImageHeight === null ? null : Number(r.coverImageHeight),
+      publishedAt: r.publishedAt ? new Date(r.publishedAt as string) : null,
+      category: await categoryPath(r.categoryId === null ? null : Number(r.categoryId)),
+    })),
+  );
+}
+
+export async function getStandings(): Promise<StandingsTable[]> {
+  const rows = (await db.execute(sql`
+    SELECT s.league_id AS "leagueId", l.name AS "leagueName", l.logo AS "leagueLogo",
+           l.country AS "leagueCountry", s.season,
+           s.rank, s.group_name AS "groupName",
+           s.points, s.played, s.won, s.drew, s.lost,
+           s.goals_for AS "goalsFor", s.goals_against AS "goalsAgainst", s.goals_diff AS "goalsDiff",
+           s.form, s.description,
+           t.id AS "teamId", t.name AS "teamName", t.logo AS "teamLogo"
+      FROM standings s
+      JOIN leagues l ON l.id = s.league_id
+      JOIN teams t ON t.id = s.team_id
+     ORDER BY l.country NULLS LAST, l.name, s.group_name NULLS FIRST, s.rank
+  `)) as unknown as Array<Record<string, unknown>>;
+
+  const tables = new Map<string, StandingsTable>();
+  for (const r of rows) {
+    const key = `${r.leagueId}:${r.season}`;
+    let table = tables.get(key);
+    if (!table) {
+      table = {
+        league: {
+          id: Number(r.leagueId),
+          name: String(r.leagueName),
+          logo: (r.leagueLogo as string) ?? null,
+          country: (r.leagueCountry as string) ?? null,
+          season: Number(r.season),
+        },
+        groups: [],
+      };
+      tables.set(key, table);
+    }
+    const groupName = (r.groupName as string) ?? null;
+    let group = table.groups.find((g) => g.name === groupName);
+    if (!group) {
+      group = { name: groupName, rows: [] };
+      table.groups.push(group);
+    }
+    group.rows.push({
+      rank: Number(r.rank),
+      groupName,
+      points: Number(r.points),
+      played: Number(r.played),
+      won: Number(r.won),
+      drew: Number(r.drew),
+      lost: Number(r.lost),
+      goalsFor: Number(r.goalsFor),
+      goalsAgainst: Number(r.goalsAgainst),
+      goalsDiff: Number(r.goalsDiff),
+      form: (r.form as string) ?? null,
+      description: (r.description as string) ?? null,
+      team: { id: Number(r.teamId), name: String(r.teamName), logo: (r.teamLogo as string) ?? null },
+    });
+  }
+  return [...tables.values()];
+}
+
 export async function getRelatedPosts(
   excludeId: number,
   categoryId: number | null,

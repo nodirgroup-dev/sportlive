@@ -10,6 +10,9 @@
     "schedule": "Jadval",
     "results": "Natijalar",
     "live": "Jonli",
+    "standings": "Jadvallar",
+    "search": "Qidiruv",
+    "searchPlaceholder": "Maqolalar bo'yicha qidirish…",
     "tags": "Teglar",
     "search": "Qidiruv"
   },
