@@ -17,6 +17,8 @@ type FormPost = {
   coverImage: string | null;
   featured: boolean;
   tags: string;
+  /** Names already in tags table for this locale; used as autocomplete datalist. */
+  allTagNames: string[];
 };
 
 export async function NewsForm({
@@ -94,7 +96,15 @@ export async function NewsForm({
               placeholder="Реал Мадрид, Лига чемпионов, трансферы"
               className="input"
               maxLength={500}
+              list="tag-suggestions"
             />
+            {post.allTagNames.length > 0 ? (
+              <datalist id="tag-suggestions">
+                {post.allTagNames.map((n) => (
+                  <option key={n} value={n} />
+                ))}
+              </datalist>
+            ) : null}
           </div>
           <div className="field">
             <label>Тело статьи</label>
@@ -150,6 +160,23 @@ export async function NewsForm({
               </label>
               <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2, paddingLeft: 22 }}>
                 Самая свежая закрепленная статья показывается как герой главной
+              </div>
+            </div>
+            <div className="field">
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  cursor: 'pointer',
+                  marginTop: 4,
+                }}
+              >
+                <input type="checkbox" name="sendPush" value="1" />
+                <span>🔔 Отправить push после сохранения</span>
+              </label>
+              <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2, paddingLeft: 22 }}>
+                Только если статья будет опубликована (status = published)
               </div>
             </div>
           </div>

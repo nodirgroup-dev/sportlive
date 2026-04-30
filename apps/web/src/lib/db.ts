@@ -663,6 +663,16 @@ function tagSlug(name: string): string {
  * Replace a post's tags with the given names. Names are split externally
  * (comma-separated), so this just upserts each tag and rewrites the join table.
  */
+export async function getAllTagNames(locale: Locale, limit = 200): Promise<string[]> {
+  const rows = await db
+    .select({ name: tags.name })
+    .from(tags)
+    .where(eq(tags.locale, locale))
+    .orderBy(asc(tags.name))
+    .limit(limit);
+  return rows.map((r) => r.name);
+}
+
 export async function setPostTags(postId: number, locale: Locale, names: string[]): Promise<void> {
   const cleaned = Array.from(
     new Set(names.map((n) => n.trim()).filter((n) => n.length > 0 && n.length <= 100)),

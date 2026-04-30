@@ -40,6 +40,15 @@ export default async function NewsletterPage() {
             {t.active} активных · {t.unsub} отписались · {t.total} всего
           </div>
         </div>
+        <div className="actions">
+          <a
+            href="/7071218admin/api/newsletter-export"
+            download
+            className="btn"
+          >
+            ⬇ Экспорт CSV ({t.active})
+          </a>
+        </div>
       </div>
 
       <div className="table-wrap">

@@ -8,6 +8,56 @@ import { getCurrentUser } from '@/lib/auth';
 import { recordAudit } from '@/lib/audit';
 import { autoSummary } from '@/lib/text';
 import { setPostTags } from '@/lib/db';
+import { broadcastPush } from '@/lib/push';
+import { siteConfig } from '@/lib/site';
+import { categories } from '@sportlive/db';
+
+async function maybeBroadcastPostPush(post: {
+  id: number;
+  legacyId: number | null;
+  slug: string;
+  title: string;
+  summary: string | null;
+  body: string;
+  coverImage: string | null;
+  locale: 'uz' | 'ru' | 'en';
+  categoryId: number | null;
+}): Promise<{ sent: number; total: number } | null> {
+  let categoryPath: string | null = null;
+  if (post.categoryId) {
+    const c = await db
+      .select({ slug: categories.slug })
+      .from(categories)
+      .where(eq(categories.id, post.categoryId))
+      .limit(1);
+    categoryPath = c[0]?.slug ?? null;
+  }
+  const url = `${siteConfig.url}/${post.locale === 'uz' ? '' : post.locale + '/'}${categoryPath ? categoryPath + '/' : ''}${post.legacyId ?? post.id}-${post.slug}`;
+  const body = (post.summary && post.summary.trim()) || autoSummary(post.body, 140);
+  try {
+    const stats = await broadcastPush(
+      {
+        title: post.title,
+        body: body.slice(0, 200),
+        url,
+        image: post.coverImage ?? undefined,
+        tag: `post-${post.id}`,
+      },
+      post.locale,
+    );
+    await recordAudit({
+      action: 'push.broadcast',
+      entityType: 'post',
+      entityId: post.id,
+      summary: `${stats.sent}/${stats.total} delivered`,
+      meta: { ...stats, url, source: 'auto' },
+    });
+    return { sent: stats.sent, total: stats.total };
+  } catch (e) {
+    console.error('[push] auto-broadcast failed', e);
+    return null;
+  }
+}
 
 function slugify(s: string): string {
   return s
@@ -40,6 +90,7 @@ export async function createPost(formData: FormData) {
   const finalSummary = summary ?? autoSummary(body);
   const tagsRaw = ((formData.get('tags') as string) || '').trim();
   const tagNames = tagsRaw ? tagsRaw.split(',').map((s) => s.trim()).filter(Boolean) : [];
+  const sendPush = formData.get('sendPush') === '1';
 
   // groupId: pick max + 1 to avoid collision with legacy_id range
   const maxGroup = await db
@@ -81,9 +132,25 @@ export async function createPost(formData: FormData) {
     meta: { locale, status, categoryId },
   });
 
+  let pushQuery = '';
+  if (sendPush && status === 'published') {
+    const stats = await maybeBroadcastPostPush({
+      id: row!.id,
+      legacyId: null,
+      slug,
+      title,
+      summary: finalSummary,
+      body,
+      coverImage,
+      locale: locale as 'uz' | 'ru' | 'en',
+      categoryId,
+    });
+    if (stats) pushQuery = `&push=${stats.sent}/${stats.total}`;
+  }
+
   revalidatePath('/7071218admin/news');
   revalidatePath('/');
-  redirect(`/7071218admin/news/${row!.id}/edit?saved=1`);
+  redirect(`/7071218admin/news/${row!.id}/edit?saved=1${pushQuery}`);
 }
 
 export async function updatePost(id: number, formData: FormData) {
@@ -105,6 +172,7 @@ export async function updatePost(id: number, formData: FormData) {
   const finalSummary = summary ?? autoSummary(body);
   const tagsRaw = ((formData.get('tags') as string) || '').trim();
   const tagNames = tagsRaw ? tagsRaw.split(',').map((s) => s.trim()).filter(Boolean) : [];
+  const sendPush = formData.get('sendPush') === '1';
 
   const existing = await db.select().from(posts).where(eq(posts.id, id)).limit(1);
   if (existing.length === 0) throw new Error('post not found');
@@ -155,9 +223,25 @@ export async function updatePost(id: number, formData: FormData) {
     meta: { fromStatus: existing[0]!.status, toStatus: status, categoryId },
   });
 
+  let pushQuery = '';
+  if (sendPush && status === 'published') {
+    const stats = await maybeBroadcastPostPush({
+      id,
+      legacyId: existing[0]!.legacyId,
+      slug,
+      title,
+      summary: finalSummary,
+      body,
+      coverImage,
+      locale: existing[0]!.locale,
+      categoryId,
+    });
+    if (stats) pushQuery = `&push=${stats.sent}/${stats.total}`;
+  }
+
   revalidatePath('/7071218admin/news');
   revalidatePath('/');
-  redirect(`/7071218admin/news/${id}/edit?saved=1`);
+  redirect(`/7071218admin/news/${id}/edit?saved=1${pushQuery}`);
 }
 
 export async function deletePost(id: number) {

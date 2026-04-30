@@ -3,38 +3,72 @@ import { db, posts } from '@sportlive/db';
 import { eq } from 'drizzle-orm';
 import { NewsForm } from '../../_form';
 import { updatePost } from '../../../_actions/posts';
-import { getTagsForPost } from '@/lib/db';
+import { getTagsForPost, getAllTagNames } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-export default async function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditPostPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ saved?: string; push?: string }>;
+}) {
   const { id: idStr } = await params;
+  const sp = await searchParams;
   const id = parseInt(idStr, 10);
   if (!Number.isFinite(id)) notFound();
 
   const rows = await db.select().from(posts).where(eq(posts.id, id)).limit(1);
   if (rows.length === 0) notFound();
   const p = rows[0]!;
-  const tags = await getTagsForPost(p.id);
+  const [tags, allTagNames] = await Promise.all([
+    getTagsForPost(p.id),
+    getAllTagNames(p.locale as 'uz' | 'ru' | 'en'),
+  ]);
 
   const action = updatePost.bind(null, id);
 
   return (
-    <NewsForm
-      post={{
-        id: p.id,
-        locale: p.locale as 'uz' | 'ru' | 'en',
-        title: p.title,
-        slug: p.slug,
-        summary: p.summary,
-        body: p.body,
-        categoryId: p.categoryId,
-        status: p.status as 'draft' | 'published' | 'archived',
-        coverImage: p.coverImage,
-        featured: p.featuredAt !== null,
-        tags: tags.map((t) => t.name).join(', '),
-      }}
-      action={action}
-    />
+    <>
+      {sp.saved ? (
+        <div
+          style={{
+            padding: '10px 12px',
+            borderRadius: 8,
+            background: 'rgba(34,197,94,0.1)',
+            border: '1px solid rgba(34,197,94,0.3)',
+            color: '#86efac',
+            marginBottom: 14,
+            fontSize: 12.5,
+          }}
+        >
+          ✓ Сохранено
+          {sp.push ? (
+            <>
+              {' '}
+              · push отправлено <b>{sp.push}</b>
+            </>
+          ) : null}
+        </div>
+      ) : null}
+      <NewsForm
+        post={{
+          id: p.id,
+          locale: p.locale as 'uz' | 'ru' | 'en',
+          title: p.title,
+          slug: p.slug,
+          summary: p.summary,
+          body: p.body,
+          categoryId: p.categoryId,
+          status: p.status as 'draft' | 'published' | 'archived',
+          coverImage: p.coverImage,
+          featured: p.featuredAt !== null,
+          tags: tags.map((t) => t.name).join(', '),
+          allTagNames,
+        }}
+        action={action}
+      />
+    </>
   );
 }

@@ -1,9 +1,11 @@
 import { NewsForm } from '../_form';
 import { createPost } from '../../_actions/posts';
+import { getAllTagNames } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-export default function NewPostPage() {
+export default async function NewPostPage() {
+  const allTagNames = await getAllTagNames('uz');
   return (
     <NewsForm
       post={{
@@ -18,6 +20,7 @@ export default function NewPostPage() {
         coverImage: '',
         featured: false,
         tags: '',
+        allTagNames,
       }}
       action={createPost}
     />
