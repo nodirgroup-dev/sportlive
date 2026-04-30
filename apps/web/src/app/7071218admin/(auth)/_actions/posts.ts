@@ -1,7 +1,7 @@
 'use server';
 
 import { db, posts } from '@sportlive/db';
-import { eq, inArray } from 'drizzle-orm';
+import { desc, eq, inArray, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
@@ -78,9 +78,15 @@ export async function createPost(formData: FormData) {
   const body = ((formData.get('body') as string) || '').trim();
   const slugRaw = ((formData.get('slug') as string) || '').trim();
   const categoryIdRaw = ((formData.get('categoryId') as string) || '').trim();
-  const status = ((formData.get('status') as string) || 'draft') as 'draft' | 'published';
+  const status = ((formData.get('status') as string) || 'draft') as
+    | 'draft'
+    | 'scheduled'
+    | 'published'
+    | 'archived';
   const coverImage = ((formData.get('coverImage') as string) || '').trim() || null;
   const featured = formData.get('featured') === '1';
+  const publishedAtRaw = ((formData.get('publishedAt') as string) || '').trim();
+  const requestedPublishAt = publishedAtRaw ? new Date(publishedAtRaw) : null;
 
   if (!title || !body) {
     throw new Error('title and body required');
@@ -91,6 +97,21 @@ export async function createPost(formData: FormData) {
   const tagsRaw = ((formData.get('tags') as string) || '').trim();
   const tagNames = tagsRaw ? tagsRaw.split(',').map((s) => s.trim()).filter(Boolean) : [];
   const sendPush = formData.get('sendPush') === '1';
+
+  let computedPublishedAt: Date | null = null;
+  let computedStatus: 'draft' | 'scheduled' | 'published' | 'archived' = status;
+  if (status === 'scheduled') {
+    if (!requestedPublishAt || Number.isNaN(requestedPublishAt.getTime())) {
+      throw new Error('scheduled status requires publishedAt');
+    }
+    computedPublishedAt = requestedPublishAt;
+    // If schedule is in the past, just publish now.
+    if (requestedPublishAt <= new Date()) computedStatus = 'published';
+  } else if (status === 'published') {
+    computedPublishedAt = requestedPublishAt && !Number.isNaN(requestedPublishAt.getTime())
+      ? requestedPublishAt
+      : new Date();
+  }
 
   // groupId: pick max + 1 to avoid collision with legacy_id range
   const maxGroup = await db
@@ -110,8 +131,8 @@ export async function createPost(formData: FormData) {
       body,
       authorId: user.id,
       categoryId,
-      status,
-      publishedAt: status === 'published' ? new Date() : null,
+      status: computedStatus,
+      publishedAt: computedPublishedAt,
       metaTitle: title.slice(0, 300),
       metaDescription: finalSummary
         ? finalSummary.replace(/<[^>]*>/g, '').slice(0, 500)
@@ -125,15 +146,20 @@ export async function createPost(formData: FormData) {
   await setPostTags(row!.id, locale as 'uz' | 'ru' | 'en', tagNames);
 
   await recordAudit({
-    action: status === 'published' ? 'post.publish' : 'post.create',
+    action:
+      computedStatus === 'published'
+        ? 'post.publish'
+        : computedStatus === 'scheduled'
+          ? 'post.schedule'
+          : 'post.create',
     entityType: 'post',
     entityId: row!.id,
     summary: title.slice(0, 200),
-    meta: { locale, status, categoryId },
+    meta: { locale, status: computedStatus, categoryId, publishedAt: computedPublishedAt },
   });
 
   let pushQuery = '';
-  if (sendPush && status === 'published') {
+  if (sendPush && computedStatus === 'published') {
     const stats = await maybeBroadcastPostPush({
       id: row!.id,
       legacyId: null,
@@ -162,9 +188,15 @@ export async function updatePost(id: number, formData: FormData) {
   const body = ((formData.get('body') as string) || '').trim();
   const slugRaw = ((formData.get('slug') as string) || '').trim();
   const categoryIdRaw = ((formData.get('categoryId') as string) || '').trim();
-  const status = ((formData.get('status') as string) || 'draft') as 'draft' | 'published' | 'archived';
+  const status = ((formData.get('status') as string) || 'draft') as
+    | 'draft'
+    | 'scheduled'
+    | 'published'
+    | 'archived';
   const coverImage = ((formData.get('coverImage') as string) || '').trim() || null;
   const featured = formData.get('featured') === '1';
+  const publishedAtRaw = ((formData.get('publishedAt') as string) || '').trim();
+  const requestedPublishAt = publishedAtRaw ? new Date(publishedAtRaw) : null;
 
   if (!title || !body) throw new Error('title and body required');
   const slug = slugRaw ? slugify(slugRaw) : slugify(title);
@@ -178,12 +210,24 @@ export async function updatePost(id: number, formData: FormData) {
   if (existing.length === 0) throw new Error('post not found');
 
   const wasPublished = existing[0]!.status === 'published';
-  const publishedAt =
-    status === 'published' && !wasPublished
-      ? new Date()
-      : status !== 'published'
-        ? null
-        : existing[0]!.publishedAt;
+
+  let computedStatus = status;
+  let publishedAt: Date | null = existing[0]!.publishedAt;
+  if (status === 'scheduled') {
+    if (!requestedPublishAt || Number.isNaN(requestedPublishAt.getTime())) {
+      throw new Error('scheduled status requires publishedAt');
+    }
+    publishedAt = requestedPublishAt;
+    if (requestedPublishAt <= new Date()) computedStatus = 'published';
+  } else if (status === 'published') {
+    if (requestedPublishAt && !Number.isNaN(requestedPublishAt.getTime())) {
+      publishedAt = requestedPublishAt;
+    } else if (!wasPublished) {
+      publishedAt = new Date();
+    }
+  } else {
+    publishedAt = null;
+  }
 
   const wasFeatured = existing[0]!.featuredAt !== null;
   const featuredAt = featured
@@ -200,7 +244,7 @@ export async function updatePost(id: number, formData: FormData) {
       summary: finalSummary,
       body,
       categoryId,
-      status,
+      status: computedStatus,
       publishedAt,
       metaTitle: title.slice(0, 300),
       metaDescription: finalSummary
@@ -214,9 +258,14 @@ export async function updatePost(id: number, formData: FormData) {
 
   await setPostTags(id, existing[0]!.locale, tagNames);
 
-  const statusFlippedToPublished = status === 'published' && !wasPublished;
+  const statusFlippedToPublished = computedStatus === 'published' && !wasPublished;
+  const becameScheduled = computedStatus === 'scheduled' && existing[0]!.status !== 'scheduled';
   await recordAudit({
-    action: statusFlippedToPublished ? 'post.publish' : 'post.update',
+    action: becameScheduled
+      ? 'post.schedule'
+      : statusFlippedToPublished
+        ? 'post.publish'
+        : 'post.update',
     entityType: 'post',
     entityId: id,
     summary: title.slice(0, 200),
@@ -224,7 +273,7 @@ export async function updatePost(id: number, formData: FormData) {
   });
 
   let pushQuery = '';
-  if (sendPush && status === 'published') {
+  if (sendPush && computedStatus === 'published') {
     const stats = await maybeBroadcastPostPush({
       id,
       legacyId: existing[0]!.legacyId,
@@ -242,6 +291,70 @@ export async function updatePost(id: number, formData: FormData) {
   revalidatePath('/7071218admin/news');
   revalidatePath('/');
   redirect(`/7071218admin/news/${id}/edit?saved=1${pushQuery}`);
+}
+
+export async function duplicatePost(formData: FormData) {
+  const user = await getCurrentUser();
+  if (!user) redirect('/7071218admin/login');
+
+  const id = parseInt((formData.get('id') as string) || '', 10);
+  if (!Number.isFinite(id)) redirect('/7071218admin/news');
+
+  const source = await db.select().from(posts).where(eq(posts.id, id)).limit(1);
+  if (source.length === 0) redirect('/7071218admin/news?dup=not_found');
+  const s = source[0]!;
+
+  // Group: new groupId so the duplicate doesn't mess with cross-locale linking.
+  const maxGroup = await db.select({ m: posts.groupId }).from(posts).orderBy(desc(posts.groupId)).limit(1);
+  const newGroupId = (maxGroup[0]?.m ?? 0) + 1;
+
+  // Slug: append -copy and a random suffix to dodge unique (locale, slug) conflicts.
+  const dupSuffix = `-copy-${Math.random().toString(36).slice(2, 7)}`;
+  const newSlug = (s.slug + dupSuffix).slice(0, 200);
+  const newTitle = `[COPY] ${s.title}`.slice(0, 300);
+
+  const [row] = await db
+    .insert(posts)
+    .values({
+      locale: s.locale,
+      slug: newSlug,
+      title: newTitle,
+      summary: s.summary,
+      body: s.body,
+      authorId: user.id,
+      categoryId: s.categoryId,
+      status: 'draft',
+      publishedAt: null,
+      metaTitle: s.metaTitle,
+      metaDescription: s.metaDescription,
+      metaKeywords: s.metaKeywords,
+      groupId: newGroupId,
+      coverImage: s.coverImage,
+      coverImageWidth: s.coverImageWidth,
+      coverImageHeight: s.coverImageHeight,
+      featuredAt: null,
+    })
+    .returning({ id: posts.id });
+
+  // Copy tags as well.
+  const srcTags = await db.execute(
+    sql`SELECT name FROM tags t JOIN post_tags pt ON pt.tag_id = t.id WHERE pt.post_id = ${id}`,
+  );
+  const tagNames = (srcTags as unknown as Array<{ name: string }>).map((r) => r.name);
+  if (tagNames.length > 0) {
+    await setPostTags(row!.id, s.locale, tagNames);
+  }
+
+  await recordAudit({
+    action: 'post.duplicate',
+    entityType: 'post',
+    entityId: row!.id,
+    summary: newTitle,
+    meta: { sourceId: id },
+  });
+
+  revalidatePath('/7071218admin/news');
+  redirect(`/7071218admin/news/${row!.id}/edit?dup=1`);
 }
 
 export async function deletePost(id: number) {

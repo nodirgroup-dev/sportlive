@@ -18,6 +18,7 @@ import { CommentsSection } from '@/components/comments-section';
 import { ShareButtons } from '@/components/share-buttons';
 import { ArticleTracker } from '@/components/article-tracker';
 import { PostCard } from '@/components/post-card';
+import { ArticleBody } from '@/components/article-body';
 
 const READING_LABEL: Record<Locale, (n: number) => string> = {
   uz: (n) => `${n} daqiqa o'qish`,
@@ -306,7 +307,7 @@ export default async function CatchAllPage({
                   dangerouslySetInnerHTML={{ __html: post.summary! }}
                 />
               ) : null}
-              <div className="article-body" dangerouslySetInnerHTML={{ __html: cleanedBody }} />
+              <ArticleBody html={cleanedBody} locale={locale} />
               <ShareButtons url={absoluteUrl(canonical)} title={post.title} />
               <div className="my-6 flex justify-center">
                 <BannerSlot position="in_article_bottom" />

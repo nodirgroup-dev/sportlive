@@ -61,11 +61,12 @@ export default async function EditPostPage({
           summary: p.summary,
           body: p.body,
           categoryId: p.categoryId,
-          status: p.status as 'draft' | 'published' | 'archived',
+          status: p.status as 'draft' | 'scheduled' | 'published' | 'archived',
           coverImage: p.coverImage,
           featured: p.featuredAt !== null,
           tags: tags.map((t) => t.name).join(', '),
           allTagNames,
+          publishedAt: p.publishedAt ? p.publishedAt.toISOString().slice(0, 16) : null,
         }}
         action={action}
       />

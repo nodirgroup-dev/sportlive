@@ -8,6 +8,43 @@ import { recordAudit } from '@/lib/audit';
 import { broadcastPush } from '@/lib/push';
 import { autoSummary } from '@/lib/text';
 import { siteConfig } from '@/lib/site';
+import { hasLocale } from '@/i18n/routing';
+
+export async function broadcastCustomPush(formData: FormData) {
+  const user = await getCurrentUser();
+  if (!user) redirect('/7071218admin/login');
+
+  const title = ((formData.get('title') as string) || '').trim();
+  const body = ((formData.get('body') as string) || '').trim();
+  const url = ((formData.get('url') as string) || '').trim() || siteConfig.url;
+  const image = ((formData.get('image') as string) || '').trim() || undefined;
+  const localeRaw = ((formData.get('locale') as string) || '').trim();
+  const locale = hasLocale(localeRaw) ? (localeRaw as 'uz' | 'ru' | 'en') : null;
+
+  if (!title || !body) redirect('/7071218admin/push?error=title_body_required');
+
+  const stats = await broadcastPush(
+    {
+      title: title.slice(0, 200),
+      body: body.slice(0, 500),
+      url,
+      image,
+      tag: `custom-${Date.now()}`,
+    },
+    locale,
+  );
+
+  await recordAudit({
+    action: 'push.broadcast',
+    entityType: 'push',
+    summary: title.slice(0, 200),
+    meta: { ...stats, url, source: 'custom', locale: locale ?? 'all' },
+  });
+
+  redirect(
+    `/7071218admin/push?ok=1&sent=${stats.sent}&total=${stats.total}&invalidated=${stats.invalidated}&errors=${stats.errors}`,
+  );
+}
 
 export async function broadcastPostPush(formData: FormData) {
   const user = await getCurrentUser();

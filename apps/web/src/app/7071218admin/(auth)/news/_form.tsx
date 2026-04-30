@@ -13,12 +13,14 @@ type FormPost = {
   summary: string | null;
   body: string;
   categoryId: number | null;
-  status: 'draft' | 'published' | 'archived';
+  status: 'draft' | 'scheduled' | 'published' | 'archived';
   coverImage: string | null;
   featured: boolean;
   tags: string;
   /** Names already in tags table for this locale; used as autocomplete datalist. */
   allTagNames: string[];
+  /** ISO datetime-local string for status=scheduled. */
+  publishedAt: string | null;
 };
 
 export async function NewsForm({
@@ -109,6 +111,9 @@ export async function NewsForm({
           <div className="field">
             <label>Тело статьи</label>
             <RichEditor name="body" defaultValue={post.body} placeholder="Начните писать…" />
+            <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>
+              💡 Шорткоды: <code>[fixture id=N]</code> — карточка матча, <code>[team id=N]</code> — карточка команды
+            </div>
           </div>
         </div>
 
@@ -118,9 +123,23 @@ export async function NewsForm({
               <label>Статус</label>
               <select name="status" defaultValue={post.status} className="select">
                 <option value="draft">Черновик</option>
+                <option value="scheduled">⏱ Запланировать</option>
                 <option value="published">Опубликовать</option>
                 <option value="archived">В архив</option>
               </select>
+            </div>
+            <div className="field">
+              <label htmlFor="publishedAt">Дата публикации (для «Запланировать»)</label>
+              <input
+                id="publishedAt"
+                name="publishedAt"
+                type="datetime-local"
+                defaultValue={post.publishedAt ?? ''}
+                className="input"
+              />
+              <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>
+                Если статус = «Запланировать», укажите будущую дату — cron автоматически опубликует
+              </div>
             </div>
             <div className="field">
               <label>Язык</label>

@@ -12,7 +12,7 @@ import { localeEnum, createdAt, updatedAt } from './_shared';
 import { users } from './users';
 import { categories } from './categories';
 
-export const postStatusEnum = pgEnum('post_status', ['draft', 'published', 'archived']);
+export const postStatusEnum = pgEnum('post_status', ['draft', 'scheduled', 'published', 'archived']);
 
 export const posts = pgTable(
   'posts',

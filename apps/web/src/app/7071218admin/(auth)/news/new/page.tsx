@@ -21,6 +21,7 @@ export default async function NewPostPage() {
         featured: false,
         tags: '',
         allTagNames,
+        publishedAt: null,
       }}
       action={createPost}
     />

@@ -1,6 +1,7 @@
 import { db, posts } from '@sportlive/db';
 import { desc, eq, sql } from 'drizzle-orm';
-import { broadcastPostPush } from '../_actions/push';
+import { broadcastPostPush, broadcastCustomPush } from '../_actions/push';
+import { PushTemplateForm } from '@/components/push-template-form';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,7 +76,9 @@ export default async function PushPage({
             «Отправить» работать не будут.
           </p>
         </div>
-      ) : null}
+      ) : (
+        <PushTemplateForm action={broadcastCustomPush} />
+      )}
 
       <div className="table-wrap">
         <table className="table">

@@ -1,14 +1,15 @@
 import Link from 'next/link';
 import { db, posts, categories } from '@sportlive/db';
 import { desc, eq, sql } from 'drizzle-orm';
-import { bulkPostsAction, togglePostFeature, togglePostStatus } from '../_actions/posts';
+import { bulkPostsAction, togglePostFeature, togglePostStatus, duplicatePost } from '../_actions/posts';
 
 export const dynamic = 'force-dynamic';
 
 async function getList(localeFilter: string | null, q: string | null, statusFilter: string | null) {
   const where: ReturnType<typeof eq>[] = [];
   if (localeFilter) where.push(eq(posts.locale, localeFilter as 'uz' | 'ru' | 'en'));
-  if (statusFilter) where.push(eq(posts.status, statusFilter as 'draft' | 'published' | 'archived'));
+  if (statusFilter)
+    where.push(eq(posts.status, statusFilter as 'draft' | 'scheduled' | 'published' | 'archived'));
 
   let query = db
     .select({
@@ -87,6 +88,7 @@ export default async function NewsList({
         <select name="status" defaultValue={sp.status ?? ''} className="select" style={{ height: 32, width: 130 }}>
           <option value="">Все статусы</option>
           <option value="published">Опубликовано</option>
+          <option value="scheduled">⏱ Запланировано</option>
           <option value="draft">Черновик</option>
           <option value="archived">В архиве</option>
         </select>
@@ -183,9 +185,15 @@ export default async function NewsList({
                 </td>
                 <td>
                   <span
-                    className={`pill ${r.status === 'published' ? 'green' : r.status === 'draft' ? 'gray' : 'yellow'}`}
+                    className={`pill ${r.status === 'published' ? 'green' : r.status === 'scheduled' ? 'yellow' : r.status === 'draft' ? 'gray' : 'yellow'}`}
                   >
-                    {r.status === 'published' ? 'Опубл.' : r.status === 'draft' ? 'Черн.' : 'Архив'}
+                    {r.status === 'published'
+                      ? 'Опубл.'
+                      : r.status === 'scheduled'
+                        ? '⏱ Запланир.'
+                        : r.status === 'draft'
+                          ? 'Черн.'
+                          : 'Архив'}
                   </span>
                 </td>
                 <td className="t-dim" style={{ color: 'var(--text-3)' }}>
@@ -231,6 +239,17 @@ export default async function NewsList({
                     }}
                   >
                     📌
+                  </button>
+                  <button
+                    type="submit"
+                    formAction={duplicatePost}
+                    name="id"
+                    value={r.id}
+                    title="Дублировать"
+                    className="btn"
+                    style={{ height: 28, width: 28, padding: 0, marginRight: 4, fontSize: 14 }}
+                  >
+                    📋
                   </button>
                   <Link href={`/7071218admin/news/${r.id}/edit`} className="btn" style={{ height: 28, fontSize: 11.5 }}>
                     Изменить
