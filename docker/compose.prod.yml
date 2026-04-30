@@ -18,8 +18,11 @@ services:
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL}
       TZ: Asia/Tashkent
+      UPLOAD_DIR: /var/uploads/posts
     ports:
       - "127.0.0.1:3001:3000"
+    volumes:
+      - /var/www/sportlive/data/www/sportlive.uz/uploads/posts:/var/uploads/posts
     depends_on:
       postgres:
         condition: service_healthy

@@ -6,6 +6,7 @@ import { siteConfig, absoluteUrl, localePath } from '@/lib/site';
 import { getLatestPosts } from '@/lib/db';
 import { PostCard } from '@/components/post-card';
 import { PostHero, PostGridCard } from '@/components/post-hero';
+import { BannerSlot } from '@/components/banner-slot';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 60;
@@ -82,6 +83,10 @@ export default async function HomePage({
               <PostHero post={hero} locale={locale as Locale} />
             </section>
           ) : null}
+
+          <div className="mb-6 flex justify-center">
+            <BannerSlot position="header" />
+          </div>
 
           {featured.length > 0 ? (
             <section className="mb-10">

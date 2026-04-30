@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { db, posts, categories } from '@sportlive/db';
 import { desc, eq, sql } from 'drizzle-orm';
+import { bulkPostsAction } from '../_actions/posts';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,7 +39,7 @@ async function getList(localeFilter: string | null, q: string | null, statusFilt
 export default async function NewsList({
   searchParams,
 }: {
-  searchParams: Promise<{ locale?: string; q?: string; status?: string }>;
+  searchParams: Promise<{ locale?: string; q?: string; status?: string; bulk?: string; n?: string }>;
 }) {
   const sp = await searchParams;
   const list = await getList(sp.locale ?? null, sp.q ?? null, sp.status ?? null);
@@ -59,6 +60,13 @@ export default async function NewsList({
           </Link>
         </div>
       </div>
+
+      {sp.bulk ? (
+        <div style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#86efac', marginBottom: 14, fontSize: 12.5 }}>
+          {sp.bulk === 'publish' ? 'Опубликовано' : sp.bulk === 'unpublish' ? 'Снято с публикации' : sp.bulk === 'archive' ? 'Перемещено в архив' : 'Удалено'}{' '}
+          <b>{sp.n ?? '?'}</b> ст.
+        </div>
+      ) : null}
 
       <form className="card" style={{ padding: 12, display: 'flex', gap: 10, marginBottom: 14, alignItems: 'center' }}>
         <input
@@ -83,10 +91,29 @@ export default async function NewsList({
         <button type="submit" className="btn">Применить</button>
       </form>
 
+      <form action={bulkPostsAction}>
+        <div className="card" style={{ padding: 10, display: 'flex', gap: 10, marginBottom: 14, alignItems: 'center' }}>
+          <span style={{ fontSize: 12, color: 'var(--text-3)' }}>Массовое действие:</span>
+          <select name="action" defaultValue="" className="select" style={{ height: 30, fontSize: 12.5 }}>
+            <option value="">— выбрать —</option>
+            <option value="publish">Опубликовать</option>
+            <option value="unpublish">Снять с публикации</option>
+            <option value="archive">В архив</option>
+            <option value="delete">Удалить</option>
+          </select>
+          <button type="submit" className="btn" style={{ height: 30, fontSize: 12.5 }}>
+            Применить к выбранным
+          </button>
+          <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-3)' }}>
+            Используйте чекбоксы в таблице
+          </span>
+        </div>
+
       <div className="table-wrap">
         <table className="table">
           <thead>
             <tr>
+              <th style={{ width: 32 }} />
               <th>ID</th>
               <th>Заголовок</th>
               <th>Категория</th>
@@ -99,6 +126,9 @@ export default async function NewsList({
           <tbody>
             {list.map((r) => (
               <tr key={r.id}>
+                <td>
+                  <input type="checkbox" name="ids" value={r.id} className="chk-input" />
+                </td>
                 <td className="num" style={{ color: 'var(--text-3)' }}>
                   {r.legacyId ?? r.id}
                 </td>
@@ -140,7 +170,7 @@ export default async function NewsList({
             ))}
             {list.length === 0 ? (
               <tr>
-                <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-3)' }}>
+                <td colSpan={8} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-3)' }}>
                   Нет статей по выбранным фильтрам
                 </td>
               </tr>
@@ -148,6 +178,7 @@ export default async function NewsList({
           </tbody>
         </table>
       </div>
+      </form>
     </>
   );
 }

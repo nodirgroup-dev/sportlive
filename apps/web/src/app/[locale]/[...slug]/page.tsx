@@ -13,6 +13,7 @@ import {
 } from '@/lib/db';
 import { PostCard } from '@/components/post-card';
 import { PostHero, PostGridCard } from '@/components/post-hero';
+import { BannerSlot } from '@/components/banner-slot';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 60;
@@ -222,6 +223,9 @@ export default async function CatchAllPage({
             sizes="(max-width: 768px) 100vw, 768px"
           />
         ) : null}
+        <div className="my-4 flex justify-center">
+          <BannerSlot position="in_article_top" />
+        </div>
         {(() => {
           // Body cleanup:
           // 1. Strip the leading DLE cover-image marker — the cover is already rendered above.
@@ -253,6 +257,9 @@ export default async function CatchAllPage({
                 />
               ) : null}
               <div className="article-body" dangerouslySetInnerHTML={{ __html: cleanedBody }} />
+              <div className="my-6 flex justify-center">
+                <BannerSlot position="in_article_bottom" />
+              </div>
             </>
           );
         })()}

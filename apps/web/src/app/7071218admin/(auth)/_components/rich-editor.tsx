@@ -74,9 +74,31 @@ export function RichEditor({ name, defaultValue = '', placeholder }: Props) {
   };
 
   const setImg = () => {
-    const url = window.prompt('URL изображения (например /uploads/posts/...webp)');
-    if (!url) return;
-    editor.chain().focus().setImage({ src: url }).run();
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg,image/png,image/webp,image/avif,image/gif';
+    input.onchange = async () => {
+      const f = input.files?.[0];
+      if (!f) return;
+      try {
+        const fd = new FormData();
+        fd.append('file', f);
+        const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
+        if (!res.ok) {
+          const j = await res.json().catch(() => ({}));
+          throw new Error(j.error || `HTTP ${res.status}`);
+        }
+        const j = await res.json();
+        editor.chain().focus().setImage({ src: j.url }).run();
+      } catch (e) {
+        const url = window.prompt(
+          `Загрузка не удалась (${e instanceof Error ? e.message : 'error'}). Вставьте URL вручную:`,
+          '',
+        );
+        if (url) editor.chain().focus().setImage({ src: url }).run();
+      }
+    };
+    input.click();
   };
 
   return (

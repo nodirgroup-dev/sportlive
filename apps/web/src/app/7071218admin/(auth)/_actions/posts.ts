@@ -1,7 +1,7 @@
 'use server';
 
 import { db, posts } from '@sportlive/db';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
@@ -122,5 +122,41 @@ export async function deletePost(id: number) {
   await db.delete(posts).where(eq(posts.id, id));
   revalidatePath('/7071218admin/news');
   redirect('/7071218admin/news');
+}
+
+export async function bulkPostsAction(formData: FormData) {
+  const user = await getCurrentUser();
+  if (!user || (user.role !== 'admin' && user.role !== 'editor')) redirect('/7071218admin/login');
+
+  const action = (formData.get('action') as string) || '';
+  const ids = formData
+    .getAll('ids')
+    .map((v) => parseInt(String(v), 10))
+    .filter(Number.isFinite);
+  if (ids.length === 0 || !action) {
+    redirect('/7071218admin/news');
+  }
+
+  if (action === 'publish') {
+    await db
+      .update(posts)
+      .set({ status: 'published', publishedAt: new Date(), updatedAt: new Date() })
+      .where(inArray(posts.id, ids));
+  } else if (action === 'unpublish') {
+    await db
+      .update(posts)
+      .set({ status: 'draft', updatedAt: new Date() })
+      .where(inArray(posts.id, ids));
+  } else if (action === 'archive') {
+    await db
+      .update(posts)
+      .set({ status: 'archived', updatedAt: new Date() })
+      .where(inArray(posts.id, ids));
+  } else if (action === 'delete') {
+    await db.delete(posts).where(inArray(posts.id, ids));
+  }
+  revalidatePath('/7071218admin/news');
+  revalidatePath('/');
+  redirect(`/7071218admin/news?bulk=${action}&n=${ids.length}`);
 }
 

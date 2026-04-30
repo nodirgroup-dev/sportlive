@@ -1,4 +1,4 @@
-import { db, posts, categories, users, redirects, staticPages } from '@sportlive/db';
+import { db, posts, categories, users, redirects, staticPages, banners } from '@sportlive/db';
 import { and, desc, eq, gte, sql } from 'drizzle-orm';
 import type { Locale } from '@/i18n/routing';
 
@@ -302,6 +302,30 @@ export async function getFooterPages(locale: Locale): Promise<Array<{ slug: stri
     .from(staticPages)
     .where(eq(staticPages.locale, locale))
     .orderBy(staticPages.sortOrder);
+}
+
+export type BannerView = {
+  id: number;
+  imageUrl: string;
+  linkUrl: string | null;
+  altText: string | null;
+  htmlSnippet: string | null;
+};
+
+export async function getActiveBanners(
+  position: 'header' | 'sidebar' | 'in_article_top' | 'in_article_bottom' | 'footer',
+): Promise<BannerView[]> {
+  const now = new Date().toISOString();
+  return db.execute(sql`
+    SELECT id, image_url AS "imageUrl", link_url AS "linkUrl", alt_text AS "altText", html_snippet AS "htmlSnippet"
+      FROM banners
+     WHERE active = true
+       AND position = ${position}
+       AND (starts_at IS NULL OR starts_at <= ${now}::timestamptz)
+       AND (ends_at IS NULL OR ends_at >= ${now}::timestamptz)
+     ORDER BY sort_order ASC, id ASC
+     LIMIT 5
+  `) as unknown as Promise<BannerView[]>;
 }
 
 export async function getRecentPostsCount(locale: Locale): Promise<number> {

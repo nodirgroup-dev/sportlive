@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { db, categories } from '@sportlive/db';
 import { eq } from 'drizzle-orm';
 import { RichEditor } from '../_components/rich-editor';
+import { CoverUpload } from '../_components/cover-upload';
 
 type FormPost = {
   id: number | null;
@@ -113,14 +114,8 @@ export async function NewsForm({
               </select>
             </div>
             <div className="field">
-              <label>Обложка (URL)</label>
-              <input
-                name="coverImage"
-                type="text"
-                defaultValue={post.coverImage ?? ''}
-                placeholder="/uploads/posts/2026-04/example.webp"
-                className="input"
-              />
+              <label>Обложка</label>
+              <CoverUpload name="coverImage" defaultValue={post.coverImage} />
             </div>
           </div>
         </div>

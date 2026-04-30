@@ -106,21 +106,59 @@
 /* topbar */
 [data-admin] .topbar {
   background: var(--bg-2); border-bottom: 1px solid var(--line);
-  display: flex; align-items: center; gap: 14px; padding: 0 22px; height: 56px;
+  display: flex; align-items: center; gap: 10px; padding: 0 22px; height: 56px;
 }
 [data-admin] .crumbs { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-2); }
+[data-admin] .crumbs .sep { opacity: 0.4; }
 [data-admin] .crumbs b { color: var(--text); font-weight: 600; }
 [data-admin] .topbar-spacer { flex: 1; }
 [data-admin] .iconbtn {
-  width: 32px; height: 32px; display: grid; place-items: center;
+  width: 34px; height: 34px; display: grid; place-items: center;
   border-radius: 8px; background: transparent; border: 1px solid var(--line); color: var(--text-2);
+  cursor: pointer; transition: background 0.12s, color 0.12s;
 }
 [data-admin] .iconbtn:hover { background: var(--surface-2); color: var(--text); }
+[data-admin] .iconbtn.has-dot { position: relative; }
+[data-admin] .iconbtn.has-dot::after {
+  content: ""; position: absolute; top: 6px; right: 6px;
+  width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+  box-shadow: 0 0 0 2px var(--bg-2);
+}
+
+[data-admin] .topbar-search {
+  flex: 1; max-width: 460px;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  padding: 0 10px; height: 34px; color: var(--text-3);
+}
+[data-admin] .topbar-search input {
+  flex: 1; background: transparent; border: 0; outline: none;
+  font-size: 12.5px; color: var(--text); font-family: inherit;
+}
+[data-admin] .topbar-search input::placeholder { color: var(--text-3); }
+[data-admin] .topbar-search kbd {
+  font-family: var(--font-mono); font-size: 10px;
+  padding: 2px 6px; border-radius: 4px;
+  background: var(--surface-3); color: var(--text-3); border: 1px solid var(--line);
+}
+
+[data-admin] .lang-group {
+  display: flex; background: var(--surface); border: 1px solid var(--line);
+  border-radius: 8px; padding: 2px;
+}
+[data-admin] .lang-group button {
+  border: 0; background: transparent; padding: 4px 9px; border-radius: 6px;
+  font-size: 11px; font-weight: 600; color: var(--text-3); letter-spacing: 0.04em; cursor: pointer;
+  font-family: inherit;
+}
+[data-admin] .lang-group button.active { background: var(--surface-3); color: var(--text); }
+
 [data-admin] .profile {
   display: flex; align-items: center; gap: 10px;
-  padding: 4px 10px 4px 4px; border-radius: 999px; background: var(--surface);
-  border: 1px solid var(--line);
+  padding: 4px 12px 4px 4px; border-radius: 999px; background: var(--surface);
+  border: 1px solid var(--line); cursor: pointer; position: relative;
 }
+[data-admin] .profile:hover { background: var(--surface-2); }
 [data-admin] .avatar {
   width: 28px; height: 28px; border-radius: 50%;
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
@@ -129,6 +167,32 @@
 [data-admin] .profile .who b { font-size: 12px; }
 [data-admin] .profile .who span { font-size: 9.5px; color: var(--text-3); letter-spacing: 0.12em; text-transform: uppercase; }
 [data-admin] .profile .who { display: flex; flex-direction: column; line-height: 1.1; }
+
+[data-admin] .menu-pop {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  min-width: 200px;
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+  padding: 6px; z-index: 50;
+}
+[data-admin] .menu-pop a, [data-admin] .menu-pop button {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 6px;
+  font-size: 12.5px; color: var(--text); font-weight: 500;
+  width: 100%; text-align: left; border: 0; background: transparent;
+  cursor: pointer; text-decoration: none; font-family: inherit;
+}
+[data-admin] .menu-pop a:hover, [data-admin] .menu-pop button:hover { background: var(--surface-2); }
+[data-admin] .menu-pop hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; }
+[data-admin] .menu-pop .danger { color: #ef4444; }
+
+/* light theme */
+[data-admin][data-theme="light"], [data-theme="light"] [data-admin] {
+  --bg: #f5f6f8; --bg-2: #eef0f3;
+  --surface: #ffffff; --surface-2: #f8f9fb; --surface-3: #eef0f3;
+  --line: rgba(0,0,0,0.06); --line-strong: rgba(0,0,0,0.12);
+  --text: #0f1218; --text-2: #4b5563; --text-3: #6b7280; --text-dim: #9ca3af;
+}
 
 /* page header */
 [data-admin] .page-h {
