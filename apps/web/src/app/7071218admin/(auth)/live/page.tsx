@@ -42,7 +42,7 @@ export default async function LiveBlogIndex() {
         <div>
           <h1>Live blog</h1>
           <div className="sub">
-            Daqiqa-bo'lay sharhlar — выберите матч, чтобы открыть live-blog
+            Минутные комментарии — выберите матч, чтобы открыть live-blog
           </div>
         </div>
       </div>
