@@ -3,9 +3,10 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { hasLocale, type Locale } from '@/i18n/routing';
 import { siteConfig, absoluteUrl, localePath } from '@/lib/site';
-import { getLatestPosts } from '@/lib/db';
+import { getLatestPosts, getMostPopular } from '@/lib/db';
 import { PostCard } from '@/components/post-card';
 import { PostHero, PostGridCard } from '@/components/post-hero';
+import { PopularList } from '@/components/popular-list';
 import { BannerSlot } from '@/components/banner-slot';
 import { MatchWidget } from '@/components/match-widget';
 
@@ -32,7 +33,10 @@ export default async function HomePage({
   if (!hasLocale(locale)) notFound();
   setRequestLocale(locale);
   const t = await getTranslations();
-  const posts = await getLatestPosts(locale, 31);
+  const [posts, popular] = await Promise.all([
+    getLatestPosts(locale as Locale, 31),
+    getMostPopular(locale as Locale, 5),
+  ]);
 
   const hero = posts[0];
   const featured = posts.slice(1, 7); // 6 cards
@@ -104,16 +108,29 @@ export default async function HomePage({
             </section>
           ) : null}
 
-          {rest.length > 0 ? (
-            <section>
-              <h2 className="mb-4 text-xl font-bold tracking-tight">{t('home.popular')}</h2>
-              <div className="rounded-lg border border-neutral-200 bg-white px-4 dark:border-neutral-800 dark:bg-neutral-950">
-                {rest.map((p) => (
-                  <PostCard key={p.id} post={p} locale={locale as Locale} />
-                ))}
-              </div>
-            </section>
-          ) : null}
+          <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
+            {rest.length > 0 ? (
+              <section>
+                <h2 className="mb-4 text-xl font-bold tracking-tight">{t('home.more')}</h2>
+                <div className="rounded-lg border border-neutral-200 bg-white px-4 dark:border-neutral-800 dark:bg-neutral-950">
+                  {rest.map((p) => (
+                    <PostCard key={p.id} post={p} locale={locale as Locale} />
+                  ))}
+                </div>
+              </section>
+            ) : (
+              <div />
+            )}
+
+            {popular.length > 0 ? (
+              <aside className="lg:sticky lg:top-20 lg:self-start">
+                <h2 className="mb-4 text-xl font-bold tracking-tight">{t('home.popular')}</h2>
+                <div className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950">
+                  <PopularList posts={popular} locale={locale as Locale} />
+                </div>
+              </aside>
+            ) : null}
+          </div>
         </>
       )}
     </div>
