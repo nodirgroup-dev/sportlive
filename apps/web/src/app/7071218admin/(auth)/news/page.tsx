@@ -21,6 +21,7 @@ async function getList(localeFilter: string | null, q: string | null, statusFilt
       publishedAt: posts.publishedAt,
       categoryId: posts.categoryId,
       categoryName: categories.name,
+      coverImage: posts.coverImage,
     })
     .from(posts)
     .leftJoin(categories, eq(categories.id, posts.categoryId))
@@ -115,6 +116,7 @@ export default async function NewsList({
             <tr>
               <th style={{ width: 32 }} />
               <th>ID</th>
+              <th style={{ width: 64 }}>Фото</th>
               <th>Заголовок</th>
               <th>Категория</th>
               <th>Язык</th>
@@ -131,6 +133,34 @@ export default async function NewsList({
                 </td>
                 <td className="num" style={{ color: 'var(--text-3)' }}>
                   {r.legacyId ?? r.id}
+                </td>
+                <td>
+                  {r.coverImage ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={r.coverImage}
+                      alt=""
+                      loading="lazy"
+                      style={{
+                        width: 56,
+                        height: 36,
+                        objectFit: 'cover',
+                        borderRadius: 4,
+                        display: 'block',
+                        background: 'var(--bg-2)',
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: 56,
+                        height: 36,
+                        borderRadius: 4,
+                        background: 'var(--bg-2)',
+                        border: '1px dashed var(--border)',
+                      }}
+                    />
+                  )}
                 </td>
                 <td style={{ fontWeight: 500 }}>{r.title}</td>
                 <td>
@@ -170,7 +200,7 @@ export default async function NewsList({
             ))}
             {list.length === 0 ? (
               <tr>
-                <td colSpan={8} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-3)' }}>
+                <td colSpan={9} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-3)' }}>
                   Нет статей по выбранным фильтрам
                 </td>
               </tr>
