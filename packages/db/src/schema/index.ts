@@ -7,3 +7,4 @@ export * from './media';
 export * from './redirects';
 export * from './fixtures';
 export * from './static_pages';
+export * from './sessions';

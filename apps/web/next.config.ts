@@ -17,7 +17,9 @@ const nextConfig: NextConfig = {
     ],
     formats: ['image/avif', 'image/webp'],
   },
-  typedRoutes: true,
+  // typedRoutes disabled — many dynamic admin paths and i18n-aware Link use a
+  // wider URL surface than the static type-checker allows.
+  // typedRoutes: true,
   async headers() {
     return [
       {

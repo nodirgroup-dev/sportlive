@@ -7,6 +7,6 @@ export const config = {
   matcher: [
     // Process every path except framework internals, /uploads, and static assets.
     // .html IS processed (legacy DLE URLs end in .html and we 301 them in [...slug]).
-    '/((?!api|admin|_next|_vercel|uploads|favicon\\.|sitemap\\.xml|robots\\.txt|google_news\\.xml|rss\\.xml|.*\\.(?:jpg|jpeg|png|gif|webp|avif|svg|ico|css|js|woff|woff2|ttf|otf|mp4|mp3|webm|m3u8|json|xml|txt|map)$).*)',
+    '/((?!api|admin|7071218admin|_next|_vercel|uploads|favicon\\.|sitemap\\.xml|robots\\.txt|google_news\\.xml|rss\\.xml|.*\\.(?:jpg|jpeg|png|gif|webp|avif|svg|ico|css|js|woff|woff2|ttf|otf|mp4|mp3|webm|m3u8|json|xml|txt|map)$).*)',
   ],
 };
