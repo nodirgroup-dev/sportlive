@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'sportlive.uz' },
       { protocol: 'https', hostname: 'staging.sportlive.uz' },
+      { protocol: 'https', hostname: 'media.api-sports.io' },
     ],
     formats: ['image/avif', 'image/webp'],
   },

@@ -20,6 +20,9 @@ export function SiteHeader() {
           <Link href="/results" className="hover:text-brand-700">
             {t('results')}
           </Link>
+          <Link href="/live" className="hover:text-brand-700">
+            {t('live')}
+          </Link>
         </nav>
         <LanguageSwitcher />
       </div>

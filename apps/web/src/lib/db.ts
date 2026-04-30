@@ -1,5 +1,5 @@
-import { db, posts, categories, users, redirects } from '@sportlive/db';
-import { and, desc, eq, gte, sql } from 'drizzle-orm';
+import { db, posts, categories, users, redirects, leagues, teams, fixtures } from '@sportlive/db';
+import { and, asc, desc, eq, gte, lt, lte, inArray, sql } from 'drizzle-orm';
 import type { Locale } from '@/i18n/routing';
 
 export type ListedPost = {
@@ -187,6 +187,86 @@ export async function getAllPostsForSitemap(): Promise<
       categoryPath: (await categoryPath(r.categoryId))?.path ?? null,
     })),
   );
+}
+
+export type FixtureRow = {
+  id: number;
+  kickoffAt: Date;
+  statusShort: string;
+  statusLong: string | null;
+  elapsed: number | null;
+  homeGoals: number | null;
+  awayGoals: number | null;
+  league: { id: number; name: string; logo: string | null; country: string | null };
+  homeTeam: { id: number; name: string; logo: string | null };
+  awayTeam: { id: number; name: string; logo: string | null };
+};
+
+const homeTeams = sql.raw('home_teams');
+const awayTeams = sql.raw('away_teams');
+
+async function fixturesQuery(opts: { from?: Date; to?: Date; statusIn?: string[]; live?: boolean; limit?: number; order?: 'asc' | 'desc' }): Promise<FixtureRow[]> {
+  const { from, to, statusIn, live, limit = 50, order = 'asc' } = opts;
+  const conds = [];
+  if (from) conds.push(gte(fixtures.kickoffAt, from));
+  if (to) conds.push(lt(fixtures.kickoffAt, to));
+  if (statusIn && statusIn.length > 0) conds.push(inArray(fixtures.statusShort, statusIn));
+  if (live) conds.push(inArray(fixtures.statusShort, ['1H', '2H', 'HT', 'ET', 'P', 'BT', 'LIVE']));
+
+  const rows = await db.execute(sql`
+    SELECT
+      f.id, f.kickoff_at AS "kickoffAt", f.status_short AS "statusShort",
+      f.status_long AS "statusLong", f.elapsed,
+      f.home_goals AS "homeGoals", f.away_goals AS "awayGoals",
+      l.id AS "leagueId", l.name AS "leagueName", l.logo AS "leagueLogo", l.country AS "leagueCountry",
+      ht.id AS "homeId", ht.name AS "homeName", ht.logo AS "homeLogo",
+      at.id AS "awayId", at.name AS "awayName", at.logo AS "awayLogo"
+    FROM fixtures f
+    JOIN leagues l ON l.id = f.league_id
+    JOIN teams ht ON ht.id = f.home_team_id
+    JOIN teams at ON at.id = f.away_team_id
+    ${conds.length > 0 ? sql`WHERE ${sql.join(conds, sql` AND `)}` : sql``}
+    ORDER BY f.kickoff_at ${sql.raw(order === 'asc' ? 'ASC' : 'DESC')}
+    LIMIT ${limit}
+  `);
+  void homeTeams;
+  void awayTeams;
+
+  // postgres-js returns rows in r as the array directly when using sql.execute
+  const arr = (rows as unknown as Array<Record<string, unknown>>) ?? [];
+  return arr.map((r) => ({
+    id: Number(r.id),
+    kickoffAt: new Date(r.kickoffAt as string),
+    statusShort: String(r.statusShort),
+    statusLong: (r.statusLong as string) ?? null,
+    elapsed: r.elapsed === null ? null : Number(r.elapsed),
+    homeGoals: r.homeGoals === null ? null : Number(r.homeGoals),
+    awayGoals: r.awayGoals === null ? null : Number(r.awayGoals),
+    league: {
+      id: Number(r.leagueId),
+      name: String(r.leagueName),
+      logo: (r.leagueLogo as string) ?? null,
+      country: (r.leagueCountry as string) ?? null,
+    },
+    homeTeam: { id: Number(r.homeId), name: String(r.homeName), logo: (r.homeLogo as string) ?? null },
+    awayTeam: { id: Number(r.awayId), name: String(r.awayName), logo: (r.awayLogo as string) ?? null },
+  }));
+}
+
+export async function getUpcomingFixtures(daysAhead = 7, limit = 50): Promise<FixtureRow[]> {
+  const from = new Date();
+  const to = new Date(Date.now() + daysAhead * 24 * 60 * 60 * 1000);
+  return fixturesQuery({ from, to, statusIn: ['NS', 'TBD'], limit, order: 'asc' });
+}
+
+export async function getRecentResults(daysBack = 7, limit = 50): Promise<FixtureRow[]> {
+  const from = new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000);
+  const to = new Date();
+  return fixturesQuery({ from, to, statusIn: ['FT', 'AET', 'PEN', 'AWD', 'WO'], limit, order: 'desc' });
+}
+
+export async function getLiveFixtures(limit = 30): Promise<FixtureRow[]> {
+  return fixturesQuery({ live: true, limit, order: 'asc' });
 }
 
 export async function getRecentPostsCount(locale: Locale): Promise<number> {

@@ -5,3 +5,4 @@ export * from './posts';
 export * from './tags';
 export * from './media';
 export * from './redirects';
+export * from './fixtures';
