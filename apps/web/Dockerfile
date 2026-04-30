@@ -20,6 +20,8 @@ RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
 # ---------- builder ----------
 FROM base AS builder
 ENV NEXT_TELEMETRY_DISABLED=1
+ARG NEXT_PUBLIC_VAPID_PUBLIC_KEY
+ENV NEXT_PUBLIC_VAPID_PUBLIC_KEY=${NEXT_PUBLIC_VAPID_PUBLIC_KEY}
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY --from=deps /app/packages/db/node_modules ./packages/db/node_modules
