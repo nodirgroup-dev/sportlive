@@ -228,10 +228,17 @@ export default async function CatchAllPage({
           // 2. If the migration left summary == body (DLE legacy: full_story empty,
           //    short_story used for both), don't render the summary block — it would be
           //    a verbatim duplicate.
-          const cleanedBody = post.body.replace(
-            /^\s*<!--\s*dle_image_begin:[^>]*-->[\s\S]*?<!--\s*dle_image_end\s*-->\s*(?:<br\s*\/?>\s*)*/i,
-            '',
-          );
+          // Strip the DLE cover-image block (and any leading <br>s after it) wherever
+          // it appears in the body — it may be wrapped in <p>, sit at the top, or be
+          // embedded later. The cover image is rendered separately above.
+          const cleanedBody = post.body
+            .replace(
+              /<!--\s*dle_image_begin:[\s\S]*?<!--\s*dle_image_end\s*-->(?:\s*<br\s*\/?>)*/gi,
+              '',
+            )
+            // If that left an empty <p></p> at the top, drop it.
+            .replace(/^\s*<p>\s*<\/p>\s*/i, '')
+            .replace(/^\s*<p>\s*(?:<br\s*\/?>\s*)+/i, '<p>');
           const summaryDup =
             post.summary != null &&
             (post.summary.trim() === post.body.trim() ||
