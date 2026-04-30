@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db, newsletterSubscribers } from '@sportlive/db';
 import { eq, sql } from 'drizzle-orm';
 import { hasLocale } from '@/i18n/routing';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 export const runtime = 'nodejs';
 
@@ -14,6 +15,12 @@ const ipFromRequest = (req: NextRequest) =>
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: NextRequest) {
+  const ip0 = ipFromRequest(req) ?? 'unknown';
+  const rl = await checkRateLimit(`newsletter:${ip0}`, 3, 5 * 60_000);
+  if (!rl.ok) {
+    return NextResponse.json({ error: 'too many requests' }, { status: 429, headers: { 'retry-after': String(Math.ceil(rl.resetMs / 1000)) } });
+  }
+
   let body: { email?: string; locale?: string };
   try {
     body = await req.json();

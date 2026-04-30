@@ -27,6 +27,8 @@ async function getAuthors() {
       total: sql<number>`count(*)::int`,
       published: sql<number>`sum(case when ${posts.status} = 'published' then 1 else 0 end)::int`,
       drafts: sql<number>`sum(case when ${posts.status} = 'draft' then 1 else 0 end)::int`,
+      last7d: sql<number>`sum(case when ${posts.publishedAt} >= now() - interval '7 days' then 1 else 0 end)::int`,
+      totalViews: sql<number>`coalesce(sum(${posts.viewCount}), 0)::int`,
       lastPublishedAt: max(posts.publishedAt),
     })
     .from(posts)
@@ -41,6 +43,8 @@ async function getAuthors() {
       total: s?.total ?? 0,
       published: s?.published ?? 0,
       drafts: s?.drafts ?? 0,
+      last7d: s?.last7d ?? 0,
+      totalViews: s?.totalViews ?? 0,
       lastPublishedAt: s?.lastPublishedAt ?? null,
     };
   });
@@ -90,7 +94,7 @@ export default async function AuthorsPage() {
               {a.bio ? (
                 <div style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 10, lineHeight: 1.5 }}>{a.bio}</div>
               ) : null}
-              <div style={{ display: 'flex', gap: 16, fontSize: 11.5 }}>
+              <div style={{ display: 'flex', gap: 16, fontSize: 11.5, flexWrap: 'wrap' }}>
                 <div>
                   <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, lineHeight: 1 }}>
                     {a.published}
@@ -105,6 +109,18 @@ export default async function AuthorsPage() {
                     <div style={{ color: 'var(--text-3)' }}>черн.</div>
                   </div>
                 ) : null}
+                <div>
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, lineHeight: 1, color: 'var(--accent-2)' }}>
+                    {a.last7d}
+                  </div>
+                  <div style={{ color: 'var(--text-3)' }}>за 7 дн</div>
+                </div>
+                <div>
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, lineHeight: 1 }}>
+                    {a.totalViews >= 1000 ? `${(a.totalViews / 1000).toFixed(1)}k` : a.totalViews}
+                  </div>
+                  <div style={{ color: 'var(--text-3)' }}>просм.</div>
+                </div>
               </div>
               {a.lastPublishedAt ? (
                 <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 8 }}>

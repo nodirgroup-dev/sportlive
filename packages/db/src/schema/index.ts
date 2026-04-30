@@ -19,3 +19,5 @@ export * from './post_revisions';
 export * from './players';
 export * from './match_lineups';
 export * from './rss_sources';
+export * from './transfers';
+export * from './rate_limits';

@@ -117,7 +117,10 @@ export async function NewsForm({
             <label>Тело статьи</label>
             <RichEditor name="body" defaultValue={post.body} placeholder="Начните писать…" />
             <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>
-              💡 Шорткоды: <code>[fixture id=N]</code> · <code>[team id=N]</code> · <code>[youtube id=ABC]</code> · <code>[tweet id=NNNN]</code>
+              💡 Шорткоды: <code>[fixture id=N]</code> · <code>[team id=N]</code> · <code>[youtube id=ABC]</code> · <code>[tweet id=NNNN]</code> · <code>[bet match=N]</code>
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>
+              ♿ Alt-текст: вставленные изображения должны иметь описание (правый клик → редактировать) — это обязательно для SEO и accessibility
             </div>
           </div>
         </div>

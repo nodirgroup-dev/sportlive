@@ -19,6 +19,8 @@ import { ShareButtons } from '@/components/share-buttons';
 import { ArticleTracker } from '@/components/article-tracker';
 import { PostCard } from '@/components/post-card';
 import { ArticleBody } from '@/components/article-body';
+import { ReadingProgress } from '@/components/reading-progress';
+import { Breadcrumbs } from '@/components/breadcrumbs';
 
 const READING_LABEL: Record<Locale, (n: number) => string> = {
   uz: (n) => `${n} daqiqa o'qish`,
@@ -214,29 +216,26 @@ export default async function CatchAllPage({
       : '';
 
     return (
-      <article className="container mx-auto max-w-3xl px-4 py-6 sm:py-10">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-        />
-        {post.category ? (
-          <nav className="mb-3 flex items-center gap-1 text-xs text-neutral-500">
-            <Link href={'/' as Parameters<typeof permanentRedirect>[0]} className="hover:text-brand-700">
-              {t('nav.home')}
-            </Link>
-            <span>·</span>
-            <Link
-              href={`/${post.category.path}` as Parameters<typeof permanentRedirect>[0]}
-              className="font-medium uppercase tracking-wider text-brand-700"
-            >
-              {post.category.name}
-            </Link>
-          </nav>
-        ) : null}
+      <>
+        <ReadingProgress />
+        <article className="container mx-auto max-w-3xl px-4 py-6 sm:py-10">
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+          />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+          />
+          <Breadcrumbs
+            crumbs={[
+              { name: t('nav.home'), href: '/' },
+              ...(post.category
+                ? [{ name: post.category.name, href: `/${post.category.path}` }]
+                : []),
+              { name: post.title },
+            ]}
+          />
         <header className="mb-6">
           <h1 className="text-3xl font-bold leading-tight tracking-tight sm:text-4xl">{post.title}</h1>
           <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-neutral-500">
@@ -399,8 +398,9 @@ export default async function CatchAllPage({
           );
         })()}
 
-        <CommentsSection postId={post.id} locale={locale} />
-      </article>
+          <CommentsSection postId={post.id} locale={locale} />
+        </article>
+      </>
     );
   }
 

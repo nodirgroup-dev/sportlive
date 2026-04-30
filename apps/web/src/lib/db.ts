@@ -13,6 +13,7 @@ import {
   playerStats,
   matchLineups,
   teams,
+  transfers,
 } from '@sportlive/db';
 import { and, asc, desc, eq, gte, inArray, ne, sql } from 'drizzle-orm';
 import type { Locale } from '@/i18n/routing';
@@ -342,6 +343,7 @@ export type CommentView = {
   body: string;
   createdAt: Date;
   parentId: number | null;
+  likeCount: number;
 };
 
 export async function getApprovedComments(postId: number): Promise<CommentView[]> {
@@ -352,6 +354,7 @@ export async function getApprovedComments(postId: number): Promise<CommentView[]
       body: comments.body,
       createdAt: comments.createdAt,
       parentId: comments.parentId,
+      likeCount: comments.likeCount,
     })
     .from(comments)
     .where(and(eq(comments.postId, postId), eq(comments.status, 'approved')))
@@ -999,6 +1002,122 @@ export async function getLeaguesWithScorers(): Promise<LeagueRow[]> {
 
 void players;
 void playerStats;
+void transfers;
+
+// =================== H2H + Squad + Transfers ===================
+
+export type H2hRow = {
+  id: number;
+  kickoffAt: Date;
+  statusShort: string;
+  homeGoals: number | null;
+  awayGoals: number | null;
+  homeTeam: { id: number; name: string; logo: string | null };
+  awayTeam: { id: number; name: string; logo: string | null };
+  league: { name: string };
+};
+
+/** Last N completed meetings between two teams (any side). */
+export async function getHeadToHead(homeId: number, awayId: number, limit = 5): Promise<H2hRow[]> {
+  const rows = (await db.execute(sql`
+    SELECT f.id, f.kickoff_at AS "kickoffAt", f.status_short AS "statusShort",
+           f.home_goals AS "homeGoals", f.away_goals AS "awayGoals",
+           ht.id AS "homeId", ht.name AS "homeName", ht.logo AS "homeLogo",
+           at.id AS "awayId", at.name AS "awayName", at.logo AS "awayLogo",
+           l.name AS "leagueName"
+    FROM fixtures f
+    JOIN teams ht ON ht.id = f.home_team_id
+    JOIN teams at ON at.id = f.away_team_id
+    JOIN leagues l ON l.id = f.league_id
+    WHERE ((f.home_team_id = ${homeId} AND f.away_team_id = ${awayId})
+        OR (f.home_team_id = ${awayId} AND f.away_team_id = ${homeId}))
+      AND f.status_short IN ('FT','AET','PEN','AWD','WO')
+    ORDER BY f.kickoff_at DESC
+    LIMIT ${limit}
+  `)) as unknown as Array<Record<string, unknown>>;
+  return rows.map((r) => ({
+    id: Number(r.id),
+    kickoffAt: new Date(r.kickoffAt as string),
+    statusShort: String(r.statusShort),
+    homeGoals: r.homeGoals === null ? null : Number(r.homeGoals),
+    awayGoals: r.awayGoals === null ? null : Number(r.awayGoals),
+    homeTeam: { id: Number(r.homeId), name: String(r.homeName), logo: (r.homeLogo as string) ?? null },
+    awayTeam: { id: Number(r.awayId), name: String(r.awayName), logo: (r.awayLogo as string) ?? null },
+    league: { name: String(r.leagueName) },
+  }));
+}
+
+export type SquadPlayer = {
+  id: number;
+  name: string;
+  position: string | null;
+  photo: string | null;
+  goals: number;
+  assists: number;
+};
+
+/** Players whose latest team is teamId. Sorted by recent league season's goals. */
+export async function getTeamSquad(teamId: number, limit = 50): Promise<SquadPlayer[]> {
+  const rows = (await db.execute(sql`
+    SELECT
+      p.id, p.name, p.position, p.photo,
+      COALESCE((
+        SELECT goals FROM player_stats s
+        WHERE s.player_id = p.id AND s.team_id = ${teamId}
+        ORDER BY season DESC LIMIT 1
+      ), 0)::int AS goals,
+      COALESCE((
+        SELECT assists FROM player_stats s
+        WHERE s.player_id = p.id AND s.team_id = ${teamId}
+        ORDER BY season DESC LIMIT 1
+      ), 0)::int AS assists
+    FROM players p
+    WHERE p.team_id = ${teamId}
+    ORDER BY goals DESC, p.name ASC
+    LIMIT ${limit}
+  `)) as unknown as Array<Record<string, unknown>>;
+  return rows.map((r) => ({
+    id: Number(r.id),
+    name: String(r.name),
+    position: (r.position as string) ?? null,
+    photo: (r.photo as string) ?? null,
+    goals: Number(r.goals),
+    assists: Number(r.assists),
+  }));
+}
+
+export type TransferRow = {
+  id: number;
+  date: Date | null;
+  type: string | null;
+  player: { id: number; name: string; photo: string | null };
+  teamIn: { id: number; name: string; logo: string | null } | null;
+  teamOut: { id: number; name: string; logo: string | null } | null;
+};
+
+export async function getTeamTransfers(teamId: number, limit = 20): Promise<TransferRow[]> {
+  const rows = (await db.execute(sql`
+    SELECT t.id, t.transfer_date AS "date", t.type,
+           p.id AS "playerId", p.name AS "playerName", p.photo,
+           ti.id AS "tiId", ti.name AS "tiName", ti.logo AS "tiLogo",
+           toq.id AS "toId", toq.name AS "toName", toq.logo AS "toLogo"
+    FROM transfers t
+    JOIN players p ON p.id = t.player_id
+    LEFT JOIN teams ti ON ti.id = t.team_in_id
+    LEFT JOIN teams toq ON toq.id = t.team_out_id
+    WHERE t.team_in_id = ${teamId} OR t.team_out_id = ${teamId}
+    ORDER BY t.transfer_date DESC NULLS LAST, t.id DESC
+    LIMIT ${limit}
+  `)) as unknown as Array<Record<string, unknown>>;
+  return rows.map((r) => ({
+    id: Number(r.id),
+    date: r.date ? new Date(r.date as string) : null,
+    type: (r.type as string) ?? null,
+    player: { id: Number(r.playerId), name: String(r.playerName), photo: (r.photo as string) ?? null },
+    teamIn: r.tiId ? { id: Number(r.tiId), name: String(r.tiName), logo: (r.tiLogo as string) ?? null } : null,
+    teamOut: r.toId ? { id: Number(r.toId), name: String(r.toName), logo: (r.toLogo as string) ?? null } : null,
+  }));
+}
 
 // =================== Search ===================
 
@@ -1236,6 +1355,39 @@ export async function getAdjacentPosts(
     prev: await enrich(prevRows[0]),
     next: await enrich(nextRows[0]),
   };
+}
+
+/** Top-viewed published posts in the last N hours, scored by viewCount/recency. */
+export async function getTrending(locale: Locale, hours = 24, limit = 5): Promise<ListedPost[]> {
+  const cutoff = new Date(Date.now() - hours * 60 * 60 * 1000);
+  const rows = await db
+    .select({
+      id: posts.id,
+      legacyId: posts.legacyId,
+      slug: posts.slug,
+      title: posts.title,
+      summary: posts.summary,
+      coverImage: posts.coverImage,
+      coverImageWidth: posts.coverImageWidth,
+      coverImageHeight: posts.coverImageHeight,
+      publishedAt: posts.publishedAt,
+      categoryId: posts.categoryId,
+    })
+    .from(posts)
+    .where(
+      and(
+        eq(posts.locale, locale),
+        eq(posts.status, 'published'),
+        gte(posts.publishedAt, cutoff),
+      ),
+    )
+    .orderBy(desc(posts.viewCount), desc(posts.publishedAt))
+    .limit(limit);
+  if (rows.length > 0) {
+    return Promise.all(rows.map(async (r) => ({ ...r, category: await categoryPath(r.categoryId) })));
+  }
+  // Fall back to most-popular semantics when there's no recent traffic yet.
+  return getMostPopular(locale, limit);
 }
 
 /** Most recently featured published post for the locale; null if none. */

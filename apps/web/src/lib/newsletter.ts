@@ -50,7 +50,8 @@ export function renderDigestHtml(
   recipientEmail: string,
 ): { html: string; text: string } {
   const t = HEADER[locale];
-  const unsubUrl = `${siteConfig.url}/api/newsletter?email=${encodeURIComponent(recipientEmail)}`;
+  const localePrefix = locale === 'uz' ? '' : `/${locale}`;
+  const unsubUrl = `${siteConfig.url}${localePrefix}/unsubscribe?email=${encodeURIComponent(recipientEmail)}`;
 
   const items = posts
     .map((p) => {

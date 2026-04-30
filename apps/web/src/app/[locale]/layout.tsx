@@ -2,10 +2,13 @@ import type { Metadata, Viewport } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { routing, hasLocale } from '@/i18n/routing';
+import { routing, hasLocale, type Locale } from '@/i18n/routing';
 import { siteConfig, absoluteUrl, localePath } from '@/lib/site';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
+import { CookieConsent } from '@/components/cookie-consent';
+import { Analytics } from '@/components/analytics';
+import { MobileNav } from '@/components/mobile-nav';
 import '../globals.css';
 
 export function generateStaticParams() {
@@ -89,12 +92,15 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className="min-h-screen flex flex-col">
+      <body className="min-h-screen flex flex-col pb-[60px] sm:pb-0">
         <NextIntlClientProvider messages={messages}>
           <SiteHeader />
           <main className="flex-1">{children}</main>
           <SiteFooter />
+          <MobileNav locale={locale as Locale} />
+          <CookieConsent locale={locale as Locale} />
         </NextIntlClientProvider>
+        <Analytics />
       </body>
     </html>
   );

@@ -45,6 +45,8 @@ const LIVE_ONLY = !!args.live;
 const TEAMS_ONLY = !!args['teams-only'];
 const TOPSCORERS_ONLY = !!args['topscorers-only'];
 const LINEUPS_ONLY = !!args['lineups-only'];
+const EVENTS_ONLY = !!args['events-only'];
+const TRANSFERS_ONLY = !!args['transfers-only'];
 
 const sql = postgres(DATABASE_URL, { prepare: false, max: 5, onnotice: () => {} });
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
@@ -278,6 +280,119 @@ async function fetchAllUpcomingLineups(daysAhead = 2) {
   }
 }
 
+// Map API-Football event "type" -> our live_entry_type enum.
+const EVENT_TYPE_MAP = {
+  goal: 'goal',
+  card: 'yellow_card', // narrowed below by detail
+  subst: 'sub',
+  var: 'var',
+};
+
+async function importEventsForFixture(fixtureId) {
+  const r = await api('/fixtures/events', { fixture: fixtureId });
+  const events = r.response ?? [];
+  // Wipe previous auto-imported events for this fixture so we don't dup.
+  // Author IS NULL means cron-imported (admins set authorId on manual entries).
+  await sql`DELETE FROM live_entries WHERE fixture_id = ${fixtureId} AND author_id IS NULL`;
+  for (const ev of events) {
+    const minute = ev.time?.elapsed ?? null;
+    const detail = (ev.detail ?? '').toLowerCase();
+    const cardKind = detail.includes('red')
+      ? 'red_card'
+      : detail.includes('yellow')
+        ? 'yellow_card'
+        : null;
+    const t = ev.type === 'Card' ? cardKind ?? 'yellow_card'
+      : ev.type === 'Goal' ? 'goal'
+      : ev.type === 'subst' ? 'sub'
+      : ev.type === 'Var' ? 'var'
+      : 'general';
+    void EVENT_TYPE_MAP;
+    const player = ev.player?.name ?? '';
+    const assist = ev.assist?.name ?? '';
+    const team = ev.team?.name ?? '';
+    const body = `${team}: ${ev.detail ?? ev.type}${player ? ` — ${player}` : ''}${assist ? ` (assist ${assist})` : ''}`;
+    await sql`
+      INSERT INTO live_entries (fixture_id, minute, type, body, author_id, occurred_at)
+      VALUES (${fixtureId}, ${minute}, ${t}, ${body}, NULL, now())
+    `;
+  }
+  return events.length;
+}
+
+async function fetchAllLiveEvents() {
+  // Fixtures that are live or finished within the last 6 hours.
+  const rows = await sql`
+    SELECT id FROM fixtures
+    WHERE (status_short IN ('1H','HT','2H','ET','P','LIVE','BT')
+       OR (status_short IN ('FT','AET','PEN') AND kickoff_at >= now() - interval '6 hours'))
+    ORDER BY kickoff_at DESC
+    LIMIT 30
+  `;
+  log(`  importing live events for ${rows.length} fixtures`);
+  let total = 0;
+  for (const r of rows) {
+    try {
+      total += await importEventsForFixture(r.id);
+    } catch (e) {
+      log(`  events fixture=${r.id} failed: ${e.message?.slice(0, 100)}`);
+    }
+  }
+  log(`  imported ${total} events total`);
+}
+
+async function importTransfersForTeam(teamId) {
+  const r = await api('/transfers', { team: teamId });
+  const items = r.response ?? [];
+  let count = 0;
+  for (const it of items) {
+    if (!it.player?.id) continue;
+    // Ensure player exists (minimal upsert).
+    await sql`
+      INSERT INTO players (id, name)
+      VALUES (${it.player.id}, ${it.player.name ?? 'Unknown'})
+      ON CONFLICT (id) DO NOTHING
+    `;
+    for (const t of it.transfers ?? []) {
+      const date = t.date ? new Date(t.date) : null;
+      const type = t.type ?? null;
+      const teamInId = t.teams?.in?.id ?? null;
+      const teamOutId = t.teams?.out?.id ?? null;
+      // Dedupe by (player, date, teamIn, teamOut).
+      const exists = await sql`
+        SELECT 1 FROM transfers
+        WHERE player_id = ${it.player.id}
+          AND COALESCE(team_in_id, 0) = ${teamInId ?? 0}
+          AND COALESCE(team_out_id, 0) = ${teamOutId ?? 0}
+          AND COALESCE(transfer_date::text, '') = ${date ? date.toISOString() : ''}
+        LIMIT 1
+      `;
+      if (exists.length > 0) continue;
+      await sql`
+        INSERT INTO transfers (player_id, team_in_id, team_out_id, transfer_date, type)
+        VALUES (${it.player.id}, ${teamInId}, ${teamOutId}, ${date}, ${type})
+      `;
+      count++;
+    }
+  }
+  return count;
+}
+
+async function fetchAllTransfers() {
+  // Walk all teams we've seen in fixtures.
+  const rows = await sql`SELECT id FROM teams ORDER BY id`;
+  log(`  fetching transfers for ${rows.length} teams`);
+  let total = 0;
+  for (const r of rows) {
+    try {
+      total += await importTransfersForTeam(r.id);
+    } catch (e) {
+      log(`  transfer team=${r.id} failed: ${e.message?.slice(0, 100)}`);
+    }
+  }
+  log(`  imported ${total} transfers total`);
+}
+
 async function fetchTeamsForLeague(leagueId) {
   const r = await api('/teams', { league: leagueId, season: SEASON });
   const items = r.response ?? [];
@@ -347,6 +462,10 @@ async function main() {
     }
   } else if (LINEUPS_ONLY) {
     await fetchAllUpcomingLineups(DAYS ?? 2);
+  } else if (EVENTS_ONLY) {
+    await fetchAllLiveEvents();
+  } else if (TRANSFERS_ONLY) {
+    await fetchAllTransfers();
   } else {
     await fetchLeagues();
     for (const lid of LEAGUES) {

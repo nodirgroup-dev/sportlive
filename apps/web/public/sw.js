@@ -1,11 +1,34 @@
-// sportlive.uz service worker — only handles push and notification clicks.
+// sportlive.uz service worker — push notifications + offline fallback.
+
+const OFFLINE_CACHE = 'sl-offline-v1';
+const OFFLINE_URL = '/offline.html';
 
 self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(OFFLINE_CACHE).then((cache) => cache.addAll([OFFLINE_URL])),
+  );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    Promise.all([
+      self.clients.claim(),
+      caches.keys().then((keys) =>
+        Promise.all(keys.filter((k) => k !== OFFLINE_CACHE).map((k) => caches.delete(k))),
+      ),
+    ]),
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  // Only intercept navigations — not API calls, not assets.
+  if (event.request.mode !== 'navigate') return;
+  event.respondWith(
+    fetch(event.request).catch(() =>
+      caches.match(OFFLINE_URL).then((r) => r ?? new Response('offline', { status: 503 })),
+    ),
+  );
 });
 
 self.addEventListener('push', (event) => {

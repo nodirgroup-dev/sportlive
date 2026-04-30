@@ -21,6 +21,21 @@ const nextConfig: NextConfig = {
   // wider URL surface than the static type-checker allows.
   // typedRoutes: true,
   async headers() {
+    const csp = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com https://www.googletagmanager.com https://pagead2.googlesyndication.com https://*.adtrafficquality.google",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: https: blob:",
+      "font-src 'self' data:",
+      "connect-src 'self' https://cloudflareinsights.com https://*.sentry.io",
+      "frame-src https://www.youtube.com https://www.youtube-nocookie.com https://platform.twitter.com https://googleads.g.doubleclick.net",
+      "media-src 'self' https:",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'self'",
+      'upgrade-insecure-requests',
+    ].join('; ');
     return [
       {
         source: '/(.*)',
@@ -32,6 +47,8 @@ const nextConfig: NextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
           },
+          { key: 'Content-Security-Policy', value: csp },
+          { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
         ],
       },
     ];

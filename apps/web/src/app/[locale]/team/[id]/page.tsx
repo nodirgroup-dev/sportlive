@@ -9,9 +9,13 @@ import {
   getTeamUpcoming,
   getTeamRecent,
   getTeamStandings,
+  getTeamSquad,
+  getTeamTransfers,
   teamFormFromFixtures,
   type TeamFormResult,
 } from '@/lib/db';
+import { Link } from '@/i18n/navigation';
+import type { Route } from 'next';
 import { FixtureRowItem } from '@/components/fixture-row';
 
 export const dynamic = 'force-dynamic';
@@ -72,10 +76,12 @@ export default async function TeamPage({
   if (!team) notFound();
 
   const t = await getTranslations({ locale, namespace: 'team' });
-  const [upcoming, recent, standings] = await Promise.all([
+  const [upcoming, recent, standings, squad, teamTransfers] = await Promise.all([
     getTeamUpcoming(id, 10),
     getTeamRecent(id, 10),
     getTeamStandings(id),
+    getTeamSquad(id, 30),
+    getTeamTransfers(id, 10),
   ]);
   const form = teamFormFromFixtures(id, recent);
   const teamUrl = absoluteUrl(localePath(locale, `/team/${id}`));
@@ -234,6 +240,79 @@ export default async function TeamPage({
           <p className="text-sm text-neutral-500">{t('noRecent')}</p>
         )}
       </section>
+
+      {squad.length > 0 ? (
+        <section className="mt-8">
+          <h2 className="mb-3 text-lg font-bold tracking-tight">
+            {locale === 'ru' ? 'Состав' : locale === 'en' ? 'Squad' : 'Tarkib'}
+          </h2>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            {squad.map((p) => (
+              <Link
+                key={p.id}
+                href={`/player/${p.id}` as Route}
+                className="flex items-center gap-2 rounded-lg border border-neutral-200 bg-white p-2 text-sm hover:border-brand-500 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:border-brand-400"
+              >
+                {p.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={p.photo}
+                    alt=""
+                    width={40}
+                    height={40}
+                    loading="lazy"
+                    className="h-10 w-10 flex-shrink-0 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="h-10 w-10 flex-shrink-0 rounded-full bg-neutral-200 dark:bg-neutral-800" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="truncate font-medium">{p.name}</div>
+                  <div className="text-xs text-neutral-500">
+                    {p.position ?? ''}
+                    {p.goals > 0 ? ` · ⚽${p.goals}` : ''}
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {teamTransfers.length > 0 ? (
+        <section className="mt-8">
+          <h2 className="mb-3 text-lg font-bold tracking-tight">
+            {locale === 'ru' ? 'Трансферы' : locale === 'en' ? 'Transfers' : 'Transferlar'}
+          </h2>
+          <div className="rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
+            {teamTransfers.map((tr) => {
+              const inbound = tr.teamIn?.id === id;
+              return (
+                <div
+                  key={tr.id}
+                  className="flex items-center gap-3 border-b border-neutral-100 px-3 py-2 last:border-0 dark:border-neutral-800"
+                >
+                  <span className={inbound ? 'text-green-600' : 'text-red-600'}>{inbound ? '⬇ in' : '⬆ out'}</span>
+                  <Link href={`/player/${tr.player.id}` as Route} className="flex-1 truncate font-medium hover:text-brand-700">
+                    {tr.player.name}
+                  </Link>
+                  <span className="text-xs text-neutral-500">
+                    {inbound ? (tr.teamOut ? `← ${tr.teamOut.name}` : '') : tr.teamIn ? `→ ${tr.teamIn.name}` : ''}
+                  </span>
+                  {tr.type ? (
+                    <span className="rounded bg-neutral-100 px-2 py-0.5 text-xs dark:bg-neutral-800">{tr.type}</span>
+                  ) : null}
+                  {tr.date ? (
+                    <time className="font-mono text-xs text-neutral-500" dateTime={tr.date.toISOString()}>
+                      {new Intl.DateTimeFormat('uz-UZ', { day: '2-digit', month: 'short', year: '2-digit' }).format(tr.date)}
+                    </time>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

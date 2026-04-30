@@ -4,15 +4,16 @@ import type { Route } from 'next';
 import type { Locale } from '@/i18n/routing';
 import { getFixtureById, getTeamById } from '@/lib/db';
 
-// Matches [fixture id=N], [team id=N], [youtube id=ABC], [tweet id=NNNN]
-const SHORTCODE_RE = /\[(fixture|team|youtube|tweet)\s+id=([A-Za-z0-9_-]+)\s*\]/gi;
+// Matches [fixture id=N], [team id=N], [youtube id=ABC], [tweet id=NNNN], [bet match=N]
+const SHORTCODE_RE = /\[(fixture|team|youtube|tweet|bet)\s+(?:id|match)=([A-Za-z0-9_-]+)\s*\]/gi;
 
 type Chunk =
   | { type: 'html'; value: string }
   | { type: 'fixture'; id: number }
   | { type: 'team'; id: number }
   | { type: 'youtube'; id: string }
-  | { type: 'tweet'; id: string };
+  | { type: 'tweet'; id: string }
+  | { type: 'bet'; matchId: number };
 
 function splitBody(html: string): Chunk[] {
   const chunks: Chunk[] = [];
@@ -20,13 +21,16 @@ function splitBody(html: string): Chunk[] {
   for (const m of html.matchAll(SHORTCODE_RE)) {
     const idx = m.index ?? 0;
     if (idx > lastIndex) chunks.push({ type: 'html', value: html.slice(lastIndex, idx) });
-    const kind = m[1]!.toLowerCase() as 'fixture' | 'team' | 'youtube' | 'tweet';
+    const kind = m[1]!.toLowerCase() as 'fixture' | 'team' | 'youtube' | 'tweet' | 'bet';
     const raw = m[2]!;
     if (kind === 'fixture' || kind === 'team') {
       const n = parseInt(raw, 10);
       if (Number.isFinite(n)) chunks.push({ type: kind, id: n });
     } else if (kind === 'youtube' || kind === 'tweet') {
       if (raw.length > 0 && raw.length <= 64) chunks.push({ type: kind, id: raw });
+    } else if (kind === 'bet') {
+      const n = parseInt(raw, 10);
+      if (Number.isFinite(n)) chunks.push({ type: 'bet', matchId: n });
     }
     lastIndex = idx + m[0].length;
   }
@@ -47,6 +51,34 @@ function YouTubeEmbed({ id }: { id: string }) {
         className="h-full w-full border-0"
       />
     </div>
+  );
+}
+
+async function BetEmbed({ matchId }: { matchId: number }) {
+  // Build the bet target URL from a single env var so the partner can be
+  // swapped without code changes. {matchId} is replaced; any unknown token
+  // is left intact.
+  const tpl = process.env.BET_AFFILIATE_URL;
+  const f = await getFixtureById(matchId);
+  if (!f || !tpl) return null;
+  const url = tpl.replace('{matchId}', String(matchId));
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="sponsored noreferrer"
+      className="my-6 flex items-center justify-between gap-3 rounded-lg border-2 border-amber-400 bg-amber-50 p-4 transition-colors hover:bg-amber-100 dark:border-amber-600 dark:bg-amber-900/20 dark:hover:bg-amber-900/30"
+    >
+      <div>
+        <div className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">
+          ⚡ Bet on this match (18+)
+        </div>
+        <div className="mt-1 text-sm font-semibold">
+          {f.homeTeam.name} vs {f.awayTeam.name}
+        </div>
+      </div>
+      <div className="rounded-md bg-amber-500 px-3 py-2 text-xs font-bold text-white">Odds →</div>
+    </a>
   );
 }
 
@@ -153,7 +185,10 @@ export async function ArticleBody({ html, locale }: { html: string; locale: Loca
         if (c.type === 'youtube') {
           return <YouTubeEmbed key={i} id={c.id} />;
         }
-        return <TweetEmbed key={i} id={c.id} />;
+        if (c.type === 'tweet') {
+          return <TweetEmbed key={i} id={c.id} />;
+        }
+        return <BetEmbed key={i} matchId={c.matchId} />;
       })}
     </div>
   );

@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 
 const STATUS_PILL: Record<string, string> = {
   published: 'green',
+  scheduled: 'yellow',
   draft: 'gray',
   archived: 'yellow',
 };
@@ -148,7 +149,13 @@ export default async function EditorialCalendar({
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
                         borderLeft: `3px solid ${
-                          p.status === 'published' ? 'var(--green)' : p.status === 'draft' ? 'var(--text-3)' : 'var(--yellow)'
+                          p.status === 'published'
+                            ? 'var(--green)'
+                            : p.status === 'scheduled'
+                              ? 'var(--accent-2)'
+                              : p.status === 'draft'
+                                ? 'var(--text-3)'
+                                : 'var(--yellow)'
                         }`,
                       }}
                       title={`${p.title} (${p.locale})`}

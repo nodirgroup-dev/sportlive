@@ -10,6 +10,7 @@ type ThreadedComment = {
   body: string;
   createdAt: Date | string;
   parentId: number | null;
+  likeCount: number;
   replies: ThreadedComment[];
 };
 
@@ -18,6 +19,8 @@ const REPLY_LABEL: Record<Locale, string> = {
   ru: 'Ответить',
   en: 'Reply',
 };
+
+const LIKE_LABEL: Record<Locale, string> = { uz: 'Yoqdi', ru: 'Лайк', en: 'Like' };
 
 const localeFmt: Record<Locale, string> = { uz: 'uz-UZ', ru: 'ru-RU', en: 'en-US' };
 
@@ -43,6 +46,24 @@ function CommentNode({
     minute: '2-digit',
   }).format(typeof c.createdAt === 'string' ? new Date(c.createdAt) : c.createdAt);
   const open = replyOpenId === c.id;
+  const [likes, setLikes] = useState(c.likeCount);
+  const [liked, setLiked] = useState(false);
+
+  async function toggleLike() {
+    if (liked) return;
+    setLiked(true);
+    setLikes((n) => n + 1);
+    try {
+      const res = await fetch(`/api/comments/${c.id}/like`, { method: 'POST' });
+      const j = (await res.json().catch(() => ({}))) as { likeCount?: number; throttled?: boolean };
+      if (typeof j.likeCount === 'number') setLikes(j.likeCount);
+      if (j.throttled) {
+        // Already liked from this IP — keep optimistic UI but revert count to server.
+      }
+    } catch {
+      // ignore
+    }
+  }
 
   return (
     <article
@@ -58,13 +79,24 @@ function CommentNode({
       <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-800 dark:text-neutral-200">
         {c.body}
       </p>
-      <button
-        type="button"
-        onClick={() => setReplyOpenId(open ? null : c.id)}
-        className="mt-2 text-xs font-medium text-brand-700 hover:underline"
-      >
-        ↳ {REPLY_LABEL[locale]}
-      </button>
+      <div className="mt-2 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => setReplyOpenId(open ? null : c.id)}
+          className="text-xs font-medium text-brand-700 hover:underline"
+        >
+          ↳ {REPLY_LABEL[locale]}
+        </button>
+        <button
+          type="button"
+          onClick={toggleLike}
+          disabled={liked}
+          aria-label={LIKE_LABEL[locale]}
+          className={`text-xs font-medium ${liked ? 'text-brand-700' : 'text-neutral-500 hover:text-brand-700'}`}
+        >
+          {liked ? '♥' : '♡'} {likes > 0 ? likes : ''}
+        </button>
+      </div>
       {open ? (
         <div className="mt-3">
           <CommentForm

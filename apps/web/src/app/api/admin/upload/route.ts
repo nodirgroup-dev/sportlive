@@ -9,14 +9,8 @@ export const runtime = 'nodejs';
 const UPLOAD_DIR = process.env.UPLOAD_DIR || '/var/uploads/posts';
 const MAX_BYTES = 8 * 1024 * 1024; // 8 MB
 const ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif']);
-
-const EXT_BY_MIME: Record<string, string> = {
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-  'image/avif': 'avif',
-  'image/gif': 'gif',
-};
+const TARGET_WIDTH = 1600;
+const QUALITY = 82;
 
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
@@ -46,13 +40,51 @@ export async function POST(req: NextRequest) {
   const dir = path.join(UPLOAD_DIR, yyyymm);
   await mkdir(dir, { recursive: true });
 
-  const ext = EXT_BY_MIME[file.type] ?? 'bin';
-  const name = `${randomBytes(16).toString('hex')}.${ext}`;
-  const fullPath = path.join(dir, name);
+  const inBuf = Buffer.from(await file.arrayBuffer());
 
-  const buf = Buffer.from(await file.arrayBuffer());
-  await writeFile(fullPath, buf);
+  // Convert + resize to WebP. Animated GIFs keep their original format and
+  // skip the resize step (sharp would flatten them).
+  let outBuf = inBuf;
+  let outName = `${randomBytes(16).toString('hex')}`;
+  let outType = file.type;
+  let width: number | null = null;
+  let height: number | null = null;
 
-  const url = `/uploads/posts/${yyyymm}/${name}`;
-  return NextResponse.json({ url, sizeBytes: buf.length, type: file.type });
+  if (file.type === 'image/gif') {
+    outName += '.gif';
+  } else {
+    try {
+      const sharp = (await import('sharp')).default;
+      const pipeline = sharp(inBuf, { failOn: 'none' }).rotate(); // EXIF orientation
+      const meta = await pipeline.metadata();
+      const w = meta.width ?? TARGET_WIDTH;
+      const resize = w > TARGET_WIDTH
+        ? pipeline.resize({ width: TARGET_WIDTH, withoutEnlargement: true })
+        : pipeline;
+      const out = await resize.webp({ quality: QUALITY, effort: 4 }).toBuffer({ resolveWithObject: true });
+      outBuf = Buffer.from(out.data);
+      width = out.info.width;
+      height = out.info.height;
+      outName += '.webp';
+      outType = 'image/webp';
+    } catch (e) {
+      // Fall back to raw upload if sharp fails (e.g. exotic format).
+      console.error('[upload] sharp failed, saving raw', e);
+      const ext = file.type === 'image/jpeg' ? 'jpg' : file.type.split('/')[1] || 'bin';
+      outName += `.${ext}`;
+    }
+  }
+
+  const fullPath = path.join(dir, outName);
+  await writeFile(fullPath, outBuf);
+
+  const url = `/uploads/posts/${yyyymm}/${outName}`;
+  return NextResponse.json({
+    url,
+    sizeBytes: outBuf.length,
+    originalBytes: inBuf.length,
+    type: outType,
+    width,
+    height,
+  });
 }

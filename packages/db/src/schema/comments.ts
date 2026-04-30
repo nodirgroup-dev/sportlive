@@ -30,6 +30,10 @@ export const comments = pgTable(
     authorIp: varchar({ length: 45 }),
     body: text().notNull(),
     status: commentStatusEnum().notNull().default('pending'),
+    /** Number of public likes (anonymous, IP-rate-limited). */
+    likeCount: integer().notNull().default(0),
+    /** AI moderation score (0..100, null if not yet scored). Higher = more spammy. */
+    aiSpamScore: integer(),
     createdAt,
     updatedAt,
   },

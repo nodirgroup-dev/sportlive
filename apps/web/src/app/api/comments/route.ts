@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, comments, posts } from '@sportlive/db';
 import { eq } from 'drizzle-orm';
+import { checkRateLimit } from '@/lib/rate-limit';
+import { notifyOps } from '@/lib/notify';
+import { siteConfig } from '@/lib/site';
+import { moderateComment } from '@/lib/comment-moderation';
 
 export const runtime = 'nodejs';
 
@@ -11,6 +15,12 @@ const ipFromRequest = (req: NextRequest) =>
   null;
 
 export async function POST(req: NextRequest) {
+  const ip0 = ipFromRequest(req) ?? 'unknown';
+  const rl = await checkRateLimit(`comments:${ip0}`, 5, 60_000);
+  if (!rl.ok) {
+    return NextResponse.json({ error: 'too many requests' }, { status: 429, headers: { 'retry-after': String(Math.ceil(rl.resetMs / 1000)) } });
+  }
+
   let body: { postId?: number; parentId?: number | null; name?: string | null; email?: string | null; body?: string };
   try {
     body = await req.json();
@@ -51,15 +61,33 @@ export async function POST(req: NextRequest) {
 
   const ip = ipFromRequest(req)?.slice(0, 45) ?? null;
 
-  await db.insert(comments).values({
-    postId,
-    parentId,
-    authorName,
-    authorEmail,
-    authorIp: ip,
-    body: text,
-    status: 'pending',
-  });
+  // AI moderation (best-effort): score >= 80 → spam, < 30 → auto-approve.
+  const moderation = await moderateComment(text, authorName);
 
-  return NextResponse.json({ ok: true, status: 'pending' });
+  let status: 'pending' | 'approved' | 'spam' = 'pending';
+  if (moderation && moderation.score >= 80) status = 'spam';
+  else if (moderation && moderation.score < 30) status = 'approved';
+
+  const inserted = await db
+    .insert(comments)
+    .values({
+      postId,
+      parentId,
+      authorName,
+      authorEmail,
+      authorIp: ip,
+      body: text,
+      status,
+      aiSpamScore: moderation?.score ?? null,
+    })
+    .returning({ id: comments.id });
+
+  if (status === 'pending') {
+    notifyOps({
+      text: `💬 New comment pending moderation by ${authorName}: ${text.slice(0, 100)}`,
+      url: `${siteConfig.url}/7071218admin/comments`,
+    }).catch(() => {});
+  }
+
+  return NextResponse.json({ ok: true, status, id: inserted[0]?.id });
 }

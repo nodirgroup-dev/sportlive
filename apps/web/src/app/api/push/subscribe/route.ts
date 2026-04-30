@@ -10,6 +10,7 @@ export async function POST(req: NextRequest) {
     endpoint?: string;
     keys?: { p256dh?: string; auth?: string };
     locale?: string;
+    categoryIds?: number[];
   };
   try {
     body = await req.json();
@@ -27,13 +28,17 @@ export async function POST(req: NextRequest) {
   }
 
   const userAgent = req.headers.get('user-agent')?.slice(0, 500) ?? null;
+  const cats = Array.isArray(body.categoryIds)
+    ? body.categoryIds.filter((n) => Number.isFinite(n)).slice(0, 50)
+    : null;
+  const catFilters = cats && cats.length > 0 ? cats : null;
 
   await db
     .insert(pushSubscriptions)
-    .values({ endpoint, p256dh, auth, locale, userAgent })
+    .values({ endpoint, p256dh, auth, locale, userAgent, categoryFilters: catFilters })
     .onConflictDoUpdate({
       target: pushSubscriptions.endpoint,
-      set: { p256dh, auth, locale, userAgent, invalidatedAt: sql`NULL` },
+      set: { p256dh, auth, locale, userAgent, categoryFilters: catFilters, invalidatedAt: sql`NULL` },
     });
 
   return NextResponse.json({ ok: true });

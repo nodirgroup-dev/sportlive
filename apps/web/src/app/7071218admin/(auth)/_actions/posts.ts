@@ -10,6 +10,7 @@ import { autoSummary } from '@/lib/text';
 import { setPostTags } from '@/lib/db';
 import { broadcastPush } from '@/lib/push';
 import { siteConfig } from '@/lib/site';
+import { notifyOps } from '@/lib/notify';
 import { categories } from '@sportlive/db';
 
 async function maybeBroadcastPostPush(post: {
@@ -172,6 +173,13 @@ export async function createPost(formData: FormData) {
       categoryId,
     });
     if (stats) pushQuery = `&push=${stats.sent}/${stats.total}`;
+  }
+
+  if (computedStatus === 'published') {
+    notifyOps({
+      text: `📰 New post (${locale}): ${title}`,
+      url: `${siteConfig.url}/${locale === 'uz' ? '' : locale + '/'}${slug}`,
+    }).catch(() => {});
   }
 
   revalidatePath('/7071218admin/news');

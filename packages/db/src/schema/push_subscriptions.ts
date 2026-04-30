@@ -1,4 +1,4 @@
-import { pgTable, integer, varchar, text, timestamp, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, integer, varchar, text, timestamp, jsonb, index, uniqueIndex } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { localeEnum } from './_shared';
 
@@ -11,6 +11,8 @@ export const pushSubscriptions = pgTable(
     p256dh: varchar({ length: 200 }).notNull(),
     auth: varchar({ length: 100 }).notNull(),
     locale: localeEnum(),
+    /** Optional per-subscription category whitelist (ID array). Null = all categories. */
+    categoryFilters: jsonb(),
     userAgent: varchar({ length: 500 }),
     createdAt: timestamp({ withTimezone: true })
       .notNull()

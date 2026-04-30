@@ -6,7 +6,7 @@ import { hasLocale, type Locale } from '@/i18n/routing';
 import { absoluteUrl, localePath } from '@/lib/site';
 import { Link } from '@/i18n/navigation';
 import type { Route } from 'next';
-import { getFixtureById, getLiveEntries, getMatchLineups } from '@/lib/db';
+import { getFixtureById, getLiveEntries, getMatchLineups, getHeadToHead } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 30;
@@ -77,7 +77,11 @@ export default async function MatchPage({
 
   const eventsRaw = (f.raw as { events?: unknown[] } | null)?.events ?? [];
   const events = Array.isArray(eventsRaw) ? eventsRaw : [];
-  const [liveEntries, lineups] = await Promise.all([getLiveEntries(id), getMatchLineups(id)]);
+  const [liveEntries, lineups, h2h] = await Promise.all([
+    getLiveEntries(id),
+    getMatchLineups(id),
+    getHeadToHead(f.homeTeam.id, f.awayTeam.id, 5),
+  ]);
 
   const TYPE_LABEL: Record<string, string> = {
     comment: '💬',
@@ -190,6 +194,32 @@ export default async function MatchPage({
         ) : null}
         {f.refereeName ? <div className="mt-1 text-xs text-neutral-500">🟡 {f.refereeName}</div> : null}
       </header>
+
+      {h2h.length > 0 ? (
+        <section className="mt-6">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-neutral-500">
+            {locale === 'uz' ? "O'zaro o'yinlar" : locale === 'ru' ? 'Личные встречи' : 'Head-to-head'}
+          </h2>
+          <div className="rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
+            {h2h.map((m) => (
+              <Link
+                key={m.id}
+                href={`/match/${m.id}` as Route}
+                className="grid grid-cols-[80px_1fr_60px_1fr] items-center gap-2 border-b border-neutral-100 px-3 py-2 text-sm last:border-0 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-900"
+              >
+                <time className="font-mono text-xs text-neutral-500" dateTime={m.kickoffAt.toISOString()}>
+                  {new Intl.DateTimeFormat('uz-UZ', { day: '2-digit', month: 'short', year: '2-digit' }).format(m.kickoffAt)}
+                </time>
+                <div className="truncate text-right font-medium">{m.homeTeam.name}</div>
+                <div className="text-center font-mono font-bold tabular-nums">
+                  {m.homeGoals ?? 0} : {m.awayGoals ?? 0}
+                </div>
+                <div className="truncate font-medium">{m.awayTeam.name}</div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {lineups.length > 0 ? (
         <section className="mt-6 grid gap-4 sm:grid-cols-2">

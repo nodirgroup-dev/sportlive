@@ -36,24 +36,40 @@ export type PushSendStats = {
 /**
  * Broadcast a push notification to every active subscriber. If `locale` is
  * given, only subscribers with that locale receive it; null-locale subscribers
- * always receive (we don't know who they are yet).
+ * always receive. If `categoryId` is given, subscribers with category_filters
+ * set will only receive when their list contains the category.
  */
-export async function broadcastPush(payload: PushPayload, locale: Locale | null = null): Promise<PushSendStats> {
+export async function broadcastPush(
+  payload: PushPayload,
+  locale: Locale | null = null,
+  categoryId: number | null = null,
+): Promise<PushSendStats> {
   if (!configure()) {
     throw new Error('VAPID keys are not configured (VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY)');
   }
 
   const conds = [isNull(pushSubscriptions.invalidatedAt)];
   if (locale) conds.push(eq(pushSubscriptions.locale, locale));
-  const subs = await db
+  const subsAll = await db
     .select({
       id: pushSubscriptions.id,
       endpoint: pushSubscriptions.endpoint,
       p256dh: pushSubscriptions.p256dh,
       auth: pushSubscriptions.auth,
+      categoryFilters: pushSubscriptions.categoryFilters,
     })
     .from(pushSubscriptions)
     .where(and(...conds));
+
+  // Apply category filter in JS — the array is small and Postgres ANY on jsonb
+  // is awkward. Subscribers with category_filters=NULL receive all broadcasts.
+  const subs = categoryId
+    ? subsAll.filter((s) => {
+        if (!s.categoryFilters) return true;
+        const arr = Array.isArray(s.categoryFilters) ? (s.categoryFilters as number[]) : [];
+        return arr.length === 0 || arr.includes(categoryId);
+      })
+    : subsAll;
 
   const json = JSON.stringify(payload);
   let sent = 0;
