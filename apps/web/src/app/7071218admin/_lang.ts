@@ -49,6 +49,75 @@ export function useAdminLang(): AdminLang {
 // =================== Translations ===================
 
 export type AdminStrings = {
+  // ----- Common actions / labels -----
+  save: string;
+  saved: string;
+  cancel: string;
+  edit: string;
+  delete: string;
+  apply: string;
+  add: string;
+  create: string;
+  search: string;
+  remove: string;
+  enable: string;
+  disable: string;
+  yes: string;
+  no: string;
+  all: string;
+  status: string;
+  language: string;
+  category: string;
+  title: string;
+  body: string;
+  summary: string;
+  cover: string;
+  tags: string;
+  slug: string;
+  date: string;
+  author: string;
+  email: string;
+  password: string;
+  loading: string;
+  empty: string;
+  back: string;
+  // Status pills
+  status_draft: string;
+  status_scheduled: string;
+  status_published: string;
+  status_archived: string;
+  // Filters
+  all_locales: string;
+  all_statuses: string;
+  // News form
+  news_title_label: string;
+  news_slug_label: string;
+  news_summary_label: string;
+  news_summary_hint: string;
+  news_body_label: string;
+  news_status_label: string;
+  news_publishedAt_label: string;
+  news_publishedAt_hint: string;
+  news_locale_label: string;
+  news_category_label: string;
+  news_cover_label: string;
+  news_featured_label: string;
+  news_featured_hint: string;
+  news_sendpush_label: string;
+  news_sendpush_hint: string;
+  news_tags_label: string;
+  news_shortcodes_hint: string;
+  news_alt_hint: string;
+  news_create_btn: string;
+  news_save_btn: string;
+  news_history_btn: string;
+  news_search_placeholder: string;
+  // Login
+  login_title: string;
+  login_sub: string;
+  login_submit: string;
+  login_err_invalid: string;
+  login_err_empty: string;
   // Topbar
   searchPlaceholder: string;
   notifications: string;
@@ -239,6 +308,70 @@ export const PAGE_INFO: Record<AdminLang, Record<PageId, PageInfoEntry>> = {
 
 export const ADMIN_T: Record<AdminLang, AdminStrings> = {
   ru: {
+    save: 'Сохранить',
+    saved: 'Сохранено',
+    cancel: 'Отмена',
+    edit: 'Изменить',
+    delete: 'Удалить',
+    apply: 'Применить',
+    add: 'Добавить',
+    create: 'Создать',
+    search: 'Поиск',
+    remove: 'Удалить',
+    enable: 'Включить',
+    disable: 'Отключить',
+    yes: 'Да',
+    no: 'Нет',
+    all: 'Все',
+    status: 'Статус',
+    language: 'Язык',
+    category: 'Категория',
+    title: 'Заголовок',
+    body: 'Тело',
+    summary: 'Лид',
+    cover: 'Обложка',
+    tags: 'Теги',
+    slug: 'URL-slug',
+    date: 'Дата',
+    author: 'Автор',
+    email: 'Email',
+    password: 'Пароль',
+    loading: 'Загрузка…',
+    empty: 'Нет данных',
+    back: 'Назад',
+    status_draft: 'Черновик',
+    status_scheduled: 'Запланировано',
+    status_published: 'Опубликовано',
+    status_archived: 'В архиве',
+    all_locales: 'Все языки',
+    all_statuses: 'Все статусы',
+    news_title_label: 'Заголовок',
+    news_slug_label: 'URL-slug (опционально, генерируется из заголовка)',
+    news_summary_label: 'Лид / краткое описание (HTML, опционально)',
+    news_summary_hint: 'Если оставить пустым — автоматически возьмётся первый абзац статьи',
+    news_body_label: 'Тело статьи',
+    news_status_label: 'Статус',
+    news_publishedAt_label: 'Дата публикации (для «Запланировать»)',
+    news_publishedAt_hint: 'Если статус = «Запланировать», укажите будущую дату — cron автоматически опубликует',
+    news_locale_label: 'Язык',
+    news_category_label: 'Категория',
+    news_cover_label: 'Обложка',
+    news_featured_label: 'Закрепить на главной',
+    news_featured_hint: 'Самая свежая закреплённая статья показывается как герой главной',
+    news_sendpush_label: 'Отправить push после сохранения',
+    news_sendpush_hint: 'Только если статья будет опубликована (status = published)',
+    news_tags_label: 'Теги (через запятую)',
+    news_shortcodes_hint: 'Шорткоды: [fixture id=N] · [team id=N] · [youtube id=ABC] · [tweet id=NNNN] · [bet match=N]',
+    news_alt_hint: 'Alt-текст: вставленные изображения должны иметь описание — обязательно для SEO и accessibility',
+    news_create_btn: 'Создать',
+    news_save_btn: 'Сохранить',
+    news_history_btn: 'История',
+    news_search_placeholder: 'Поиск по заголовку…',
+    login_title: 'Вход в админку',
+    login_sub: 'Введите свои учётные данные.',
+    login_submit: 'Войти',
+    login_err_invalid: 'Неверный email или пароль',
+    login_err_empty: 'Заполните все поля',
     searchPlaceholder: 'Поиск по новостям…',
     notifications: 'Уведомления',
     noNotifications: 'Новых уведомлений нет',
@@ -309,6 +442,70 @@ export const ADMIN_T: Record<AdminLang, AdminStrings> = {
     crumb_admin: 'Админка',
   },
   uz: {
+    save: 'Saqlash',
+    saved: 'Saqlandi',
+    cancel: 'Bekor qilish',
+    edit: 'Tahrirlash',
+    delete: 'O‘chirish',
+    apply: 'Qo‘llash',
+    add: 'Qo‘shish',
+    create: 'Yaratish',
+    search: 'Qidirish',
+    remove: 'O‘chirish',
+    enable: 'Yoqish',
+    disable: 'O‘chirish',
+    yes: 'Ha',
+    no: 'Yo‘q',
+    all: 'Barchasi',
+    status: 'Status',
+    language: 'Til',
+    category: 'Kategoriya',
+    title: 'Sarlavha',
+    body: 'Matn',
+    summary: 'Lid',
+    cover: 'Muqova',
+    tags: 'Teglar',
+    slug: 'URL-slug',
+    date: 'Sana',
+    author: 'Muallif',
+    email: 'Email',
+    password: 'Parol',
+    loading: 'Yuklanmoqda…',
+    empty: 'Ma’lumot yo‘q',
+    back: 'Orqaga',
+    status_draft: 'Qoralama',
+    status_scheduled: 'Rejalashtirilgan',
+    status_published: 'Nashr qilingan',
+    status_archived: 'Arxivlangan',
+    all_locales: 'Barcha tillar',
+    all_statuses: 'Barcha statuslar',
+    news_title_label: 'Sarlavha',
+    news_slug_label: 'URL-slug (ixtiyoriy, sarlavhadan avtomatik shakllanadi)',
+    news_summary_label: 'Lid / qisqa tavsif (HTML, ixtiyoriy)',
+    news_summary_hint: 'Bo‘sh qoldirilsa — birinchi xatboshidan avtomatik olinadi',
+    news_body_label: 'Maqola matni',
+    news_status_label: 'Status',
+    news_publishedAt_label: 'Nashr sanasi («Rejalashtirish» uchun)',
+    news_publishedAt_hint: 'Status = «Rejalashtirish» bo‘lsa, kelajak sanani belgilang — cron avtomatik nashr etadi',
+    news_locale_label: 'Til',
+    news_category_label: 'Kategoriya',
+    news_cover_label: 'Muqova',
+    news_featured_label: 'Bosh sahifaga biriktirish',
+    news_featured_hint: 'Eng so‘nggi biriktirilgan maqola bosh sahifa qahramoni sifatida ko‘rsatiladi',
+    news_sendpush_label: 'Saqlashdan keyin push yuborish',
+    news_sendpush_hint: 'Faqat status = published bo‘lganda yuboriladi',
+    news_tags_label: 'Teglar (vergul bilan)',
+    news_shortcodes_hint: 'Shortcodelar: [fixture id=N] · [team id=N] · [youtube id=ABC] · [tweet id=NNNN] · [bet match=N]',
+    news_alt_hint: 'Alt-matn: rasmlar tavsifga ega bo‘lishi shart — SEO va accessibility uchun majburiy',
+    news_create_btn: 'Yaratish',
+    news_save_btn: 'Saqlash',
+    news_history_btn: 'Tarix',
+    news_search_placeholder: 'Sarlavha bo‘yicha qidiruv…',
+    login_title: 'Adminkaga kirish',
+    login_sub: 'O‘z ma’lumotlaringizni kiriting.',
+    login_submit: 'Kirish',
+    login_err_invalid: 'Email yoki parol noto‘g‘ri',
+    login_err_empty: 'Barcha maydonlarni to‘ldiring',
     searchPlaceholder: 'Yangiliklar boʻyicha qidiruv…',
     notifications: 'Bildirishnomalar',
     noNotifications: 'Yangi bildirishnomalar yoʻq',
@@ -379,6 +576,70 @@ export const ADMIN_T: Record<AdminLang, AdminStrings> = {
     crumb_admin: 'Admin',
   },
   en: {
+    save: 'Save',
+    saved: 'Saved',
+    cancel: 'Cancel',
+    edit: 'Edit',
+    delete: 'Delete',
+    apply: 'Apply',
+    add: 'Add',
+    create: 'Create',
+    search: 'Search',
+    remove: 'Remove',
+    enable: 'Enable',
+    disable: 'Disable',
+    yes: 'Yes',
+    no: 'No',
+    all: 'All',
+    status: 'Status',
+    language: 'Language',
+    category: 'Category',
+    title: 'Title',
+    body: 'Body',
+    summary: 'Summary',
+    cover: 'Cover',
+    tags: 'Tags',
+    slug: 'URL slug',
+    date: 'Date',
+    author: 'Author',
+    email: 'Email',
+    password: 'Password',
+    loading: 'Loading…',
+    empty: 'No data',
+    back: 'Back',
+    status_draft: 'Draft',
+    status_scheduled: 'Scheduled',
+    status_published: 'Published',
+    status_archived: 'Archived',
+    all_locales: 'All languages',
+    all_statuses: 'All statuses',
+    news_title_label: 'Title',
+    news_slug_label: 'URL slug (optional, derived from title)',
+    news_summary_label: 'Lede / short description (HTML, optional)',
+    news_summary_hint: 'Leave empty to auto-derive from the first paragraph',
+    news_body_label: 'Article body',
+    news_status_label: 'Status',
+    news_publishedAt_label: 'Publish date (for "Schedule")',
+    news_publishedAt_hint: 'When status = "Schedule", set a future date — cron will auto-publish',
+    news_locale_label: 'Language',
+    news_category_label: 'Category',
+    news_cover_label: 'Cover',
+    news_featured_label: 'Pin to homepage',
+    news_featured_hint: 'The most recently pinned article shows as the homepage hero',
+    news_sendpush_label: 'Send push after save',
+    news_sendpush_hint: 'Only fires when status = published',
+    news_tags_label: 'Tags (comma-separated)',
+    news_shortcodes_hint: 'Shortcodes: [fixture id=N] · [team id=N] · [youtube id=ABC] · [tweet id=NNNN] · [bet match=N]',
+    news_alt_hint: 'Alt text: every embedded image must have a description — required for SEO and accessibility',
+    news_create_btn: 'Create',
+    news_save_btn: 'Save',
+    news_history_btn: 'History',
+    news_search_placeholder: 'Search by title…',
+    login_title: 'Sign in to Admin',
+    login_sub: 'Enter your credentials.',
+    login_submit: 'Sign in',
+    login_err_invalid: 'Wrong email or password',
+    login_err_empty: 'Fill in both fields',
     searchPlaceholder: 'Search news…',
     notifications: 'Notifications',
     noNotifications: 'No new notifications',

@@ -1,10 +1,11 @@
+'use client';
+
 import Link from 'next/link';
-import { db, categories } from '@sportlive/db';
-import { eq } from 'drizzle-orm';
 import { Pin, Bell, Sparkles, History } from 'lucide-react';
 import { RichEditor } from '../_components/rich-editor';
 import { CoverUpload } from '../_components/cover-upload';
 import { NewsAiPanel } from '../_components/news-form-side';
+import { useAdminLang, ADMIN_T } from '../../_lang';
 
 type FormPost = {
   id: number | null;
@@ -24,25 +25,31 @@ type FormPost = {
   publishedAt: string | null;
 };
 
-export async function NewsForm({
+export function NewsForm({
   post,
   action,
+  cats,
 }: {
   post: FormPost;
   action: (formData: FormData) => Promise<void>;
+  cats: Array<{ id: number; name: string; slug: string }>;
 }) {
-  const cats = await db
-    .select({ id: categories.id, name: categories.name, slug: categories.slug })
-    .from(categories)
-    .where(eq(categories.locale, post.locale));
+  const lang = useAdminLang();
+  const t = ADMIN_T[lang];
+  const editTitle =
+    lang === 'uz' ? 'Maqolani tahrirlash' : lang === 'en' ? 'Edit article' : 'Редактирование статьи';
+  const newTitle =
+    lang === 'uz' ? 'Yangi maqola' : lang === 'en' ? 'New article' : 'Новая статья';
+  const newSub =
+    lang === 'uz' ? 'Yangi nashr yaratish' : lang === 'en' ? 'Creating a new publication' : 'Создание новой публикации';
 
   return (
     <form action={action}>
       <div className="page-h">
         <div>
-          <h1>{post.id ? 'Редактирование статьи' : 'Новая статья'}</h1>
+          <h1>{post.id ? editTitle : newTitle}</h1>
           <div className="sub">
-            {post.id ? `ID #${post.id}` : 'Создание новой публикации'} · язык:{' '}
+            {post.id ? `ID #${post.id}` : newSub} · {t.language}:{' '}
             <span className={`pill ${post.locale === 'uz' ? 'green' : post.locale === 'ru' ? 'red' : 'yellow'}`}>
               {post.locale}
             </span>
@@ -56,14 +63,14 @@ export async function NewsForm({
               style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
             >
               <History size={14} strokeWidth={1.8} />
-              История
+              {t.news_history_btn}
             </Link>
           ) : null}
           <Link href="/7071218admin/news" className="btn">
-            Отмена
+            {t.cancel}
           </Link>
           <button type="submit" className="btn primary">
-            {post.id ? 'Сохранить' : 'Создать'}
+            {post.id ? t.news_save_btn : t.news_create_btn}
           </button>
         </div>
       </div>
@@ -71,7 +78,7 @@ export async function NewsForm({
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 'var(--gap)' }}>
         <div className="card" style={{ padding: 22 }}>
           <div className="field">
-            <label htmlFor="title">Заголовок</label>
+            <label htmlFor="title">{t.news_title_label}</label>
             <input
               id="title"
               name="title"
@@ -83,11 +90,11 @@ export async function NewsForm({
             />
           </div>
           <div className="field">
-            <label htmlFor="slug">URL-slug (опционально, генерируется из заголовка)</label>
+            <label htmlFor="slug">{t.news_slug_label}</label>
             <input id="slug" name="slug" type="text" defaultValue={post.slug} className="input" maxLength={200} />
           </div>
           <div className="field">
-            <label htmlFor="summary">Лид / краткое описание (HTML, опционально)</label>
+            <label htmlFor="summary">{t.news_summary_label}</label>
             <textarea
               id="summary"
               name="summary"
@@ -96,17 +103,17 @@ export async function NewsForm({
               style={{ minHeight: 80 }}
             />
             <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>
-              Если оставить пустым — автоматически возьмётся первый абзац статьи
+              {t.news_summary_hint}
             </div>
           </div>
           <div className="field">
-            <label htmlFor="tags">Теги (через запятую)</label>
+            <label htmlFor="tags">{t.news_tags_label}</label>
             <input
               id="tags"
               name="tags"
               type="text"
               defaultValue={post.tags}
-              placeholder="Реал Мадрид, Лига чемпионов, трансферы"
+              placeholder="Real Madrid, Champions League, transfers"
               className="input"
               maxLength={500}
               list="tag-suggestions"
@@ -120,13 +127,13 @@ export async function NewsForm({
             ) : null}
           </div>
           <div className="field">
-            <label>Тело статьи</label>
-            <RichEditor name="body" defaultValue={post.body} placeholder="Начните писать…" />
+            <label>{t.news_body_label}</label>
+            <RichEditor name="body" defaultValue={post.body} placeholder="…" />
             <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>
-              💡 Шорткоды: <code>[fixture id=N]</code> · <code>[team id=N]</code> · <code>[youtube id=ABC]</code> · <code>[tweet id=NNNN]</code> · <code>[bet match=N]</code>
+              💡 {t.news_shortcodes_hint}
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>
-              ♿ Alt-текст: вставленные изображения должны иметь описание (правый клик → редактировать) — это обязательно для SEO и accessibility
+              ♿ {t.news_alt_hint}
             </div>
           </div>
         </div>
@@ -134,16 +141,16 @@ export async function NewsForm({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap)' }}>
           <div className="card" style={{ padding: 16 }}>
             <div className="field">
-              <label>Статус</label>
+              <label>{t.news_status_label}</label>
               <select name="status" defaultValue={post.status} className="select">
-                <option value="draft">Черновик</option>
-                <option value="scheduled">Запланировать</option>
-                <option value="published">Опубликовать</option>
-                <option value="archived">В архив</option>
+                <option value="draft">{t.status_draft}</option>
+                <option value="scheduled">{t.status_scheduled}</option>
+                <option value="published">{t.status_published}</option>
+                <option value="archived">{t.status_archived}</option>
               </select>
             </div>
             <div className="field">
-              <label htmlFor="publishedAt">Дата публикации (для «Запланировать»)</label>
+              <label htmlFor="publishedAt">{t.news_publishedAt_label}</label>
               <input
                 id="publishedAt"
                 name="publishedAt"
@@ -152,21 +159,21 @@ export async function NewsForm({
                 className="input"
               />
               <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>
-                Если статус = «Запланировать», укажите будущую дату — cron автоматически опубликует
+                {t.news_publishedAt_hint}
               </div>
             </div>
             <div className="field">
-              <label>Язык</label>
+              <label>{t.news_locale_label}</label>
               <select name="locale" defaultValue={post.locale} className="select" disabled={post.id != null}>
-                <option value="uz">Узбекский</option>
-                <option value="ru">Русский</option>
+                <option value="uz">{lang === 'uz' ? 'O‘zbek' : lang === 'en' ? 'Uzbek' : 'Узбекский'}</option>
+                <option value="ru">{lang === 'uz' ? 'Rus' : lang === 'en' ? 'Russian' : 'Русский'}</option>
                 <option value="en">English</option>
               </select>
             </div>
             <div className="field">
-              <label>Категория</label>
+              <label>{t.news_category_label}</label>
               <select name="categoryId" defaultValue={post.categoryId ?? ''} className="select">
-                <option value="">— не выбрана —</option>
+                <option value="">— —</option>
                 {cats.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
@@ -175,7 +182,7 @@ export async function NewsForm({
               </select>
             </div>
             <div className="field">
-              <label>Обложка</label>
+              <label>{t.news_cover_label}</label>
               <CoverUpload name="coverImage" defaultValue={post.coverImage} />
             </div>
             <div className="field">
@@ -190,10 +197,10 @@ export async function NewsForm({
               >
                 <input type="checkbox" name="featured" value="1" defaultChecked={post.featured} />
                 <Pin size={14} strokeWidth={1.8} />
-                <span>Закрепить на главной</span>
+                <span>{t.news_featured_label}</span>
               </label>
               <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2, paddingLeft: 22 }}>
-                Самая свежая закрепленная статья показывается как герой главной
+                {t.news_featured_hint}
               </div>
             </div>
             <div className="field">
@@ -208,10 +215,10 @@ export async function NewsForm({
               >
                 <input type="checkbox" name="sendPush" value="1" />
                 <Bell size={14} strokeWidth={1.8} />
-                <span>Отправить push после сохранения</span>
+                <span>{t.news_sendpush_label}</span>
               </label>
               <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2, paddingLeft: 22 }}>
-                Только если статья будет опубликована (status = published)
+                {t.news_sendpush_hint}
               </div>
             </div>
           </div>

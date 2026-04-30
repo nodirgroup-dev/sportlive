@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { db, posts } from '@sportlive/db';
+import { db, posts, categories } from '@sportlive/db';
 import { eq } from 'drizzle-orm';
 import { CheckCircle2 } from 'lucide-react';
 import { NewsForm } from '../../_form';
@@ -23,9 +23,13 @@ export default async function EditPostPage({
   const rows = await db.select().from(posts).where(eq(posts.id, id)).limit(1);
   if (rows.length === 0) notFound();
   const p = rows[0]!;
-  const [tags, allTagNames] = await Promise.all([
+  const [tags, allTagNames, cats] = await Promise.all([
     getTagsForPost(p.id),
     getAllTagNames(p.locale as 'uz' | 'ru' | 'en'),
+    db
+      .select({ id: categories.id, name: categories.name, slug: categories.slug })
+      .from(categories)
+      .where(eq(categories.locale, p.locale as 'uz' | 'ru' | 'en')),
   ]);
 
   const action = updatePost.bind(null, id);
@@ -76,6 +80,7 @@ export default async function EditPostPage({
           publishedAt: p.publishedAt ? p.publishedAt.toISOString().slice(0, 16) : null,
         }}
         action={action}
+        cats={cats}
       />
     </>
   );

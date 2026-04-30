@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { db, posts, categories } from '@sportlive/db';
 import { desc, eq, sql } from 'drizzle-orm';
-import { Plus, Pin, PinOff, Eye, EyeOff, Copy, Pencil, Clock } from 'lucide-react';
+import { Plus, Pin, PinOff, Eye, EyeOff, Copy, Pencil } from 'lucide-react';
 import { bulkPostsAction, togglePostFeature, togglePostStatus, duplicatePost } from '../_actions/posts';
 import { AdminPageHeader } from '../../_components/page-header';
+import { NewsFilters, StatusPill } from './_filters';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,29 +71,11 @@ export default async function NewsList({
         </div>
       ) : null}
 
-      <form className="card" style={{ padding: 12, display: 'flex', gap: 10, marginBottom: 14, alignItems: 'center' }}>
-        <input
-          name="q"
-          defaultValue={sp.q ?? ''}
-          placeholder="Поиск по заголовку…"
-          className="input"
-          style={{ flex: 1, height: 32 }}
-        />
-        <select name="locale" defaultValue={sp.locale ?? ''} className="select" style={{ height: 32, width: 100 }}>
-          <option value="">Все языки</option>
-          <option value="uz">UZ</option>
-          <option value="ru">RU</option>
-          <option value="en">EN</option>
-        </select>
-        <select name="status" defaultValue={sp.status ?? ''} className="select" style={{ height: 32, width: 130 }}>
-          <option value="">Все статусы</option>
-          <option value="published">Опубликовано</option>
-          <option value="scheduled">Запланировано</option>
-          <option value="draft">Черновик</option>
-          <option value="archived">В архиве</option>
-        </select>
-        <button type="submit" className="btn">Применить</button>
-      </form>
+      <NewsFilters
+        defaultQ={sp.q ?? ''}
+        defaultLocale={sp.locale ?? ''}
+        defaultStatus={sp.status ?? ''}
+      />
 
       <form action={bulkPostsAction}>
         <div className="card" style={{ padding: 10, display: 'flex', gap: 10, marginBottom: 14, alignItems: 'center' }}>
@@ -186,19 +169,7 @@ export default async function NewsList({
                   </span>
                 </td>
                 <td>
-                  <span
-                    className={`pill ${r.status === 'published' ? 'green' : r.status === 'scheduled' ? 'yellow' : r.status === 'draft' ? 'gray' : 'yellow'}`}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
-                  >
-                    {r.status === 'scheduled' ? <Clock size={11} strokeWidth={2} /> : null}
-                    {r.status === 'published'
-                      ? 'Опубл.'
-                      : r.status === 'scheduled'
-                        ? 'Запланир.'
-                        : r.status === 'draft'
-                          ? 'Черн.'
-                          : 'Архив'}
-                  </span>
+                  <StatusPill status={r.status as 'published' | 'scheduled' | 'draft' | 'archived'} />
                 </td>
                 <td className="t-dim" style={{ color: 'var(--text-3)' }}>
                   {r.publishedAt
