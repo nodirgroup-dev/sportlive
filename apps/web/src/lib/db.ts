@@ -630,7 +630,9 @@ export async function getActiveBanners(
 }
 
 export async function getMostPopular(locale: Locale, limit = 5): Promise<ListedPost[]> {
-  const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  // 1-year window so the panel surfaces content immediately after migration;
+  // once view counts accumulate the ordering will reflect actual popularity.
+  const cutoff = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
   const rows = await db
     .select({
       id: posts.id,
