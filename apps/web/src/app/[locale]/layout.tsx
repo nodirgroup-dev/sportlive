@@ -38,12 +38,25 @@ export async function generateMetadata({
     metadataBase: new URL(siteConfig.url),
     title: { default: `${t('name')} — ${t('tagline')}`, template: `%s — ${t('name')}` },
     description: t('description'),
+    manifest: '/manifest.json',
     alternates: {
       canonical: absoluteUrl(localePath(locale, '/')),
       languages,
       types: {
         'application/rss+xml': '/rss.xml',
       },
+    },
+    icons: {
+      icon: [
+        { url: '/icon-32.png', sizes: '32x32', type: 'image/png' },
+        { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      ],
+      apple: '/apple-touch-icon.png',
+    },
+    appleWebApp: {
+      capable: true,
+      title: t('name'),
+      statusBarStyle: 'black-translucent',
     },
     openGraph: {
       type: 'website',

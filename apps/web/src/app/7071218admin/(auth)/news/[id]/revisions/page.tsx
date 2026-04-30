@@ -1,0 +1,93 @@
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { db, posts, postRevisions } from '@sportlive/db';
+import { desc, eq } from 'drizzle-orm';
+import { restorePostRevision } from '../../../_actions/posts';
+
+export const dynamic = 'force-dynamic';
+
+export default async function RevisionsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: idStr } = await params;
+  const id = parseInt(idStr, 10);
+  if (!Number.isFinite(id)) notFound();
+
+  const post = await db
+    .select({ id: posts.id, title: posts.title, locale: posts.locale })
+    .from(posts)
+    .where(eq(posts.id, id))
+    .limit(1);
+  if (post.length === 0) notFound();
+
+  const revs = await db
+    .select()
+    .from(postRevisions)
+    .where(eq(postRevisions.postId, id))
+    .orderBy(desc(postRevisions.createdAt))
+    .limit(50);
+
+  return (
+    <>
+      <div className="page-h">
+        <div>
+          <h1>История изменений</h1>
+          <div className="sub">
+            #{post[0]!.id} · {post[0]!.title}
+          </div>
+        </div>
+        <div className="actions">
+          <Link href={`/7071218admin/news/${id}/edit`} className="btn">
+            ← К редактированию
+          </Link>
+        </div>
+      </div>
+
+      <div className="table-wrap">
+        <table className="table">
+          <thead>
+            <tr>
+              <th style={{ width: 160 }}>Когда</th>
+              <th style={{ width: 200 }}>Кто</th>
+              <th>Заголовок снапшота</th>
+              <th style={{ width: 80 }} className="num">Тело</th>
+              <th style={{ width: 130 }} />
+            </tr>
+          </thead>
+          <tbody>
+            {revs.map((r) => (
+              <tr key={r.id}>
+                <td className="t-mono" style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5, color: 'var(--text-2)' }}>
+                  {new Intl.DateTimeFormat('ru-RU', {
+                    day: '2-digit',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  }).format(new Date(r.createdAt))}
+                </td>
+                <td style={{ fontSize: 12 }}>{r.savedByLabel ?? <span className="t-dim">—</span>}</td>
+                <td style={{ fontWeight: 500 }}>{r.title}</td>
+                <td className="num t-dim" style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>
+                  {Math.round(r.body.length / 1024)} KB
+                </td>
+                <td style={{ textAlign: 'right' }}>
+                  <form action={restorePostRevision}>
+                    <input type="hidden" name="revisionId" value={r.id} />
+                    <button type="submit" className="btn" style={{ height: 28, fontSize: 11.5 }}>
+                      ↩ Восстановить
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            ))}
+            {revs.length === 0 ? (
+              <tr>
+                <td colSpan={5} style={{ textAlign: 'center', padding: 32, color: 'var(--text-3)' }}>
+                  Снапшотов пока нет. Они создаются автоматически при каждом сохранении.
+                </td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+}

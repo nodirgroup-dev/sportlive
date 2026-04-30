@@ -48,6 +48,11 @@ export async function NewsForm({
           </div>
         </div>
         <div className="actions">
+          {post.id ? (
+            <Link href={`/7071218admin/news/${post.id}/revisions`} className="btn">
+              ⏱ История
+            </Link>
+          ) : null}
           <Link href="/7071218admin/news" className="btn">
             Отмена
           </Link>
@@ -112,7 +117,7 @@ export async function NewsForm({
             <label>Тело статьи</label>
             <RichEditor name="body" defaultValue={post.body} placeholder="Начните писать…" />
             <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>
-              💡 Шорткоды: <code>[fixture id=N]</code> — карточка матча, <code>[team id=N]</code> — карточка команды
+              💡 Шорткоды: <code>[fixture id=N]</code> · <code>[team id=N]</code> · <code>[youtube id=ABC]</code> · <code>[tweet id=NNNN]</code>
             </div>
           </div>
         </div>

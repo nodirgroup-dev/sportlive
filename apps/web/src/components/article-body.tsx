@@ -4,12 +4,15 @@ import type { Route } from 'next';
 import type { Locale } from '@/i18n/routing';
 import { getFixtureById, getTeamById } from '@/lib/db';
 
-const SHORTCODE_RE = /\[(fixture|team)\s+id=(\d+)\s*\]/gi;
+// Matches [fixture id=N], [team id=N], [youtube id=ABC], [tweet id=NNNN]
+const SHORTCODE_RE = /\[(fixture|team|youtube|tweet)\s+id=([A-Za-z0-9_-]+)\s*\]/gi;
 
 type Chunk =
   | { type: 'html'; value: string }
   | { type: 'fixture'; id: number }
-  | { type: 'team'; id: number };
+  | { type: 'team'; id: number }
+  | { type: 'youtube'; id: string }
+  | { type: 'tweet'; id: string };
 
 function splitBody(html: string): Chunk[] {
   const chunks: Chunk[] = [];
@@ -17,13 +20,54 @@ function splitBody(html: string): Chunk[] {
   for (const m of html.matchAll(SHORTCODE_RE)) {
     const idx = m.index ?? 0;
     if (idx > lastIndex) chunks.push({ type: 'html', value: html.slice(lastIndex, idx) });
-    const kind = m[1]!.toLowerCase() as 'fixture' | 'team';
-    const id = parseInt(m[2]!, 10);
-    if (Number.isFinite(id)) chunks.push({ type: kind, id });
+    const kind = m[1]!.toLowerCase() as 'fixture' | 'team' | 'youtube' | 'tweet';
+    const raw = m[2]!;
+    if (kind === 'fixture' || kind === 'team') {
+      const n = parseInt(raw, 10);
+      if (Number.isFinite(n)) chunks.push({ type: kind, id: n });
+    } else if (kind === 'youtube' || kind === 'tweet') {
+      if (raw.length > 0 && raw.length <= 64) chunks.push({ type: kind, id: raw });
+    }
     lastIndex = idx + m[0].length;
   }
   if (lastIndex < html.length) chunks.push({ type: 'html', value: html.slice(lastIndex) });
   return chunks;
+}
+
+function YouTubeEmbed({ id }: { id: string }) {
+  return (
+    <div className="my-6 overflow-hidden rounded-lg shadow-sm" style={{ aspectRatio: '16/9' }}>
+      <iframe
+        src={`https://www.youtube.com/embed/${encodeURIComponent(id)}?rel=0`}
+        title="YouTube"
+        loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+        referrerPolicy="strict-origin-when-cross-origin"
+        className="h-full w-full border-0"
+      />
+    </div>
+  );
+}
+
+function TweetEmbed({ id }: { id: string }) {
+  // No external script: render a clean link card. Twitter/X has been hostile
+  // to oEmbed lately and the platform script bloats pages — link is good enough.
+  return (
+    <a
+      href={`https://twitter.com/i/web/status/${encodeURIComponent(id)}`}
+      target="_blank"
+      rel="noreferrer"
+      className="my-6 block rounded-lg border border-neutral-200 bg-white p-4 transition-colors hover:border-brand-500 dark:border-neutral-800 dark:bg-neutral-950 dark:hover:border-brand-400"
+    >
+      <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-wide text-neutral-500">
+        <span style={{ fontWeight: 700, color: '#0f1419' }} className="dark:!text-neutral-200">𝕏</span>
+        <span>twitter.com</span>
+      </div>
+      <div className="text-sm font-medium">View this post on X →</div>
+      <div className="mt-1 break-all text-xs text-neutral-500">/i/web/status/{id}</div>
+    </a>
+  );
 }
 
 async function FixtureEmbed({ id, locale }: { id: number; locale: Locale }) {
@@ -103,7 +147,13 @@ export async function ArticleBody({ html, locale }: { html: string; locale: Loca
         if (c.type === 'fixture') {
           return <FixtureEmbed key={i} id={c.id} locale={locale} />;
         }
-        return <TeamEmbed key={i} id={c.id} locale={locale} />;
+        if (c.type === 'team') {
+          return <TeamEmbed key={i} id={c.id} locale={locale} />;
+        }
+        if (c.type === 'youtube') {
+          return <YouTubeEmbed key={i} id={c.id} />;
+        }
+        return <TweetEmbed key={i} id={c.id} />;
       })}
     </div>
   );

@@ -29,7 +29,11 @@ export function NewsAiPanel({ postId, locale }: Props) {
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
       setMsg({ kind: 'ok', text: j.message || 'Готово' });
-      router.refresh();
+      if (j.editUrl) {
+        router.push(j.editUrl);
+      } else {
+        router.refresh();
+      }
     } catch (e) {
       setMsg({
         kind: 'err',

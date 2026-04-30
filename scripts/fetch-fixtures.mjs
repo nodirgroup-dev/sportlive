@@ -43,6 +43,8 @@ const SEASON = parseInt(args.season ?? `${new Date().getFullYear()}`, 10);
 const DAYS = args.range ? parseInt(args.range, 10) : null;
 const LIVE_ONLY = !!args.live;
 const TEAMS_ONLY = !!args['teams-only'];
+const TOPSCORERS_ONLY = !!args['topscorers-only'];
+const LINEUPS_ONLY = !!args['lineups-only'];
 
 const sql = postgres(DATABASE_URL, { prepare: false, max: 5, onnotice: () => {} });
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
@@ -175,6 +177,107 @@ async function fetchLeagues() {
   log(`  rate: ${rateLimit?.dayRemain}/${rateLimit?.dayLimit} left today`);
 }
 
+async function upsertPlayer(item) {
+  // API-Football /players response: { player: {...}, statistics: [{league:{...},team:{...},games:{...},goals:{...},...}, ...] }
+  const p = item.player;
+  if (!p?.id) return;
+  const birthYear = p.birth?.date ? parseInt(p.birth.date.slice(0, 4), 10) : null;
+  // Pick latest team from the first statistics block (or null).
+  const firstStat = item.statistics?.[0];
+  const teamId = firstStat?.team?.id ?? null;
+  const position = firstStat?.games?.position ?? null;
+  await sql`
+    INSERT INTO players (id, name, firstname, lastname, nationality, photo, height, weight, birth_year, team_id, position)
+    VALUES (
+      ${p.id}, ${p.name}, ${p.firstname ?? null}, ${p.lastname ?? null},
+      ${p.nationality ?? null}, ${p.photo ?? null},
+      ${p.height ?? null}, ${p.weight ?? null}, ${birthYear},
+      ${teamId}, ${position}
+    )
+    ON CONFLICT (id) DO UPDATE SET
+      name = EXCLUDED.name, firstname = EXCLUDED.firstname, lastname = EXCLUDED.lastname,
+      nationality = EXCLUDED.nationality, photo = EXCLUDED.photo,
+      height = EXCLUDED.height, weight = EXCLUDED.weight, birth_year = EXCLUDED.birth_year,
+      team_id = COALESCE(EXCLUDED.team_id, players.team_id),
+      position = COALESCE(EXCLUDED.position, players.position),
+      updated_at = now()
+  `;
+  for (const s of item.statistics ?? []) {
+    if (!s?.league?.id || s?.league?.season == null) continue;
+    await sql`
+      INSERT INTO player_stats (player_id, league_id, season, team_id, appearances, minutes, goals, assists, yellow_cards, red_cards, rating)
+      VALUES (
+        ${p.id}, ${s.league.id}, ${s.league.season},
+        ${s.team?.id ?? null},
+        ${s.games?.appearences ?? 0},
+        ${s.games?.minutes ?? 0},
+        ${s.goals?.total ?? 0},
+        ${s.goals?.assists ?? 0},
+        ${s.cards?.yellow ?? 0},
+        ${s.cards?.red ?? 0},
+        ${s.games?.rating ?? null}
+      )
+      ON CONFLICT (player_id, league_id, season) DO UPDATE SET
+        team_id = COALESCE(EXCLUDED.team_id, player_stats.team_id),
+        appearances = EXCLUDED.appearances, minutes = EXCLUDED.minutes,
+        goals = EXCLUDED.goals, assists = EXCLUDED.assists,
+        yellow_cards = EXCLUDED.yellow_cards, red_cards = EXCLUDED.red_cards,
+        rating = EXCLUDED.rating, updated_at = now()
+    `;
+  }
+}
+
+async function fetchTopScorersForLeague(leagueId) {
+  const r = await api('/players/topscorers', { league: leagueId, season: SEASON });
+  const items = r.response ?? [];
+  log(`  league ${leagueId} → ${items.length} top scorers`);
+  for (const item of items) {
+    await upsertPlayer(item);
+  }
+}
+
+async function fetchLineupsForFixture(fixtureId) {
+  const r = await api('/fixtures/lineups', { fixture: fixtureId });
+  const items = r.response ?? [];
+  for (const it of items) {
+    await sql`
+      INSERT INTO match_lineups (fixture_id, team_id, formation, coach_name, start_xi, substitutes, fetched_at)
+      VALUES (
+        ${fixtureId}, ${it.team?.id}, ${it.formation ?? null}, ${it.coach?.name ?? null},
+        ${it.startXI ? sql.json(it.startXI) : null},
+        ${it.substitutes ? sql.json(it.substitutes) : null},
+        now()
+      )
+      ON CONFLICT (fixture_id, team_id) DO UPDATE SET
+        formation = EXCLUDED.formation, coach_name = EXCLUDED.coach_name,
+        start_xi = EXCLUDED.start_xi, substitutes = EXCLUDED.substitutes,
+        fetched_at = now()
+    `;
+  }
+}
+
+async function fetchAllUpcomingLineups(daysAhead = 2) {
+  // Get fixtures kicking off in the next N days that don't have lineups yet.
+  const rows = await sql`
+    SELECT f.id FROM fixtures f
+    LEFT JOIN match_lineups m ON m.fixture_id = f.id
+    WHERE m.fixture_id IS NULL
+      AND f.kickoff_at >= now()
+      AND f.kickoff_at < now() + (${daysAhead} || ' days')::interval
+      AND f.status_short IN ('NS','TBD','1H','HT','2H','ET','P','LIVE')
+    ORDER BY f.kickoff_at ASC
+    LIMIT 30
+  `;
+  log(`  fetching lineups for ${rows.length} upcoming/live fixtures`);
+  for (const r of rows) {
+    try {
+      await fetchLineupsForFixture(r.id);
+    } catch (e) {
+      log(`  lineup fixture=${r.id} failed: ${e.message?.slice(0, 100)}`);
+    }
+  }
+}
+
 async function fetchTeamsForLeague(leagueId) {
   const r = await api('/teams', { league: leagueId, season: SEASON });
   const items = r.response ?? [];
@@ -238,6 +341,12 @@ async function main() {
     for (const lid of LEAGUES) {
       await fetchTeamsForLeague(lid);
     }
+  } else if (TOPSCORERS_ONLY) {
+    for (const lid of LEAGUES) {
+      await fetchTopScorersForLeague(lid);
+    }
+  } else if (LINEUPS_ONLY) {
+    await fetchAllUpcomingLineups(DAYS ?? 2);
   } else {
     await fetchLeagues();
     for (const lid of LEAGUES) {

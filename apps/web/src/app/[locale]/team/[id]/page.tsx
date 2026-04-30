@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { hasLocale, type Locale } from '@/i18n/routing';
-import { absoluteUrl, localePath } from '@/lib/site';
+import { absoluteUrl, localePath, siteConfig } from '@/lib/site';
 import {
   getTeamById,
   getTeamUpcoming,
@@ -34,12 +34,26 @@ export async function generateMetadata({
   if (!Number.isFinite(id)) return {};
   const team = await getTeamById(id);
   if (!team) return {};
+  const title = team.country ? `${team.name} (${team.country})` : team.name;
+  const description = team.venue?.name
+    ? `${team.name} — ${team.venue.name}${team.venue.city ? `, ${team.venue.city}` : ''}`
+    : team.name;
+  const url = absoluteUrl(localePath(locale, `/team/${id}`));
+  const ogImage = team.logo
+    ? absoluteUrl(team.logo)
+    : absoluteUrl(`/api/og/team/${id}?locale=${locale}`);
   return {
-    title: team.country ? `${team.name} (${team.country})` : team.name,
-    description: team.venue?.name
-      ? `${team.name} — ${team.venue.name}${team.venue.city ? `, ${team.venue.city}` : ''}`
-      : team.name,
-    alternates: { canonical: absoluteUrl(localePath(locale, `/team/${id}`)) },
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: 'website',
+      url,
+      title,
+      description,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: team.name }],
+    },
+    twitter: { card: 'summary_large_image', title, description, images: [ogImage] },
   };
 }
 
@@ -64,9 +78,33 @@ export default async function TeamPage({
     getTeamStandings(id),
   ]);
   const form = teamFormFromFixtures(id, recent);
+  const teamUrl = absoluteUrl(localePath(locale, `/team/${id}`));
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SportsTeam',
+    name: team.name,
+    sport: 'Football',
+    url: teamUrl,
+    logo: team.logo ? absoluteUrl(team.logo) : undefined,
+    location: team.venue
+      ? {
+          '@type': 'Place',
+          name: team.venue.name,
+          address: team.venue.city
+            ? { '@type': 'PostalAddress', addressLocality: team.venue.city, addressCountry: team.country ?? undefined }
+            : undefined,
+        }
+      : team.country
+        ? { '@type': 'Country', name: team.country }
+        : undefined,
+    foundingDate: team.founded ? `${team.founded}` : undefined,
+    isPartOf: { '@type': 'WebSite', name: siteConfig.name, url: siteConfig.url },
+  };
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-6 sm:py-10">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <header className="mb-8 flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:gap-6 sm:text-left">
         {team.logo ? (
           <Image

@@ -15,3 +15,7 @@ export * from './audit_log';
 export * from './push_subscriptions';
 export * from './newsletter';
 export * from './newsletter_sends';
+export * from './post_revisions';
+export * from './players';
+export * from './match_lineups';
+export * from './rss_sources';

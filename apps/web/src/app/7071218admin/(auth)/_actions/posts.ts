@@ -1,6 +1,6 @@
 'use server';
 
-import { db, posts } from '@sportlive/db';
+import { db, posts, postRevisions } from '@sportlive/db';
 import { desc, eq, inArray, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -236,6 +236,17 @@ export async function updatePost(id: number, formData: FormData) {
       : new Date()
     : null;
 
+  // Snapshot the prior version before mutating, so editors can restore.
+  await db.insert(postRevisions).values({
+    postId: id,
+    title: existing[0]!.title,
+    summary: existing[0]!.summary,
+    body: existing[0]!.body,
+    coverImage: existing[0]!.coverImage,
+    savedById: user.id,
+    savedByLabel: user.name || user.email,
+  });
+
   await db
     .update(posts)
     .set({
@@ -355,6 +366,62 @@ export async function duplicatePost(formData: FormData) {
 
   revalidatePath('/7071218admin/news');
   redirect(`/7071218admin/news/${row!.id}/edit?dup=1`);
+}
+
+export async function restorePostRevision(formData: FormData) {
+  const user = await getCurrentUser();
+  if (!user) redirect('/7071218admin/login');
+
+  const revisionId = parseInt((formData.get('revisionId') as string) || '', 10);
+  if (!Number.isFinite(revisionId)) redirect('/7071218admin/news');
+
+  const rev = await db
+    .select()
+    .from(postRevisions)
+    .where(eq(postRevisions.id, revisionId))
+    .limit(1);
+  if (rev.length === 0) redirect('/7071218admin/news?restore=not_found');
+  const r = rev[0]!;
+
+  // Snapshot the current version first so the restore is itself reversible.
+  const cur = await db
+    .select({ title: posts.title, summary: posts.summary, body: posts.body, coverImage: posts.coverImage })
+    .from(posts)
+    .where(eq(posts.id, r.postId))
+    .limit(1);
+  if (cur.length === 0) redirect('/7071218admin/news?restore=post_gone');
+  await db.insert(postRevisions).values({
+    postId: r.postId,
+    title: cur[0]!.title,
+    summary: cur[0]!.summary,
+    body: cur[0]!.body,
+    coverImage: cur[0]!.coverImage,
+    savedById: user.id,
+    savedByLabel: user.name || user.email,
+  });
+
+  await db
+    .update(posts)
+    .set({
+      title: r.title,
+      summary: r.summary,
+      body: r.body,
+      coverImage: r.coverImage,
+      updatedAt: new Date(),
+    })
+    .where(eq(posts.id, r.postId));
+
+  await recordAudit({
+    action: 'post.restore',
+    entityType: 'post',
+    entityId: r.postId,
+    summary: r.title.slice(0, 200),
+    meta: { revisionId },
+  });
+
+  revalidatePath('/7071218admin/news');
+  revalidatePath('/');
+  redirect(`/7071218admin/news/${r.postId}/edit?restored=1`);
 }
 
 export async function deletePost(id: number) {

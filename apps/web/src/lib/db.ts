@@ -1,4 +1,19 @@
-import { db, posts, categories, users, redirects, staticPages, banners, comments, tags, postTags } from '@sportlive/db';
+import {
+  db,
+  posts,
+  categories,
+  users,
+  redirects,
+  staticPages,
+  banners,
+  comments,
+  tags,
+  postTags,
+  players,
+  playerStats,
+  matchLineups,
+  teams,
+} from '@sportlive/db';
 import { and, asc, desc, eq, gte, inArray, ne, sql } from 'drizzle-orm';
 import type { Locale } from '@/i18n/routing';
 
@@ -771,6 +786,221 @@ export function teamFormFromFixtures(teamId: number, recent: FixtureRow[]): Team
       return 'D';
     });
 }
+
+// =================== Players & lineups ===================
+
+export type PlayerDetail = {
+  id: number;
+  name: string;
+  firstname: string | null;
+  lastname: string | null;
+  nationality: string | null;
+  photo: string | null;
+  height: string | null;
+  weight: string | null;
+  birthYear: number | null;
+  position: string | null;
+  team: { id: number; name: string; logo: string | null } | null;
+};
+
+export async function getPlayerById(id: number): Promise<PlayerDetail | null> {
+  const rows = (await db.execute(sql`
+    SELECT p.id, p.name, p.firstname, p.lastname, p.nationality, p.photo, p.height, p.weight,
+           p.birth_year AS "birthYear", p.position,
+           t.id AS "teamId", t.name AS "teamName", t.logo AS "teamLogo"
+    FROM players p
+    LEFT JOIN teams t ON t.id = p.team_id
+    WHERE p.id = ${id}
+    LIMIT 1
+  `)) as unknown as Array<Record<string, unknown>>;
+  if (rows.length === 0) return null;
+  const r = rows[0]!;
+  return {
+    id: Number(r.id),
+    name: String(r.name),
+    firstname: (r.firstname as string) ?? null,
+    lastname: (r.lastname as string) ?? null,
+    nationality: (r.nationality as string) ?? null,
+    photo: (r.photo as string) ?? null,
+    height: (r.height as string) ?? null,
+    weight: (r.weight as string) ?? null,
+    birthYear: r.birthYear === null ? null : Number(r.birthYear),
+    position: (r.position as string) ?? null,
+    team: r.teamId
+      ? { id: Number(r.teamId), name: String(r.teamName), logo: (r.teamLogo as string) ?? null }
+      : null,
+  };
+}
+
+export type PlayerStatsRow = {
+  league: { id: number; name: string; logo: string | null; country: string | null };
+  season: number;
+  team: { id: number; name: string; logo: string | null } | null;
+  appearances: number;
+  minutes: number;
+  goals: number;
+  assists: number;
+  yellowCards: number;
+  redCards: number;
+  rating: string | null;
+};
+
+export async function getPlayerStats(playerId: number): Promise<PlayerStatsRow[]> {
+  const rows = (await db.execute(sql`
+    SELECT s.season,
+           s.appearances, s.minutes, s.goals, s.assists,
+           s.yellow_cards AS "yellowCards", s.red_cards AS "redCards", s.rating,
+           l.id AS "leagueId", l.name AS "leagueName", l.logo AS "leagueLogo", l.country AS "leagueCountry",
+           t.id AS "teamId", t.name AS "teamName", t.logo AS "teamLogo"
+    FROM player_stats s
+    JOIN leagues l ON l.id = s.league_id
+    LEFT JOIN teams t ON t.id = s.team_id
+    WHERE s.player_id = ${playerId}
+    ORDER BY s.season DESC, s.goals DESC
+  `)) as unknown as Array<Record<string, unknown>>;
+  return rows.map((r) => ({
+    league: {
+      id: Number(r.leagueId),
+      name: String(r.leagueName),
+      logo: (r.leagueLogo as string) ?? null,
+      country: (r.leagueCountry as string) ?? null,
+    },
+    season: Number(r.season),
+    team: r.teamId
+      ? { id: Number(r.teamId), name: String(r.teamName), logo: (r.teamLogo as string) ?? null }
+      : null,
+    appearances: Number(r.appearances),
+    minutes: Number(r.minutes),
+    goals: Number(r.goals),
+    assists: Number(r.assists),
+    yellowCards: Number(r.yellowCards),
+    redCards: Number(r.redCards),
+    rating: (r.rating as string) ?? null,
+  }));
+}
+
+export type TopScorerRow = {
+  rank: number;
+  player: { id: number; name: string; photo: string | null; nationality: string | null };
+  team: { id: number; name: string; logo: string | null } | null;
+  appearances: number;
+  minutes: number;
+  goals: number;
+  assists: number;
+};
+
+export async function getTopScorers(leagueId: number, season: number, limit = 25): Promise<TopScorerRow[]> {
+  const rows = (await db.execute(sql`
+    SELECT s.appearances, s.minutes, s.goals, s.assists,
+           p.id AS "playerId", p.name AS "playerName", p.photo, p.nationality,
+           t.id AS "teamId", t.name AS "teamName", t.logo AS "teamLogo"
+    FROM player_stats s
+    JOIN players p ON p.id = s.player_id
+    LEFT JOIN teams t ON t.id = s.team_id
+    WHERE s.league_id = ${leagueId} AND s.season = ${season}
+    ORDER BY s.goals DESC, s.assists DESC, p.name ASC
+    LIMIT ${limit}
+  `)) as unknown as Array<Record<string, unknown>>;
+  return rows.map((r, i) => ({
+    rank: i + 1,
+    player: {
+      id: Number(r.playerId),
+      name: String(r.playerName),
+      photo: (r.photo as string) ?? null,
+      nationality: (r.nationality as string) ?? null,
+    },
+    team: r.teamId
+      ? { id: Number(r.teamId), name: String(r.teamName), logo: (r.teamLogo as string) ?? null }
+      : null,
+    appearances: Number(r.appearances),
+    minutes: Number(r.minutes),
+    goals: Number(r.goals),
+    assists: Number(r.assists),
+  }));
+}
+
+export type LineupPlayer = {
+  id: number;
+  name: string;
+  number: number | null;
+  pos: string | null;
+  grid: string | null;
+};
+
+export type FixtureLineup = {
+  team: { id: number; name: string; logo: string | null };
+  formation: string | null;
+  coachName: string | null;
+  startXi: LineupPlayer[];
+  substitutes: LineupPlayer[];
+};
+
+type ApiFootballLineupPlayer = {
+  player?: { id?: number; name?: string; number?: number; pos?: string; grid?: string };
+};
+
+function mapLineupArray(raw: unknown): LineupPlayer[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((it: ApiFootballLineupPlayer) => {
+      const p = it?.player ?? {};
+      if (typeof p.id !== 'number' || typeof p.name !== 'string') return null;
+      return {
+        id: p.id,
+        name: p.name,
+        number: typeof p.number === 'number' ? p.number : null,
+        pos: typeof p.pos === 'string' ? p.pos : null,
+        grid: typeof p.grid === 'string' ? p.grid : null,
+      };
+    })
+    .filter((x): x is LineupPlayer => x !== null);
+}
+
+export async function getMatchLineups(fixtureId: number): Promise<FixtureLineup[]> {
+  const rows = await db
+    .select({
+      teamId: matchLineups.teamId,
+      formation: matchLineups.formation,
+      coachName: matchLineups.coachName,
+      startXi: matchLineups.startXi,
+      substitutes: matchLineups.substitutes,
+      teamName: teams.name,
+      teamLogo: teams.logo,
+    })
+    .from(matchLineups)
+    .innerJoin(teams, eq(teams.id, matchLineups.teamId))
+    .where(eq(matchLineups.fixtureId, fixtureId));
+  return rows.map((r) => ({
+    team: { id: r.teamId, name: r.teamName, logo: r.teamLogo },
+    formation: r.formation,
+    coachName: r.coachName,
+    startXi: mapLineupArray(r.startXi),
+    substitutes: mapLineupArray(r.substitutes),
+  }));
+}
+
+export type LeagueRow = { id: number; name: string; country: string | null; logo: string | null; season: number };
+
+export async function getLeaguesWithScorers(): Promise<LeagueRow[]> {
+  const rows = (await db.execute(sql`
+    SELECT DISTINCT l.id, l.name, l.country, l.logo, l.season
+    FROM leagues l
+    JOIN player_stats s ON s.league_id = l.id AND s.season = l.season
+    ORDER BY l.country NULLS LAST, l.name
+  `)) as unknown as Array<Record<string, unknown>>;
+  return rows.map((r) => ({
+    id: Number(r.id),
+    name: String(r.name),
+    country: (r.country as string) ?? null,
+    logo: (r.logo as string) ?? null,
+    season: Number(r.season),
+  }));
+}
+
+void players;
+void playerStats;
+
+// =================== Search ===================
 
 export async function searchPosts(
   q: string,

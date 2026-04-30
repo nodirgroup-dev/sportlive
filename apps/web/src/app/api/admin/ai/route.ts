@@ -115,30 +115,39 @@ Rules:
         .limit(1);
       const finalSlug = collide.length > 0 ? `${slug}-${p.id}` : slug;
 
-      await db.insert(posts).values({
-        legacyId: null,
-        locale: target,
-        slug: finalSlug,
-        title: json.title,
-        summary: json.summary || null,
-        body: json.body,
-        authorId: p.authorId,
-        categoryId: p.categoryId,
-        status: 'published',
-        publishedAt: p.publishedAt,
-        metaTitle: json.metaTitle || json.title,
-        metaDescription: json.metaDescription || null,
-        metaKeywords: json.metaKeywords || null,
-        viewCount: 0,
-        groupId: p.groupId,
-        coverImage: p.coverImage,
-        coverImageWidth: p.coverImageWidth,
-        coverImageHeight: p.coverImageHeight,
-      });
+      const inserted = await db
+        .insert(posts)
+        .values({
+          legacyId: null,
+          locale: target,
+          slug: finalSlug,
+          title: json.title,
+          summary: json.summary || null,
+          body: json.body,
+          authorId: p.authorId,
+          categoryId: p.categoryId,
+          status: 'draft',
+          publishedAt: p.publishedAt,
+          metaTitle: json.metaTitle || json.title,
+          metaDescription: json.metaDescription || null,
+          metaKeywords: json.metaKeywords || null,
+          viewCount: 0,
+          groupId: p.groupId,
+          coverImage: p.coverImage,
+          coverImageWidth: p.coverImageWidth,
+          coverImageHeight: p.coverImageHeight,
+        })
+        .returning({ id: posts.id });
+      const newId = inserted[0]!.id;
 
       revalidatePath('/');
       revalidatePath('/7071218admin/news');
-      return NextResponse.json({ ok: true, message: `${target.toUpperCase()} версия создана` });
+      return NextResponse.json({
+        ok: true,
+        newPostId: newId,
+        editUrl: `/7071218admin/news/${newId}/edit?translated=${target}`,
+        message: `${target.toUpperCase()} версия создана (черновик #${newId})`,
+      });
     }
 
     if (body.action === 'summary') {

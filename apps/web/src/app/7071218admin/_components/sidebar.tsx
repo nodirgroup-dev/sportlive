@@ -31,6 +31,7 @@ const NAV: Array<
   { type: 'section', label: 'Маркетинг' },
   { type: 'item', href: '/7071218admin/push', label: 'Push-уведомления', icon: 'M18 16v-5a6 6 0 0 0-12 0v5l-2 3h16l-2-3zM10 21a2 2 0 0 0 4 0' },
   { type: 'item', href: '/7071218admin/newsletter', label: 'Email рассылка', icon: 'M4 4h16v16H4zM4 4l8 8 8-8' },
+  { type: 'item', href: '/7071218admin/rss', label: 'RSS импорт', icon: 'M5 11a8 8 0 0 1 8 8M5 5a14 14 0 0 1 14 14M6 19a1 1 0 1 1 0-2 1 1 0 0 1 0 2z' },
   { type: 'item', href: '/7071218admin/banners', label: 'Баннеры', icon: 'M3 6h18v12H3zM3 10h18M9 14h6' },
 
   { type: 'section', label: 'Аналитика' },

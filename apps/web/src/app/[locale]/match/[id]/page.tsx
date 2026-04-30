@@ -6,7 +6,7 @@ import { hasLocale, type Locale } from '@/i18n/routing';
 import { absoluteUrl, localePath } from '@/lib/site';
 import { Link } from '@/i18n/navigation';
 import type { Route } from 'next';
-import { getFixtureById, getLiveEntries } from '@/lib/db';
+import { getFixtureById, getLiveEntries, getMatchLineups } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 30;
@@ -77,7 +77,7 @@ export default async function MatchPage({
 
   const eventsRaw = (f.raw as { events?: unknown[] } | null)?.events ?? [];
   const events = Array.isArray(eventsRaw) ? eventsRaw : [];
-  const liveEntries = await getLiveEntries(id);
+  const [liveEntries, lineups] = await Promise.all([getLiveEntries(id), getMatchLineups(id)]);
 
   const TYPE_LABEL: Record<string, string> = {
     comment: '💬',
@@ -99,8 +99,44 @@ export default async function MatchPage({
     var: 'bg-purple-50 border-purple-200 dark:bg-purple-900/10 dark:border-purple-900/30',
   };
 
+  const matchUrl = absoluteUrl(localePath(locale, `/match/${id}`));
+  const matchEnd = new Date(f.kickoffAt.getTime() + 110 * 60 * 1000);
+  const eventStatus = finished
+    ? 'https://schema.org/EventScheduled'
+    : f.statusShort === 'PST'
+      ? 'https://schema.org/EventPostponed'
+      : f.statusShort === 'CANC'
+        ? 'https://schema.org/EventCancelled'
+        : 'https://schema.org/EventScheduled';
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SportsEvent',
+    name: `${f.homeTeam.name} vs ${f.awayTeam.name}`,
+    sport: 'Football',
+    startDate: f.kickoffAt.toISOString(),
+    endDate: matchEnd.toISOString(),
+    eventStatus,
+    eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+    url: matchUrl,
+    location: f.venue
+      ? {
+          '@type': 'Place',
+          name: f.venue.name,
+          address: f.venue.city ? { '@type': 'PostalAddress', addressLocality: f.venue.city } : undefined,
+        }
+      : { '@type': 'VirtualLocation', url: matchUrl },
+    homeTeam: { '@type': 'SportsTeam', name: f.homeTeam.name, logo: f.homeTeam.logo ?? undefined },
+    awayTeam: { '@type': 'SportsTeam', name: f.awayTeam.name, logo: f.awayTeam.logo ?? undefined },
+    competitor: [
+      { '@type': 'SportsTeam', name: f.homeTeam.name },
+      { '@type': 'SportsTeam', name: f.awayTeam.name },
+    ],
+    organizer: { '@type': 'Organization', name: f.league.name },
+  };
+
   return (
     <div className="container mx-auto max-w-3xl px-4 py-6 sm:py-10">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <header className="mb-6 text-center">
         <div className="mb-2 flex items-center justify-center gap-2 text-sm text-neutral-500">
           {f.league.logo ? (
@@ -154,6 +190,61 @@ export default async function MatchPage({
         ) : null}
         {f.refereeName ? <div className="mt-1 text-xs text-neutral-500">🟡 {f.refereeName}</div> : null}
       </header>
+
+      {lineups.length > 0 ? (
+        <section className="mt-6 grid gap-4 sm:grid-cols-2">
+          {lineups.map((l) => (
+            <div
+              key={l.team.id}
+              className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950"
+            >
+              <header className="mb-3 flex items-center gap-2">
+                {l.team.logo ? (
+                  <Image src={l.team.logo} alt="" width={20} height={20} className="h-5 w-5 object-contain" />
+                ) : null}
+                <span className="text-sm font-bold">{l.team.name}</span>
+                {l.formation ? (
+                  <span className="ml-auto rounded bg-neutral-100 px-2 py-0.5 font-mono text-xs dark:bg-neutral-800">
+                    {l.formation}
+                  </span>
+                ) : null}
+              </header>
+              {l.coachName ? (
+                <div className="mb-2 text-xs text-neutral-500">👤 {l.coachName}</div>
+              ) : null}
+              <ol className="space-y-1 text-xs">
+                {l.startXi.map((p) => (
+                  <li key={p.id} className="flex items-center gap-2">
+                    <span className="inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-neutral-200 font-mono text-[10px] font-bold dark:bg-neutral-800">
+                      {p.number ?? '·'}
+                    </span>
+                    <span className="font-medium">{p.name}</span>
+                    {p.pos ? <span className="ml-auto text-neutral-500">{p.pos}</span> : null}
+                  </li>
+                ))}
+              </ol>
+              {l.substitutes.length > 0 ? (
+                <details className="mt-3 text-xs">
+                  <summary className="cursor-pointer text-neutral-500">
+                    Substitutes ({l.substitutes.length})
+                  </summary>
+                  <ol className="mt-2 space-y-1">
+                    {l.substitutes.map((p) => (
+                      <li key={p.id} className="flex items-center gap-2 text-neutral-500">
+                        <span className="inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-neutral-100 font-mono text-[10px] dark:bg-neutral-900">
+                          {p.number ?? '·'}
+                        </span>
+                        <span>{p.name}</span>
+                        {p.pos ? <span className="ml-auto">{p.pos}</span> : null}
+                      </li>
+                    ))}
+                  </ol>
+                </details>
+              ) : null}
+            </div>
+          ))}
+        </section>
+      ) : null}
 
       {liveEntries.length > 0 ? (
         <section className="mt-6">
