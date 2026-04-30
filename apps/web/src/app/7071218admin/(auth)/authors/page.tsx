@@ -1,5 +1,5 @@
 import { db, users, posts } from '@sportlive/db';
-import { asc, eq, sql, inArray, and, max } from 'drizzle-orm';
+import { asc, sql, inArray, max } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -122,4 +122,3 @@ export default async function AuthorsPage() {
   );
 }
 
-export const _used = and || eq;

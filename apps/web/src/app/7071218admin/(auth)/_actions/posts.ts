@@ -1,7 +1,7 @@
 'use server';
 
 import { db, posts } from '@sportlive/db';
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
@@ -124,4 +124,3 @@ export async function deletePost(id: number) {
   redirect('/7071218admin/news');
 }
 
-export const _used = and; // keep import to satisfy TS
