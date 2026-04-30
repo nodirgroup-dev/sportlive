@@ -38,6 +38,7 @@ const NAV: Array<
 
   { type: 'section', label: 'Система' },
   { type: 'item', href: '/7071218admin/audit', label: 'Журнал действий', icon: 'M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z' },
+  { type: 'item', href: '/7071218admin/backups', label: 'Бэкапы', icon: 'M21 8v13H3V8M1 3h22v5H1zM10 12h4' },
   { type: 'item', href: '/7071218admin/settings', label: 'Настройки', icon: 'M12 8a4 4 0 1 0 4 4 4 4 0 0 0-4-4Z' },
 ];
 
