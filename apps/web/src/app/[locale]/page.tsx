@@ -3,7 +3,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { hasLocale, type Locale } from '@/i18n/routing';
 import { siteConfig, absoluteUrl, localePath } from '@/lib/site';
-import { getLatestPosts, getMostPopular } from '@/lib/db';
+import { getLatestPosts, getMostPopular, getFeaturedHero } from '@/lib/db';
 import { PostCard } from '@/components/post-card';
 import { PostHero, PostGridCard } from '@/components/post-hero';
 import { PopularList } from '@/components/popular-list';
@@ -33,14 +33,17 @@ export default async function HomePage({
   if (!hasLocale(locale)) notFound();
   setRequestLocale(locale);
   const t = await getTranslations();
-  const [posts, popular] = await Promise.all([
-    getLatestPosts(locale as Locale, 31),
+  const [posts, popular, pinned] = await Promise.all([
+    getLatestPosts(locale as Locale, 32),
     getMostPopular(locale as Locale, 5),
+    getFeaturedHero(locale as Locale),
   ]);
 
-  const hero = posts[0];
-  const featured = posts.slice(1, 7); // 6 cards
-  const rest = posts.slice(7);
+  // If a pinned post exists, use it as hero and exclude it from the latest feed.
+  const hero = pinned ?? posts[0] ?? null;
+  const usable = pinned ? posts.filter((p) => p.id !== pinned.id) : posts.slice(1);
+  const featured = usable.slice(0, 6); // 6 cards
+  const rest = usable.slice(6);
 
   const websiteJsonLd = {
     '@context': 'https://schema.org',

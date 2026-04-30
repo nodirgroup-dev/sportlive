@@ -38,6 +38,8 @@ export const posts = pgTable(
     commentCount: integer().notNull().default(0),
     /** Group key linking the same article across locales (uz/ru/en versions share groupId). */
     groupId: integer().notNull(),
+    /** When set, post pins to homepage hero. Most recently featured wins. Null = not featured. */
+    featuredAt: timestamp({ withTimezone: true }),
     createdAt,
     updatedAt,
   },
@@ -47,6 +49,7 @@ export const posts = pgTable(
     index('posts_published_idx').on(t.status, t.publishedAt),
     index('posts_category_idx').on(t.categoryId, t.publishedAt),
     index('posts_legacy_idx').on(t.legacyId),
+    index('posts_featured_idx').on(t.locale, t.featuredAt),
   ],
 );
 

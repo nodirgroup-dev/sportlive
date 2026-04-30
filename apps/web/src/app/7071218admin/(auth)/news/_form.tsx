@@ -15,6 +15,7 @@ type FormPost = {
   categoryId: number | null;
   status: 'draft' | 'published' | 'archived';
   coverImage: string | null;
+  featured: boolean;
 };
 
 export async function NewsForm({
@@ -117,6 +118,23 @@ export async function NewsForm({
             <div className="field">
               <label>Обложка</label>
               <CoverUpload name="coverImage" defaultValue={post.coverImage} />
+            </div>
+            <div className="field">
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  cursor: 'pointer',
+                  marginTop: 4,
+                }}
+              >
+                <input type="checkbox" name="featured" value="1" defaultChecked={post.featured} />
+                <span>📌 Закрепить на главной</span>
+              </label>
+              <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2, paddingLeft: 22 }}>
+                Самая свежая закрепленная статья показывается как герой главной
+              </div>
             </div>
           </div>
 

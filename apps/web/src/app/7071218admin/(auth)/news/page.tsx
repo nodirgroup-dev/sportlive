@@ -22,6 +22,7 @@ async function getList(localeFilter: string | null, q: string | null, statusFilt
       categoryId: posts.categoryId,
       categoryName: categories.name,
       coverImage: posts.coverImage,
+      featuredAt: posts.featuredAt,
     })
     .from(posts)
     .leftJoin(categories, eq(categories.id, posts.categoryId))
@@ -158,7 +159,14 @@ export default async function NewsList({
                     />
                   )}
                 </td>
-                <td style={{ fontWeight: 500 }}>{r.title}</td>
+                <td style={{ fontWeight: 500 }}>
+                  {r.featuredAt ? (
+                    <span title="Закреплено на главной" style={{ marginRight: 6 }}>
+                      📌
+                    </span>
+                  ) : null}
+                  {r.title}
+                </td>
                 <td>
                   {r.categoryName ? (
                     <span className="pill gray">{r.categoryName}</span>

@@ -28,6 +28,7 @@ export async function createPost(formData: FormData) {
   const categoryIdRaw = ((formData.get('categoryId') as string) || '').trim();
   const status = ((formData.get('status') as string) || 'draft') as 'draft' | 'published';
   const coverImage = ((formData.get('coverImage') as string) || '').trim() || null;
+  const featured = formData.get('featured') === '1';
 
   if (!title || !body) {
     throw new Error('title and body required');
@@ -59,6 +60,7 @@ export async function createPost(formData: FormData) {
       metaDescription: summary ? summary.replace(/<[^>]*>/g, '').slice(0, 500) : null,
       groupId: newGroupId,
       coverImage,
+      featuredAt: featured ? new Date() : null,
     })
     .returning({ id: posts.id });
 
@@ -86,6 +88,7 @@ export async function updatePost(id: number, formData: FormData) {
   const categoryIdRaw = ((formData.get('categoryId') as string) || '').trim();
   const status = ((formData.get('status') as string) || 'draft') as 'draft' | 'published' | 'archived';
   const coverImage = ((formData.get('coverImage') as string) || '').trim() || null;
+  const featured = formData.get('featured') === '1';
 
   if (!title || !body) throw new Error('title and body required');
   const slug = slugRaw ? slugify(slugRaw) : slugify(title);
@@ -102,6 +105,13 @@ export async function updatePost(id: number, formData: FormData) {
         ? null
         : existing[0]!.publishedAt;
 
+  const wasFeatured = existing[0]!.featuredAt !== null;
+  const featuredAt = featured
+    ? wasFeatured
+      ? existing[0]!.featuredAt
+      : new Date()
+    : null;
+
   await db
     .update(posts)
     .set({
@@ -115,6 +125,7 @@ export async function updatePost(id: number, formData: FormData) {
       metaTitle: title.slice(0, 300),
       metaDescription: summary ? summary.replace(/<[^>]*>/g, '').slice(0, 500) : null,
       coverImage,
+      featuredAt,
       updatedAt: new Date(),
     })
     .where(eq(posts.id, id));

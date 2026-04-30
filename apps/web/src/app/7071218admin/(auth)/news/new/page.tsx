@@ -16,6 +16,7 @@ export default function NewPostPage() {
         categoryId: null,
         status: 'draft',
         coverImage: '',
+        featured: false,
       }}
       action={createPost}
     />

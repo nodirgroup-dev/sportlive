@@ -29,6 +29,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
         categoryId: p.categoryId,
         status: p.status as 'draft' | 'published' | 'archived',
         coverImage: p.coverImage,
+        featured: p.featuredAt !== null,
       }}
       action={action}
     />

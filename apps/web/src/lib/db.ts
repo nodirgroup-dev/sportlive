@@ -805,6 +805,36 @@ export async function getActiveBanners(
   `) as unknown as Promise<BannerView[]>;
 }
 
+/** Most recently featured published post for the locale; null if none. */
+export async function getFeaturedHero(locale: Locale): Promise<ListedPost | null> {
+  const rows = await db
+    .select({
+      id: posts.id,
+      legacyId: posts.legacyId,
+      slug: posts.slug,
+      title: posts.title,
+      summary: posts.summary,
+      coverImage: posts.coverImage,
+      coverImageWidth: posts.coverImageWidth,
+      coverImageHeight: posts.coverImageHeight,
+      publishedAt: posts.publishedAt,
+      categoryId: posts.categoryId,
+    })
+    .from(posts)
+    .where(
+      and(
+        eq(posts.locale, locale),
+        eq(posts.status, 'published'),
+        sql`${posts.featuredAt} IS NOT NULL`,
+      ),
+    )
+    .orderBy(desc(posts.featuredAt))
+    .limit(1);
+  if (rows.length === 0) return null;
+  const r = rows[0]!;
+  return { ...r, category: await categoryPath(r.categoryId) };
+}
+
 export async function getMostPopular(locale: Locale, limit = 5): Promise<ListedPost[]> {
   // 1-year window so the panel surfaces content immediately after migration;
   // once view counts accumulate the ordering will reflect actual popularity.
