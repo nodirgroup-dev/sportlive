@@ -3,6 +3,7 @@ import { db, categories } from '@sportlive/db';
 import { eq } from 'drizzle-orm';
 import { RichEditor } from '../_components/rich-editor';
 import { CoverUpload } from '../_components/cover-upload';
+import { NewsAiPanel } from '../_components/news-form-side';
 
 type FormPost = {
   id: number | null;
@@ -117,6 +118,13 @@ export async function NewsForm({
               <label>Обложка</label>
               <CoverUpload name="coverImage" defaultValue={post.coverImage} />
             </div>
+          </div>
+
+          <div className="card" style={{ padding: 16 }}>
+            <h3 style={{ margin: '0 0 10px', fontSize: 11.5, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-3)' }}>
+              🤖 AI-помощник
+            </h3>
+            <NewsAiPanel postId={post.id} locale={post.locale} />
           </div>
         </div>
       </div>

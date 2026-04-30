@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 import { absoluteUrl, localePath } from '@/lib/site';
 import { routing } from '@/i18n/routing';
 import { getAllPostsForSitemap } from '@/lib/db';
+import { db, staticPages } from '@sportlive/db';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 600;
@@ -34,5 +35,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       };
     });
 
-  return [...home, ...articles];
+  const sp = await db
+    .select({ slug: staticPages.slug, locale: staticPages.locale, updatedAt: staticPages.updatedAt })
+    .from(staticPages);
+  const statics = sp.map((p) => ({
+    url: absoluteUrl(localePath(p.locale as 'uz' | 'ru' | 'en', `/${p.slug}`)),
+    lastModified: p.updatedAt,
+    changeFrequency: 'monthly' as const,
+    priority: 0.5,
+  }));
+
+  return [...home, ...articles, ...statics];
 }

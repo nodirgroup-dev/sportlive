@@ -1,5 +1,5 @@
-import { db, posts, categories, users, redirects, staticPages, banners } from '@sportlive/db';
-import { and, desc, eq, gte, sql } from 'drizzle-orm';
+import { db, posts, categories, users, redirects, staticPages, banners, comments } from '@sportlive/db';
+import { and, asc, desc, eq, gte, ne, sql } from 'drizzle-orm';
 import type { Locale } from '@/i18n/routing';
 
 export type ListedPost = {
@@ -21,6 +21,7 @@ export type ArticleDetail = ListedPost & {
   metaDescription: string | null;
   metaKeywords: string | null;
   author: { name: string } | null;
+  categoryId: number | null;
 };
 
 async function categoryPath(catId: number | null): Promise<{ slug: string; name: string; path: string } | null> {
@@ -302,6 +303,56 @@ export async function getFooterPages(locale: Locale): Promise<Array<{ slug: stri
     .from(staticPages)
     .where(eq(staticPages.locale, locale))
     .orderBy(staticPages.sortOrder);
+}
+
+export type CommentView = {
+  id: number;
+  authorName: string | null;
+  body: string;
+  createdAt: Date;
+  parentId: number | null;
+};
+
+export async function getApprovedComments(postId: number): Promise<CommentView[]> {
+  return db
+    .select({
+      id: comments.id,
+      authorName: comments.authorName,
+      body: comments.body,
+      createdAt: comments.createdAt,
+      parentId: comments.parentId,
+    })
+    .from(comments)
+    .where(and(eq(comments.postId, postId), eq(comments.status, 'approved')))
+    .orderBy(asc(comments.createdAt));
+}
+
+export async function getRelatedPosts(
+  excludeId: number,
+  categoryId: number | null,
+  locale: Locale,
+  limit = 4,
+): Promise<ListedPost[]> {
+  const conds = [eq(posts.locale, locale), eq(posts.status, 'published'), ne(posts.id, excludeId)];
+  if (categoryId) conds.push(eq(posts.categoryId, categoryId));
+  const rows = await db
+    .select({
+      id: posts.id,
+      legacyId: posts.legacyId,
+      slug: posts.slug,
+      title: posts.title,
+      summary: posts.summary,
+      coverImage: posts.coverImage,
+      coverImageWidth: posts.coverImageWidth,
+      coverImageHeight: posts.coverImageHeight,
+      publishedAt: posts.publishedAt,
+      categoryId: posts.categoryId,
+    })
+    .from(posts)
+    .where(and(...conds))
+    .orderBy(desc(posts.publishedAt))
+    .limit(limit);
+  return Promise.all(rows.map(async (r) => ({ ...r, category: await categoryPath(r.categoryId) })));
 }
 
 export type BannerView = {

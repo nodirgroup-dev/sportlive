@@ -9,8 +9,10 @@ import {
   getCategoryBySlugPath,
   getPostByLegacyId,
   getPostsByCategory,
+  getRelatedPosts,
   getStaticPage,
 } from '@/lib/db';
+import { CommentsSection } from '@/components/comments-section';
 import { PostCard } from '@/components/post-card';
 import { PostHero, PostGridCard } from '@/components/post-hero';
 import { BannerSlot } from '@/components/banner-slot';
@@ -263,6 +265,29 @@ export default async function CatchAllPage({
             </>
           );
         })()}
+
+        {/* Related */}
+        {await (async () => {
+          const related = await getRelatedPosts(post.id, post.categoryId, locale, 4);
+          if (related.length === 0) return null;
+          const titles: Record<Locale, string> = {
+            uz: "Bog'liq maqolalar",
+            ru: 'Похожие материалы',
+            en: 'Related articles',
+          };
+          return (
+            <section className="mt-10 border-t border-neutral-200 pt-8 dark:border-neutral-800">
+              <h2 className="mb-4 text-xl font-bold tracking-tight">{titles[locale]}</h2>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {related.map((p) => (
+                  <PostGridCard key={p.id} post={p} locale={locale} />
+                ))}
+              </div>
+            </section>
+          );
+        })()}
+
+        <CommentsSection postId={post.id} locale={locale} />
       </article>
     );
   }
