@@ -207,8 +207,13 @@ async function fixturesQuery(opts: { from?: Date; to?: Date; statusIn?: string[]
   const conds: ReturnType<typeof sql>[] = [];
   if (from) conds.push(sql`f.kickoff_at >= ${from}`);
   if (to) conds.push(sql`f.kickoff_at < ${to}`);
-  if (statusIn && statusIn.length > 0) conds.push(sql`f.status_short = ANY(${statusIn})`);
-  if (live) conds.push(sql`f.status_short = ANY(${['1H', '2H', 'HT', 'ET', 'P', 'BT', 'LIVE']})`);
+  if (statusIn && statusIn.length > 0) {
+    conds.push(sql`f.status_short IN (${sql.join(statusIn.map((s) => sql`${s}`), sql`, `)})`);
+  }
+  if (live) {
+    const states = ['1H', '2H', 'HT', 'ET', 'P', 'BT', 'LIVE'];
+    conds.push(sql`f.status_short IN (${sql.join(states.map((s) => sql`${s}`), sql`, `)})`);
+  }
 
   const rows = await db.execute(sql`
     SELECT
