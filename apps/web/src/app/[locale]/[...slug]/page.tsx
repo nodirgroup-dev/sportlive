@@ -222,13 +222,33 @@ export default async function CatchAllPage({
             sizes="(max-width: 768px) 100vw, 768px"
           />
         ) : null}
-        {post.summary ? (
-          <div
-            className="mb-6 border-l-4 border-brand-500 bg-brand-50/40 p-4 text-lg font-medium leading-relaxed text-neutral-800 dark:bg-neutral-900/40 dark:text-neutral-200"
-            dangerouslySetInnerHTML={{ __html: post.summary }}
-          />
-        ) : null}
-        <div className="article-body" dangerouslySetInnerHTML={{ __html: post.body }} />
+        {(() => {
+          // Body cleanup:
+          // 1. Strip the leading DLE cover-image marker — the cover is already rendered above.
+          // 2. If the migration left summary == body (DLE legacy: full_story empty,
+          //    short_story used for both), don't render the summary block — it would be
+          //    a verbatim duplicate.
+          const cleanedBody = post.body.replace(
+            /^\s*<!--\s*dle_image_begin:[^>]*-->[\s\S]*?<!--\s*dle_image_end\s*-->\s*(?:<br\s*\/?>\s*)*/i,
+            '',
+          );
+          const summaryDup =
+            post.summary != null &&
+            (post.summary.trim() === post.body.trim() ||
+              post.body.trim().startsWith(post.summary.trim()));
+          const showSummary = post.summary && !summaryDup;
+          return (
+            <>
+              {showSummary ? (
+                <div
+                  className="mb-6 border-l-4 border-brand-500 bg-brand-50/40 p-4 text-lg font-medium leading-relaxed text-neutral-800 dark:bg-neutral-900/40 dark:text-neutral-200"
+                  dangerouslySetInnerHTML={{ __html: post.summary! }}
+                />
+              ) : null}
+              <div className="article-body" dangerouslySetInnerHTML={{ __html: cleanedBody }} />
+            </>
+          );
+        })()}
       </article>
     );
   }

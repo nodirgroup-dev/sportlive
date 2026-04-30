@@ -130,7 +130,11 @@ for (const p of posts) {
   const fullStory = (p.full_story || '').toString().trim();
   const shortStory = (p.short_story || '').toString().trim();
   const body = fullStory || shortStory || '';
-  const summary = shortStory && shortStory !== fullStory ? shortStory.slice(0, 1000) : null;
+  // Only set summary when it's genuinely a separate, shorter version of the body.
+  // DLE legacy posts often have full_story empty, leaving short_story as both —
+  // in that case summary is just a duplicate of body.
+  const summary =
+    shortStory && fullStory && shortStory !== fullStory ? shortStory.slice(0, 1000) : null;
   const cover = imgByPostId.get(p.id);
 
   const titleStr = (p.title || '').toString();
