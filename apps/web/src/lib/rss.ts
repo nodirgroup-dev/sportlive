@@ -1,5 +1,5 @@
 import 'server-only';
-import { db, posts, rssSources, rssImported, categories } from '@sportlive/db';
+import { db, posts, rssSources, rssImported } from '@sportlive/db';
 import { eq, and, sql } from 'drizzle-orm';
 import { autoSummary } from './text';
 import type { Locale } from '@/i18n/routing';
@@ -237,4 +237,3 @@ export async function importRssFeed(sourceId: number): Promise<RssImportStats> {
   return stats;
 }
 
-void categories;

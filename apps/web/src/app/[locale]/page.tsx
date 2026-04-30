@@ -3,7 +3,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { hasLocale, type Locale } from '@/i18n/routing';
 import { siteConfig, absoluteUrl, localePath } from '@/lib/site';
-import { getLatestPosts, getMostPopular, getFeaturedHero, getTrending } from '@/lib/db';
+import { getLatestPosts, getFeaturedHero, getTrending } from '@/lib/db';
 import { PostCard } from '@/components/post-card';
 import { PostHero, PostGridCard } from '@/components/post-hero';
 import { PopularList } from '@/components/popular-list';
@@ -39,7 +39,6 @@ export default async function HomePage({
     getTrending(locale as Locale, 24, 5),
     getFeaturedHero(locale as Locale),
   ]);
-  void getMostPopular; // legacy import kept for callers in other modules
 
   // If a pinned post exists, use it as hero and exclude it from the latest feed.
   const hero = pinned ?? posts[0] ?? null;

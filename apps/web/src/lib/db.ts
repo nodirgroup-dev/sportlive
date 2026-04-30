@@ -41,27 +41,61 @@ export type ArticleDetail = ListedPost & {
   viewCount: number;
 };
 
-async function categoryPath(catId: number | null): Promise<{ slug: string; name: string; path: string } | null> {
+// Categories rarely change and there are <100 of them. Load the whole table
+// once per request lifecycle and resolve paths in-memory. This eliminates a
+// massive N+1: previously every post listing fired ~2-3 sequential queries
+// per row to walk the category tree (60+ queries per home page render).
+type CatRow = {
+  id: number;
+  slug: string;
+  name: string;
+  parentId: number | null;
+  locale: 'uz' | 'ru' | 'en';
+  description: string | null;
+};
+type CatCache = { byId: Map<number, CatRow>; loadedAt: number };
+let _catCache: CatCache | null = null;
+const CAT_CACHE_MS = 60_000;
+
+async function getCategoryCache(): Promise<CatCache> {
+  const now = Date.now();
+  if (_catCache && now - _catCache.loadedAt < CAT_CACHE_MS) return _catCache;
+  const rows = await db
+    .select({
+      id: categories.id,
+      slug: categories.slug,
+      name: categories.name,
+      parentId: categories.parentId,
+      locale: categories.locale,
+      description: categories.description,
+    })
+    .from(categories);
+  const byId = new Map<number, CatRow>();
+  for (const r of rows)
+    byId.set(r.id, {
+      id: r.id,
+      slug: r.slug,
+      name: r.name,
+      parentId: r.parentId,
+      locale: r.locale as 'uz' | 'ru' | 'en',
+      description: r.description,
+    });
+  _catCache = { byId, loadedAt: now };
+  return _catCache;
+}
+
+function resolveCategoryPath(
+  cache: CatCache,
+  catId: number | null,
+): { slug: string; name: string; path: string } | null {
   if (!catId) return null;
-  const segs: { slug: string; name: string }[] = [];
-  const cur = await db
-    .select({ id: categories.id, slug: categories.slug, name: categories.name, parentId: categories.parentId })
-    .from(categories)
-    .where(eq(categories.id, catId))
-    .limit(1);
-  if (cur.length === 0) return null;
-  segs.unshift({ slug: cur[0]!.slug, name: cur[0]!.name });
-  let parentId = cur[0]!.parentId;
-  while (parentId) {
-    const p = await db
-      .select({ id: categories.id, slug: categories.slug, name: categories.name, parentId: categories.parentId })
-      .from(categories)
-      .where(eq(categories.id, parentId))
-      .limit(1);
-    if (p.length === 0) break;
-    segs.unshift({ slug: p[0]!.slug, name: p[0]!.name });
-    parentId = p[0]!.parentId;
+  const segs: CatRow[] = [];
+  let cur = cache.byId.get(catId);
+  while (cur) {
+    segs.unshift(cur);
+    cur = cur.parentId ? cache.byId.get(cur.parentId) : undefined;
   }
+  if (segs.length === 0) return null;
   return {
     slug: segs[segs.length - 1]!.slug,
     name: segs[segs.length - 1]!.name,
@@ -69,31 +103,35 @@ async function categoryPath(catId: number | null): Promise<{ slug: string; name:
   };
 }
 
-export async function getLatestPosts(locale: Locale, limit = 20): Promise<ListedPost[]> {
-  const rows = await db
-    .select({
-      id: posts.id,
-      legacyId: posts.legacyId,
-      slug: posts.slug,
-      title: posts.title,
-      summary: posts.summary,
-      coverImage: posts.coverImage,
-      coverImageWidth: posts.coverImageWidth,
-      coverImageHeight: posts.coverImageHeight,
-      publishedAt: posts.publishedAt,
-      categoryId: posts.categoryId,
-    })
-    .from(posts)
-    .where(and(eq(posts.locale, locale), eq(posts.status, 'published')))
-    .orderBy(desc(posts.publishedAt))
-    .limit(limit);
+async function categoryPath(catId: number | null): Promise<{ slug: string; name: string; path: string } | null> {
+  if (!catId) return null;
+  const cache = await getCategoryCache();
+  return resolveCategoryPath(cache, catId);
+}
 
-  return Promise.all(
-    rows.map(async (r) => ({
-      ...r,
-      category: await categoryPath(r.categoryId),
-    })),
-  );
+export async function getLatestPosts(locale: Locale, limit = 20): Promise<ListedPost[]> {
+  const [rows, cache] = await Promise.all([
+    db
+      .select({
+        id: posts.id,
+        legacyId: posts.legacyId,
+        slug: posts.slug,
+        title: posts.title,
+        summary: posts.summary,
+        coverImage: posts.coverImage,
+        coverImageWidth: posts.coverImageWidth,
+        coverImageHeight: posts.coverImageHeight,
+        publishedAt: posts.publishedAt,
+        categoryId: posts.categoryId,
+      })
+      .from(posts)
+      .where(and(eq(posts.locale, locale), eq(posts.status, 'published')))
+      .orderBy(desc(posts.publishedAt))
+      .limit(limit),
+    getCategoryCache(),
+  ]);
+
+  return rows.map((r) => ({ ...r, category: resolveCategoryPath(cache, r.categoryId) }));
 }
 
 export async function getPostByLegacyId(legacyId: number, locale: Locale): Promise<ArticleDetail | null> {
@@ -137,15 +175,12 @@ export async function getCategoryBySlugPath(
   const segs = slugPath.split('/').filter(Boolean);
   if (segs.length === 0) return null;
   const lastSlug = segs[segs.length - 1]!;
-  const candidates = await db
-    .select()
-    .from(categories)
-    .where(and(eq(categories.slug, lastSlug), eq(categories.locale, locale)));
-  for (const c of candidates) {
-    const p = await categoryPath(c.id);
-    if (p && p.path === slugPath) {
-      return { id: c.id, name: c.name, description: c.description, slug: c.slug, path: p.path };
-    }
+  const cache = await getCategoryCache();
+  for (const c of cache.byId.values()) {
+    if (c.slug !== lastSlug || c.locale !== locale) continue;
+    const p = resolveCategoryPath(cache, c.id);
+    if (!p || p.path !== slugPath) continue;
+    return { id: c.id, name: c.name, description: c.description, slug: c.slug, path: p.path };
   }
   return null;
 }
@@ -174,7 +209,8 @@ export async function getPostsByCategory(catId: number, locale: Locale, limit = 
     )
     .orderBy(desc(posts.publishedAt))
     .limit(limit);
-  return Promise.all(rows.map(async (r) => ({ ...r, category: await categoryPath(r.categoryId) })));
+  const _cache = await getCategoryCache();
+  return rows.map((r) => ({ ...r, category: resolveCategoryPath(_cache, r.categoryId) }));
 }
 
 export async function getRedirect(fromPath: string): Promise<{ to: string; status: number } | null> {
@@ -197,15 +233,14 @@ export async function getAllPostsForSitemap(): Promise<
     .from(posts)
     .where(eq(posts.status, 'published'))
     .orderBy(desc(posts.publishedAt));
-  return Promise.all(
-    rows.map(async (r) => ({
-      legacyId: r.legacyId!,
-      slug: r.slug,
-      locale: r.locale as Locale,
-      updatedAt: r.updatedAt,
-      categoryPath: (await categoryPath(r.categoryId))?.path ?? null,
-    })),
-  );
+  const cache = await getCategoryCache();
+  return rows.map((r) => ({
+    legacyId: r.legacyId!,
+    slug: r.slug,
+    locale: r.locale as Locale,
+    updatedAt: r.updatedAt,
+    categoryPath: resolveCategoryPath(cache, r.categoryId)?.path ?? null,
+  }));
 }
 
 export type FixtureRow = {
@@ -395,7 +430,8 @@ export async function getPostsByAuthor(authorId: number, locale: Locale, limit =
     .where(and(eq(posts.locale, locale), eq(posts.status, 'published'), eq(posts.authorId, authorId)))
     .orderBy(desc(posts.publishedAt))
     .limit(limit);
-  return Promise.all(rows.map(async (r) => ({ ...r, category: await categoryPath(r.categoryId) })));
+  const _cache = await getCategoryCache();
+  return rows.map((r) => ({ ...r, category: resolveCategoryPath(_cache, r.categoryId) }));
 }
 
 export type StandingsRow = {
@@ -652,20 +688,19 @@ export async function getPostsByTag(tagId: number, locale: Locale, limit = 30): 
      ORDER BY p.published_at DESC NULLS LAST
      LIMIT ${limit}
   `)) as unknown as Array<Record<string, unknown>>;
-  return Promise.all(
-    rows.map(async (r) => ({
-      id: Number(r.id),
-      legacyId: r.legacyId === null ? null : Number(r.legacyId),
-      slug: String(r.slug),
-      title: String(r.title),
-      summary: (r.summary as string) ?? null,
-      coverImage: (r.coverImage as string) ?? null,
-      coverImageWidth: r.coverImageWidth === null ? null : Number(r.coverImageWidth),
-      coverImageHeight: r.coverImageHeight === null ? null : Number(r.coverImageHeight),
-      publishedAt: r.publishedAt ? new Date(r.publishedAt as string) : null,
-      category: await categoryPath(r.categoryId === null ? null : Number(r.categoryId)),
-    })),
-  );
+  const cache = await getCategoryCache();
+  return rows.map((r) => ({
+    id: Number(r.id),
+    legacyId: r.legacyId === null ? null : Number(r.legacyId),
+    slug: String(r.slug),
+    title: String(r.title),
+    summary: (r.summary as string) ?? null,
+    coverImage: (r.coverImage as string) ?? null,
+    coverImageWidth: r.coverImageWidth === null ? null : Number(r.coverImageWidth),
+    coverImageHeight: r.coverImageHeight === null ? null : Number(r.coverImageHeight),
+    publishedAt: r.publishedAt ? new Date(r.publishedAt as string) : null,
+    category: resolveCategoryPath(cache, r.categoryId === null ? null : Number(r.categoryId)),
+  }));
 }
 
 function tagSlug(name: string): string {
@@ -1000,10 +1035,6 @@ export async function getLeaguesWithScorers(): Promise<LeagueRow[]> {
   }));
 }
 
-void players;
-void playerStats;
-void transfers;
-
 // =================== H2H + Squad + Transfers ===================
 
 export type H2hRow = {
@@ -1159,20 +1190,19 @@ export async function searchPosts(
   const totalArr = (totalRows as unknown as Array<{ c: number }>) ?? [];
   const total = Number(totalArr[0]?.c ?? 0);
 
-  const mapped = await Promise.all(
-    arr.map(async (r) => ({
-      id: Number(r.id),
-      legacyId: r.legacyId === null ? null : Number(r.legacyId),
-      slug: String(r.slug),
-      title: String(r.title),
-      summary: (r.summary as string) ?? null,
-      coverImage: (r.coverImage as string) ?? null,
-      coverImageWidth: r.coverImageWidth === null ? null : Number(r.coverImageWidth),
-      coverImageHeight: r.coverImageHeight === null ? null : Number(r.coverImageHeight),
-      publishedAt: r.publishedAt ? new Date(r.publishedAt as string) : null,
-      category: await categoryPath(r.categoryId === null ? null : Number(r.categoryId)),
-    })),
-  );
+  const cache = await getCategoryCache();
+  const mapped = arr.map((r) => ({
+    id: Number(r.id),
+    legacyId: r.legacyId === null ? null : Number(r.legacyId),
+    slug: String(r.slug),
+    title: String(r.title),
+    summary: (r.summary as string) ?? null,
+    coverImage: (r.coverImage as string) ?? null,
+    coverImageWidth: r.coverImageWidth === null ? null : Number(r.coverImageWidth),
+    coverImageHeight: r.coverImageHeight === null ? null : Number(r.coverImageHeight),
+    publishedAt: r.publishedAt ? new Date(r.publishedAt as string) : null,
+    category: resolveCategoryPath(cache, r.categoryId === null ? null : Number(r.categoryId)),
+  }));
   return { items: mapped, total, page, pageSize };
 }
 
@@ -1258,7 +1288,8 @@ export async function getRelatedPosts(
     .where(and(...conds))
     .orderBy(desc(posts.publishedAt))
     .limit(limit);
-  return Promise.all(rows.map(async (r) => ({ ...r, category: await categoryPath(r.categoryId) })));
+  const _cache = await getCategoryCache();
+  return rows.map((r) => ({ ...r, category: resolveCategoryPath(_cache, r.categoryId) }));
 }
 
 export type BannerView = {
@@ -1384,7 +1415,8 @@ export async function getTrending(locale: Locale, hours = 24, limit = 5): Promis
     .orderBy(desc(posts.viewCount), desc(posts.publishedAt))
     .limit(limit);
   if (rows.length > 0) {
-    return Promise.all(rows.map(async (r) => ({ ...r, category: await categoryPath(r.categoryId) })));
+    const _cache = await getCategoryCache();
+  return rows.map((r) => ({ ...r, category: resolveCategoryPath(_cache, r.categoryId) }));
   }
   // Fall back to most-popular semantics when there's no recent traffic yet.
   return getMostPopular(locale, limit);
@@ -1441,7 +1473,8 @@ export async function getMostPopular(locale: Locale, limit = 5): Promise<ListedP
     .where(and(eq(posts.locale, locale), eq(posts.status, 'published'), gte(posts.publishedAt, cutoff)))
     .orderBy(desc(posts.viewCount), desc(posts.publishedAt))
     .limit(limit);
-  return Promise.all(rows.map(async (r) => ({ ...r, category: await categoryPath(r.categoryId) })));
+  const _cache = await getCategoryCache();
+  return rows.map((r) => ({ ...r, category: resolveCategoryPath(_cache, r.categoryId) }));
 }
 
 export async function getRecentPostsCount(locale: Locale): Promise<number> {
@@ -1523,20 +1556,19 @@ export async function getRssPosts(
     .where(and(eq(posts.locale, locale), eq(posts.status, 'published')))
     .orderBy(desc(posts.publishedAt))
     .limit(limit);
-  return Promise.all(
-    rows.map(async (r) => {
-      const cp = await categoryPath(r.categoryId);
-      return {
-        legacyId: r.legacyId!,
-        slug: r.slug,
-        title: r.title,
-        summary: r.summary,
-        body: r.body,
-        coverImage: r.coverImage,
-        publishedAt: r.publishedAt,
-        categoryPath: cp?.path ?? null,
-        categoryName: cp?.name ?? null,
-      };
-    }),
-  );
+  const cache = await getCategoryCache();
+  return rows.map((r) => {
+    const cp = resolveCategoryPath(cache, r.categoryId);
+    return {
+      legacyId: r.legacyId!,
+      slug: r.slug,
+      title: r.title,
+      summary: r.summary,
+      body: r.body,
+      coverImage: r.coverImage,
+      publishedAt: r.publishedAt,
+      categoryPath: cp?.path ?? null,
+      categoryName: cp?.name ?? null,
+    };
+  });
 }

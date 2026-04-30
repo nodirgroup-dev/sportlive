@@ -166,6 +166,14 @@ export default async function CatchAllPage({
       permanentRedirect(canonical as Parameters<typeof permanentRedirect>[0]);
     }
 
+    // Fetch sidebar/footer data in parallel — cuts ~3 round-trips of
+    // sequential await(async() => ...) IIFEs into a single concurrent batch.
+    const [postTagsList, adjacent, related] = await Promise.all([
+      getTagsForPost(post.id),
+      getAdjacentPosts(post.id, post.categoryId, locale),
+      getRelatedPosts(post.id, post.categoryId, locale, 4),
+    ]);
+
     const articleJsonLd = {
       '@context': 'https://schema.org',
       '@type': 'NewsArticle',
@@ -316,87 +324,65 @@ export default async function CatchAllPage({
         })()}
 
         {/* Tags */}
-        {await (async () => {
-          const t = await getTagsForPost(post.id);
-          if (t.length === 0) return null;
-          return (
-            <div className="mt-6 flex flex-wrap gap-2">
-              {t.map((tag) => (
-                <Link
-                  key={tag.id}
-                  href={`/tag/${tag.slug}` as never}
-                  className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700 hover:bg-brand-100 hover:text-brand-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-brand-900/30 dark:hover:text-brand-300"
-                >
-                  #{tag.name}
-                </Link>
-              ))}
-            </div>
-          );
-        })()}
+        {postTagsList.length > 0 ? (
+          <div className="mt-6 flex flex-wrap gap-2">
+            {postTagsList.map((tag) => (
+              <Link
+                key={tag.id}
+                href={`/tag/${tag.slug}` as never}
+                className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700 hover:bg-brand-100 hover:text-brand-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-brand-900/30 dark:hover:text-brand-300"
+              >
+                #{tag.name}
+              </Link>
+            ))}
+          </div>
+        ) : null}
 
         {/* Prev / Next */}
-        {await (async () => {
-          const { prev, next } = await getAdjacentPosts(post.id, post.categoryId, locale);
-          if (!prev && !next) return null;
-          const labels: Record<Locale, { prev: string; next: string }> = {
-            uz: { prev: '← Oldingi', next: 'Keyingi →' },
-            ru: { prev: '← Предыдущая', next: 'Следующая →' },
-            en: { prev: '← Previous', next: 'Next →' },
-          };
-          const href = (p: NonNullable<typeof prev>) =>
-            `/${p.category?.path ?? ''}/${p.legacyId}-${p.slug}` as never;
-          return (
-            <nav className="mt-10 grid gap-3 border-t border-neutral-200 pt-6 sm:grid-cols-2 dark:border-neutral-800">
-              {prev ? (
-                <Link
-                  href={href(prev)}
-                  className="block rounded-lg border border-neutral-200 p-4 transition-colors hover:border-brand-500 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:border-brand-400 dark:hover:bg-neutral-900"
-                >
-                  <div className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                    {labels[locale].prev}
-                  </div>
-                  <div className="mt-1 line-clamp-2 text-sm font-medium">{prev.title}</div>
-                </Link>
-              ) : (
-                <div />
-              )}
-              {next ? (
-                <Link
-                  href={href(next)}
-                  className="block rounded-lg border border-neutral-200 p-4 text-right transition-colors hover:border-brand-500 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:border-brand-400 dark:hover:bg-neutral-900"
-                >
-                  <div className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                    {labels[locale].next}
-                  </div>
-                  <div className="mt-1 line-clamp-2 text-sm font-medium">{next.title}</div>
-                </Link>
-              ) : (
-                <div />
-              )}
-            </nav>
-          );
-        })()}
+        {adjacent.prev || adjacent.next ? (
+          <nav className="mt-10 grid gap-3 border-t border-neutral-200 pt-6 sm:grid-cols-2 dark:border-neutral-800">
+            {adjacent.prev ? (
+              <Link
+                href={`/${adjacent.prev.category?.path ?? ''}/${adjacent.prev.legacyId}-${adjacent.prev.slug}` as never}
+                className="block rounded-lg border border-neutral-200 p-4 transition-colors hover:border-brand-500 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:border-brand-400 dark:hover:bg-neutral-900"
+              >
+                <div className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                  {locale === 'uz' ? '← Oldingi' : locale === 'ru' ? '← Предыдущая' : '← Previous'}
+                </div>
+                <div className="mt-1 line-clamp-2 text-sm font-medium">{adjacent.prev.title}</div>
+              </Link>
+            ) : (
+              <div />
+            )}
+            {adjacent.next ? (
+              <Link
+                href={`/${adjacent.next.category?.path ?? ''}/${adjacent.next.legacyId}-${adjacent.next.slug}` as never}
+                className="block rounded-lg border border-neutral-200 p-4 text-right transition-colors hover:border-brand-500 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:border-brand-400 dark:hover:bg-neutral-900"
+              >
+                <div className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                  {locale === 'uz' ? 'Keyingi →' : locale === 'ru' ? 'Следующая →' : 'Next →'}
+                </div>
+                <div className="mt-1 line-clamp-2 text-sm font-medium">{adjacent.next.title}</div>
+              </Link>
+            ) : (
+              <div />
+            )}
+          </nav>
+        ) : null}
 
         {/* Related */}
-        {await (async () => {
-          const related = await getRelatedPosts(post.id, post.categoryId, locale, 4);
-          if (related.length === 0) return null;
-          const titles: Record<Locale, string> = {
-            uz: "Bog'liq maqolalar",
-            ru: 'Похожие материалы',
-            en: 'Related articles',
-          };
-          return (
-            <section className="mt-10 border-t border-neutral-200 pt-8 dark:border-neutral-800">
-              <h2 className="mb-4 text-xl font-bold tracking-tight">{titles[locale]}</h2>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {related.map((p) => (
-                  <PostGridCard key={p.id} post={p} locale={locale} />
-                ))}
-              </div>
-            </section>
-          );
-        })()}
+        {related.length > 0 ? (
+          <section className="mt-10 border-t border-neutral-200 pt-8 dark:border-neutral-800">
+            <h2 className="mb-4 text-xl font-bold tracking-tight">
+              {locale === 'uz' ? "Bog'liq maqolalar" : locale === 'ru' ? 'Похожие материалы' : 'Related articles'}
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {related.map((p) => (
+                <PostGridCard key={p.id} post={p} locale={locale} />
+              ))}
+            </div>
+          </section>
+        ) : null}
 
           <CommentsSection postId={post.id} locale={locale} />
         </article>
