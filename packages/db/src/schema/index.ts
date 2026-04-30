@@ -11,3 +11,4 @@ export * from './sessions';
 export * from './comments';
 export * from './banners';
 export * from './live_entries';
+export * from './audit_log';

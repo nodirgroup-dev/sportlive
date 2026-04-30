@@ -37,6 +37,7 @@ const NAV: Array<
   { type: 'item', href: '/7071218admin/seo', label: 'SEO', icon: 'M11 4a7 7 0 1 1-7 7 7 7 0 0 1 7-7Zm9 18-4-4' },
 
   { type: 'section', label: 'Система' },
+  { type: 'item', href: '/7071218admin/audit', label: 'Журнал действий', icon: 'M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z' },
   { type: 'item', href: '/7071218admin/settings', label: 'Настройки', icon: 'M12 8a4 4 0 1 0 4 4 4 4 0 0 0-4-4Z' },
 ];
 

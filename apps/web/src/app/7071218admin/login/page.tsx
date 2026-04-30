@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { signIn, getCurrentUser } from '@/lib/auth';
+import { recordAudit } from '@/lib/audit';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,8 +13,19 @@ async function loginAction(formData: FormData) {
   }
   const user = await signIn(email, password);
   if (!user) {
+    await recordAudit({
+      action: 'user.signin.fail',
+      summary: email.slice(0, 200),
+    });
     redirect('/7071218admin/login?err=invalid');
   }
+  await recordAudit({
+    action: 'user.signin',
+    entityType: 'user',
+    entityId: user.id,
+    summary: user.name || user.email,
+    actor: { id: user.id, name: user.name, email: user.email },
+  });
   redirect('/7071218admin');
 }
 

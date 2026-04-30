@@ -5,6 +5,7 @@ import { eq, inArray } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
+import { recordAudit } from '@/lib/audit';
 
 function slugify(s: string): string {
   return s
@@ -61,6 +62,14 @@ export async function createPost(formData: FormData) {
     })
     .returning({ id: posts.id });
 
+  await recordAudit({
+    action: status === 'published' ? 'post.publish' : 'post.create',
+    entityType: 'post',
+    entityId: row!.id,
+    summary: title.slice(0, 200),
+    meta: { locale, status, categoryId },
+  });
+
   revalidatePath('/7071218admin/news');
   revalidatePath('/');
   redirect(`/7071218admin/news/${row!.id}/edit?saved=1`);
@@ -110,6 +119,15 @@ export async function updatePost(id: number, formData: FormData) {
     })
     .where(eq(posts.id, id));
 
+  const statusFlippedToPublished = status === 'published' && !wasPublished;
+  await recordAudit({
+    action: statusFlippedToPublished ? 'post.publish' : 'post.update',
+    entityType: 'post',
+    entityId: id,
+    summary: title.slice(0, 200),
+    meta: { fromStatus: existing[0]!.status, toStatus: status, categoryId },
+  });
+
   revalidatePath('/7071218admin/news');
   revalidatePath('/');
   redirect(`/7071218admin/news/${id}/edit?saved=1`);
@@ -119,7 +137,21 @@ export async function deletePost(id: number) {
   const user = await getCurrentUser();
   if (!user) redirect('/7071218admin/login');
 
+  const existing = await db
+    .select({ title: posts.title })
+    .from(posts)
+    .where(eq(posts.id, id))
+    .limit(1);
+
   await db.delete(posts).where(eq(posts.id, id));
+
+  await recordAudit({
+    action: 'post.delete',
+    entityType: 'post',
+    entityId: id,
+    summary: existing[0]?.title.slice(0, 200),
+  });
+
   revalidatePath('/7071218admin/news');
   redirect('/7071218admin/news');
 }
@@ -155,6 +187,14 @@ export async function bulkPostsAction(formData: FormData) {
   } else if (action === 'delete') {
     await db.delete(posts).where(inArray(posts.id, ids));
   }
+
+  await recordAudit({
+    action: `post.bulk.${action}`,
+    entityType: 'post',
+    summary: `${ids.length} posts`,
+    meta: { ids, action },
+  });
+
   revalidatePath('/7071218admin/news');
   revalidatePath('/');
   redirect(`/7071218admin/news?bulk=${action}&n=${ids.length}`);
