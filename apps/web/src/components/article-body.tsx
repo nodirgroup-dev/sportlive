@@ -4,6 +4,19 @@ import type { Route } from 'next';
 import type { Locale } from '@/i18n/routing';
 import { getFixtureById, getTeamById } from '@/lib/db';
 
+// Pre-pass: convert [img]URL[/img] into a plain <img src="URL"> so the
+// existing HTML chunk renderer + .article-body styles handle it. The image
+// shortcode wraps URLs that may include /, ., -, _, query strings, hashes —
+// anything except whitespace and the closing tag itself.
+const IMG_SHORTCODE_RE = /\[img\]\s*([^\s\[\]<>"]+)\s*\[\/img\]/gi;
+
+function expandImgShortcodes(html: string): string {
+  return html.replace(IMG_SHORTCODE_RE, (_m, url) => {
+    const safeUrl = String(url).replace(/"/g, '&quot;');
+    return `<img src="${safeUrl}" alt="" loading="lazy" />`;
+  });
+}
+
 // Matches [fixture id=N], [team id=N], [youtube id=ABC], [tweet id=NNNN], [bet match=N]
 const SHORTCODE_RE = /\[(fixture|team|youtube|tweet|bet)\s+(?:id|match)=([A-Za-z0-9_-]+)\s*\]/gi;
 
@@ -169,7 +182,7 @@ async function TeamEmbed({ id }: { id: number; locale: Locale }) {
 }
 
 export async function ArticleBody({ html, locale }: { html: string; locale: Locale }) {
-  const chunks = splitBody(html);
+  const chunks = splitBody(expandImgShortcodes(html));
   return (
     <div className="article-body">
       {chunks.map((c, i) => {

@@ -73,6 +73,16 @@ export function RichEditor({ name, defaultValue = '', placeholder }: Props) {
     editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
   };
 
+  const insertImgShortcode = (url: string) => {
+    // Wrap in <p> so it lives on its own block in the document — TipTap's
+    // schema otherwise glues the literal text into a previous paragraph.
+    editor
+      .chain()
+      .focus()
+      .insertContent(`<p>[img]${url}[/img]</p>`)
+      .run();
+  };
+
   const setImg = () => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -89,13 +99,13 @@ export function RichEditor({ name, defaultValue = '', placeholder }: Props) {
           throw new Error(j.error || `HTTP ${res.status}`);
         }
         const j = await res.json();
-        editor.chain().focus().setImage({ src: j.url }).run();
+        insertImgShortcode(j.url);
       } catch (e) {
         const url = window.prompt(
           `Загрузка не удалась (${e instanceof Error ? e.message : 'error'}). Вставьте URL вручную:`,
           '',
         );
-        if (url) editor.chain().focus().setImage({ src: url }).run();
+        if (url) insertImgShortcode(url);
       }
     };
     input.click();

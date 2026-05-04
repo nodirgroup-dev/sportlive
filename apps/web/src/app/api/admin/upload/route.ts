@@ -9,7 +9,12 @@ export const runtime = 'nodejs';
 const UPLOAD_DIR = process.env.UPLOAD_DIR || '/var/uploads/posts';
 const MAX_BYTES = 8 * 1024 * 1024; // 8 MB
 const ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif']);
-const TARGET_WIDTH = 1600;
+// Editorial constraints:
+// - never serve images wider than 1600px (anything larger → downscale)
+// - never serve images narrower than 1280px (anything smaller → upscale)
+// - in [1280..1600] keep as-is, just convert to WebP
+const MAX_WIDTH = 1600;
+const MIN_WIDTH = 1280;
 const QUALITY = 82;
 
 export async function POST(req: NextRequest) {
@@ -57,11 +62,18 @@ export async function POST(req: NextRequest) {
       const sharp = (await import('sharp')).default;
       const pipeline = sharp(inBuf, { failOn: 'none' }).rotate(); // EXIF orientation
       const meta = await pipeline.metadata();
-      const w = meta.width ?? TARGET_WIDTH;
-      const resize = w > TARGET_WIDTH
-        ? pipeline.resize({ width: TARGET_WIDTH, withoutEnlargement: true })
-        : pipeline;
-      const out = await resize.webp({ quality: QUALITY, effort: 4 }).toBuffer({ resolveWithObject: true });
+      const w = meta.width ?? MIN_WIDTH;
+      // Pick a target width: clamp to [MIN_WIDTH, MAX_WIDTH]. Smaller images
+      // are upscaled to MIN_WIDTH (Lanczos kernel for sharper results),
+      // larger images are downscaled to MAX_WIDTH. Inside the band we still
+      // run resize to normalize, but with the original width so it's a no-op.
+      const targetWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, w));
+      const resized = pipeline.resize({
+        width: targetWidth,
+        withoutEnlargement: false,
+        kernel: 'lanczos3',
+      });
+      const out = await resized.webp({ quality: QUALITY, effort: 4 }).toBuffer({ resolveWithObject: true });
       outBuf = Buffer.from(out.data);
       width = out.info.width;
       height = out.info.height;
