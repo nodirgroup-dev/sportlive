@@ -17,11 +17,26 @@ type FormPage = {
   showInFooter: number;
 };
 
+/**
+ * Sibling rows that share this page's slug. Lets editors hop straight to
+ * an existing translation, or click "Create translation" to start a new
+ * row with the slug + locale prefilled.
+ */
+type Translation = {
+  locale: 'uz' | 'ru' | 'en';
+  id: number | null;
+  title: string | null;
+};
+
+const LOCALES: ReadonlyArray<'uz' | 'ru' | 'en'> = ['uz', 'ru', 'en'];
+
 export function StaticPageForm({
   page,
+  translations = [],
   action,
 }: {
   page: FormPage;
+  translations?: Translation[];
   action: (formData: FormData) => Promise<void>;
 }) {
   const lang = useAdminLang();
@@ -45,6 +60,17 @@ export function StaticPageForm({
           </button>
         </div>
       </div>
+
+      <TranslationsBar
+        currentLocale={page.locale}
+        slug={page.slug}
+        pageId={page.id}
+        translations={translations}
+        labelText={t.translations_label}
+        currentText={t.translation_current}
+        createText={t.translation_create}
+        missingHint={t.translation_missing_hint}
+      />
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 'var(--gap)' }}>
         <div className="card" style={{ padding: 22 }}>
@@ -161,5 +187,133 @@ export function StaticPageForm({
         </div>
       </div>
     </form>
+  );
+}
+
+const LOCALE_LABEL: Record<'uz' | 'ru' | 'en', string> = {
+  uz: 'UZ',
+  ru: 'RU',
+  en: 'EN',
+};
+
+/**
+ * Renders one chip per locale: current language is highlighted, existing
+ * sibling translations are clickable links to their edit pages, and missing
+ * locales become "+ create translation" buttons that prefill slug + locale
+ * on the new-page form.
+ */
+function TranslationsBar({
+  currentLocale,
+  slug,
+  pageId,
+  translations,
+  labelText,
+  currentText,
+  createText,
+  missingHint,
+}: {
+  currentLocale: 'uz' | 'ru' | 'en';
+  slug: string;
+  pageId: number | null;
+  translations: Translation[];
+  labelText: string;
+  currentText: string;
+  createText: string;
+  missingHint: string;
+}) {
+  // For brand-new pages with no slug we have nothing to group by yet — show
+  // a hint instead. New pages with a seeded slug (from "Create translation")
+  // still render the bar so editors see the sibling that links here.
+  if (!pageId && !slug) {
+    return (
+      <div
+        style={{
+          padding: '8px 12px',
+          marginBottom: 14,
+          background: 'var(--surface)',
+          border: '1px dashed var(--line)',
+          borderRadius: 8,
+          fontSize: 12,
+          color: 'var(--text-3)',
+        }}
+      >
+        {missingHint}
+      </div>
+    );
+  }
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        flexWrap: 'wrap',
+        padding: '8px 12px',
+        marginBottom: 14,
+        background: 'var(--surface)',
+        border: '1px solid var(--line)',
+        borderRadius: 8,
+      }}
+    >
+      <span
+        style={{
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          color: 'var(--text-3)',
+          marginRight: 4,
+        }}
+      >
+        {labelText}:
+      </span>
+      {LOCALES.map((loc) => {
+        const isCurrent = loc === currentLocale;
+        const tr = translations.find((x) => x.locale === loc);
+        const exists = Boolean(tr?.id);
+
+        if (isCurrent) {
+          return (
+            <span
+              key={loc}
+              className={`pill ${loc === 'uz' ? 'green' : loc === 'ru' ? 'red' : 'yellow'}`}
+              title={currentText}
+              style={{ fontWeight: 700 }}
+            >
+              {LOCALE_LABEL[loc]} ✓
+            </span>
+          );
+        }
+        if (exists && tr?.id) {
+          return (
+            <Link
+              key={loc}
+              href={`/7071218admin/static/${tr.id}/edit`}
+              className="pill gray"
+              title={tr.title ?? ''}
+              style={{ textDecoration: 'none' }}
+            >
+              {LOCALE_LABEL[loc]} →
+            </Link>
+          );
+        }
+        return (
+          <Link
+            key={loc}
+            href={`/7071218admin/static/new?slug=${encodeURIComponent(slug)}&locale=${loc}`}
+            className="pill"
+            style={{
+              textDecoration: 'none',
+              border: '1px dashed var(--line)',
+              color: 'var(--text-3)',
+              opacity: 0.85,
+            }}
+            title={createText}
+          >
+            + {LOCALE_LABEL[loc]}
+          </Link>
+        );
+      })}
+    </div>
   );
 }

@@ -14,6 +14,19 @@ export default async function EditStaticPage({ params }: { params: Promise<{ id:
   if (rows.length === 0) notFound();
   const p = rows[0]!;
 
+  // Sibling translations: rows that share this page's slug. Same slug across
+  // locales is the convention for tracking translations of the same page.
+  const siblings = await db
+    .select({ id: staticPages.id, locale: staticPages.locale, title: staticPages.title })
+    .from(staticPages)
+    .where(eq(staticPages.slug, p.slug));
+
+  const translations = siblings.map((s) => ({
+    locale: s.locale as 'uz' | 'ru' | 'en',
+    id: s.id,
+    title: s.title,
+  }));
+
   const action = updateStaticPage.bind(null, id);
 
   return (
@@ -30,6 +43,7 @@ export default async function EditStaticPage({ params }: { params: Promise<{ id:
         sortOrder: p.sortOrder,
         showInFooter: p.showInFooter,
       }}
+      translations={translations}
       action={action}
     />
   );

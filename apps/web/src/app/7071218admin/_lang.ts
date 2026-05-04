@@ -192,6 +192,11 @@ export type AdminStrings = {
   banner_new_sub: string;
   cat_new_sub: string;
   static_new_sub: string;
+  // Per-page translations bar
+  translations_label: string;
+  translation_create: string;
+  translation_current: string;
+  translation_missing_hint: string;
   // ----- Bulk action / news list -----
   bulk_action_label: string;
   bulk_action_choose: string;
@@ -579,6 +584,10 @@ export const ADMIN_T: Record<AdminLang, AdminStrings> = {
     banner_new_sub: 'Создание нового баннера',
     cat_new_sub: 'Создание новой рубрики',
     static_new_sub: 'Страница для подвала / служебная',
+    translations_label: 'Переводы',
+    translation_create: 'Создать перевод',
+    translation_current: 'Текущая версия',
+    translation_missing_hint: 'Сохраните страницу, потом можно создавать переводы',
     bulk_action_label: 'Массовое действие:',
     bulk_action_choose: '— выбрать —',
     bulk_publish: 'Опубликовать',
@@ -844,6 +853,10 @@ export const ADMIN_T: Record<AdminLang, AdminStrings> = {
     banner_new_sub: 'Yangi banner yaratish',
     cat_new_sub: 'Yangi rubrika yaratish',
     static_new_sub: 'Sayt quyi qismi / xizmat sahifasi',
+    translations_label: 'Tarjimalar',
+    translation_create: 'Tarjima yaratish',
+    translation_current: 'Joriy versiya',
+    translation_missing_hint: 'Sahifani saqlang, keyin tarjima yaratish mumkin',
     bulk_action_label: 'Ommaviy harakat:',
     bulk_action_choose: '— tanlang —',
     bulk_publish: 'Nashr qilish',
@@ -1109,6 +1122,10 @@ export const ADMIN_T: Record<AdminLang, AdminStrings> = {
     banner_new_sub: 'Creating a new banner',
     cat_new_sub: 'Creating a new section',
     static_new_sub: 'Footer / utility page',
+    translations_label: 'Translations',
+    translation_create: 'Create translation',
+    translation_current: 'Current version',
+    translation_missing_hint: 'Save the page first, then you can create translations',
     bulk_action_label: 'Bulk action:',
     bulk_action_choose: '— choose —',
     bulk_publish: 'Publish',
