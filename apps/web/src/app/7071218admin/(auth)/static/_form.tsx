@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useAdminLang, ADMIN_T } from '../../_lang';
+import { RichEditor } from '../_components/rich-editor';
 
 type FormPage = {
   id: number | null;
@@ -81,13 +82,7 @@ export function StaticPageForm({
           </div>
           <div className="field">
             <label>{t.form_body_html}</label>
-            <textarea
-              name="body"
-              required
-              defaultValue={page.body}
-              className="textarea"
-              style={{ minHeight: 400 }}
-            />
+            <RichEditor name="body" defaultValue={page.body} />
           </div>
 
           <h3
