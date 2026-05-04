@@ -1,6 +1,8 @@
 import { db, auditLog } from '@sportlive/db';
 import { desc, eq, sql } from 'drizzle-orm';
 import { AdminPageHeader } from '../../_components/page-header';
+import { TH, T } from '../../_components/t';
+import { AuditFilters } from './_filters';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,50 +56,31 @@ export default async function AuditLogPage({
   if (sp.entity) query = query.where(eq(auditLog.entityType, sp.entity));
   if (sp.q) {
     const needle = `%${sp.q}%`;
-    query = query.where(sql`(${auditLog.summary} ILIKE ${needle} OR ${auditLog.actorLabel} ILIKE ${needle})`);
+    query = query.where(
+      sql`(${auditLog.summary} ILIKE ${needle} OR ${auditLog.actorLabel} ILIKE ${needle})`,
+    );
   }
 
   const list = await query;
 
   return (
     <>
-      <AdminPageHeader pageId="audit">{list.length} последних записей</AdminPageHeader>
+      <AdminPageHeader pageId="audit">
+        {list.length} <T tk="audit_count_suffix" />
+      </AdminPageHeader>
 
-      <form className="card" style={{ padding: 12, display: 'flex', gap: 10, marginBottom: 14, alignItems: 'center' }}>
-        <input
-          name="q"
-          defaultValue={sp.q ?? ''}
-          placeholder="Поиск по описанию или автору…"
-          className="input"
-          style={{ flex: 1, height: 32 }}
-        />
-        <input
-          name="action"
-          defaultValue={sp.action ?? ''}
-          placeholder="action (post.publish)"
-          className="input"
-          style={{ width: 200, height: 32 }}
-        />
-        <input
-          name="entity"
-          defaultValue={sp.entity ?? ''}
-          placeholder="entity (post, comment)"
-          className="input"
-          style={{ width: 180, height: 32 }}
-        />
-        <button type="submit" className="btn">Применить</button>
-      </form>
+      <AuditFilters defaultQ={sp.q ?? ''} defaultAction={sp.action ?? ''} defaultEntity={sp.entity ?? ''} />
 
       <div className="table-wrap">
         <table className="table">
           <thead>
             <tr>
-              <th style={{ width: 130 }}>Когда</th>
-              <th style={{ width: 160 }}>Автор</th>
-              <th style={{ width: 160 }}>Действие</th>
-              <th>Описание</th>
-              <th style={{ width: 110 }}>Объект</th>
-              <th style={{ width: 130 }}>IP</th>
+              <TH tk="th_when" style={{ width: 130 }} />
+              <TH tk="th_actor" style={{ width: 160 }} />
+              <TH tk="th_action" style={{ width: 160 }} />
+              <TH tk="th_description" />
+              <TH tk="th_object" style={{ width: 110 }} />
+              <TH tk="th_ip" style={{ width: 130 }} />
             </tr>
           </thead>
           <tbody>
@@ -115,7 +98,9 @@ export default async function AuditLogPage({
                 <td>
                   <span className={`pill ${tintFor(r.action)}`}>{r.action}</span>
                 </td>
-                <td style={{ color: 'var(--text-2)' }}>{r.summary ?? <span className="t-dim">—</span>}</td>
+                <td style={{ color: 'var(--text-2)' }}>
+                  {r.summary ?? <span className="t-dim">—</span>}
+                </td>
                 <td>
                   {r.entityType ? (
                     <span className="t-dim" style={{ fontSize: 11.5 }}>
@@ -134,7 +119,7 @@ export default async function AuditLogPage({
             {list.length === 0 ? (
               <tr>
                 <td colSpan={6} style={{ textAlign: 'center', padding: 32, color: 'var(--text-3)' }}>
-                  Записей нет
+                  <T tk="empty_no_records" />
                 </td>
               </tr>
             ) : null}

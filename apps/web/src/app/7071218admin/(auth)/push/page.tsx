@@ -4,6 +4,7 @@ import { CheckCircle2, AlertCircle, Send } from 'lucide-react';
 import { broadcastPostPush, broadcastCustomPush } from '../_actions/push';
 import { PushTemplateForm } from '@/components/push-template-form';
 import { AdminPageHeader } from '../../_components/page-header';
+import { TH } from '../../_components/t';
 
 export const dynamic = 'force-dynamic';
 
@@ -85,10 +86,10 @@ export default async function PushPage({
         <table className="table">
           <thead>
             <tr>
-              <th style={{ width: 60 }}>ID</th>
-              <th>Заголовок</th>
-              <th style={{ width: 80 }}>Язык</th>
-              <th style={{ width: 130 }}>Опубликовано</th>
+              <TH tk="th_id" style={{ width: 60 }} />
+              <TH tk="title" />
+              <TH tk="language" style={{ width: 80 }} />
+              <TH tk="th_published" style={{ width: 130 }} />
               <th style={{ width: 130 }} />
             </tr>
           </thead>

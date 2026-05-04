@@ -1,6 +1,7 @@
 import { db, leagues, fixtures } from '@sportlive/db';
 import { asc, eq, sql } from 'drizzle-orm';
 import { AdminPageHeader } from '../../_components/page-header';
+import { TH } from '../../_components/t';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,13 +41,13 @@ export default async function StandingsPage() {
           <table className="table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Лого</th>
-                <th>Турнир</th>
-                <th>Тип</th>
-                <th>Страна</th>
-                <th>Сезон</th>
-                <th className="num">Матчей</th>
+                <TH tk="th_id" />
+                <TH tk="th_logo" />
+                <TH tk="th_league" />
+                <TH tk="th_type" />
+                <TH tk="th_country" />
+                <TH tk="th_season" />
+                <TH tk="th_matches" style={{ textAlign: 'right' }} />
               </tr>
             </thead>
             <tbody>

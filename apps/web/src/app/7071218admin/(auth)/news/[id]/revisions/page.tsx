@@ -4,6 +4,7 @@ import { db, posts, postRevisions } from '@sportlive/db';
 import { desc, eq } from 'drizzle-orm';
 import { ArrowLeft, Undo2 } from 'lucide-react';
 import { restorePostRevision } from '../../../_actions/posts';
+import { TH } from '../../../../_components/t';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,10 +52,10 @@ export default async function RevisionsPage({ params }: { params: Promise<{ id: 
         <table className="table">
           <thead>
             <tr>
-              <th style={{ width: 160 }}>Когда</th>
-              <th style={{ width: 200 }}>Кто</th>
-              <th>Заголовок снапшота</th>
-              <th style={{ width: 80 }} className="num">Тело</th>
+              <TH tk="th_when" style={{ width: 160 }} />
+              <TH tk="author" style={{ width: 200 }} />
+              <TH tk="th_revision_title" />
+              <TH tk="body" style={{ width: 80, textAlign: 'right' }} />
               <th style={{ width: 130 }} />
             </tr>
           </thead>

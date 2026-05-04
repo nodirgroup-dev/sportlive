@@ -158,6 +158,145 @@ export type AdminStrings = {
   nav_audit: string;
   nav_backups: string;
   nav_settings: string;
+  // ----- Generic form labels -----
+  form_internal_name: string;
+  form_image_url: string;
+  form_link_url: string;
+  form_alt_text: string;
+  form_html_snippet: string;
+  form_position: string;
+  form_sort_order: string;
+  form_active: string;
+  form_slug_from_name: string;
+  form_description_seo: string;
+  form_parent_category: string;
+  form_no_parent: string;
+  form_sort_order_long: string;
+  form_url_slug: string;
+  form_short_description: string;
+  form_body_html: string;
+  form_meta_title: string;
+  form_meta_description: string;
+  form_footer_sort_order: string;
+  form_show_in_footer: string;
+  form_uzbek: string;
+  form_russian: string;
+  form_english: string;
+  // Banner positions
+  pos_header: string;
+  pos_sidebar: string;
+  pos_in_article_top: string;
+  pos_in_article_bottom: string;
+  pos_footer: string;
+  // Form sub-text (under H1)
+  banner_new_sub: string;
+  cat_new_sub: string;
+  static_new_sub: string;
+  // ----- Bulk action / news list -----
+  bulk_action_label: string;
+  bulk_action_choose: string;
+  bulk_publish: string;
+  bulk_unpublish: string;
+  bulk_archive: string;
+  bulk_apply_to_selected: string;
+  bulk_hint_checkboxes: string;
+  bulk_done_publish: string;
+  bulk_done_unpublish: string;
+  bulk_done_archive: string;
+  bulk_done_delete: string;
+  news_create_article_btn: string;
+  news_count_articles: string;
+  news_empty_filtered: string;
+  news_pin_homepage: string;
+  news_unpin_homepage: string;
+  news_pinned_homepage_title: string;
+  news_unpublish_action: string;
+  news_publish_action: string;
+  news_duplicate: string;
+  // ----- Table headers -----
+  th_id: string;
+  th_photo: string;
+  th_logo: string;
+  th_league: string;
+  th_type: string;
+  th_country: string;
+  th_season: string;
+  th_preview: string;
+  th_name: string;
+  th_position: string;
+  th_role: string;
+  th_verified: string;
+  th_created: string;
+  th_url: string;
+  th_in_footer: string;
+  th_team: string;
+  th_team_home: string;
+  th_file: string;
+  th_target: string;
+  th_action: string;
+  th_when: string;
+  th_actor: string;
+  th_object: string;
+  th_ip: string;
+  th_revision_title: string;
+  th_name_url: string;
+  th_parent: string;
+  th_description: string;
+  th_views: string;
+  th_published: string;
+  th_open: string;
+  th_email_user: string;
+  th_matches: string;
+  th_impressions: string;
+  th_clicks: string;
+  th_enabled_short: string;
+  th_ai: string;
+  th_last_import: string;
+  th_score: string;
+  th_articles_short: string;
+  th_subscribed: string;
+  th_unsubscribed: string;
+  th_entries: string;
+  th_size: string;
+  empty_no_records: string;
+  // ----- Audit -----
+  audit_search_placeholder: string;
+  audit_action_placeholder: string;
+  audit_entity_placeholder: string;
+  audit_count_suffix: string;
+  // ----- Settings -----
+  settings_account: string;
+  settings_name: string;
+  settings_role: string;
+  settings_change_password: string;
+  settings_password_updated: string;
+  settings_current_password: string;
+  settings_new_password: string;
+  settings_confirm_password: string;
+  settings_update_password: string;
+  settings_site_info: string;
+  settings_url: string;
+  settings_site_name: string;
+  settings_supported_langs: string;
+  settings_cache_strategy: string;
+  settings_cache_strategy_text: string;
+  settings_external_feeds: string;
+  settings_err_empty: string;
+  settings_err_weak: string;
+  settings_err_mismatch: string;
+  settings_err_wrong: string;
+  // ----- Comments -----
+  comments_pending: string;
+  comments_approved: string;
+  comments_spam: string;
+  comments_rejected: string;
+  comments_no_in_tab: string;
+  comments_anonymous: string;
+  comments_to_post: string;
+  comments_approve_btn: string;
+  comments_spam_btn: string;
+  comments_no_title: string;
+  comments_no_sub: string;
   // Crumbs labels (subset that show in breadcrumb)
   crumb_dashboard: string;
   crumb_news_new: string;
@@ -409,6 +548,137 @@ export const ADMIN_T: Record<AdminLang, AdminStrings> = {
     nav_audit: 'Журнал действий',
     nav_backups: 'Бэкапы',
     nav_settings: 'Настройки',
+    form_internal_name: 'Название (внутреннее)',
+    form_image_url: 'URL изображения',
+    form_link_url: 'Ссылка при клике',
+    form_alt_text: 'Alt-текст',
+    form_html_snippet: 'HTML/JS-сниппет (опционально, например AdSense)',
+    form_position: 'Позиция',
+    form_sort_order: 'Порядок',
+    form_active: 'Активен',
+    form_slug_from_name: 'URL-slug (опционально, генерируется из названия)',
+    form_description_seo: 'Описание (для SEO и страницы рубрики)',
+    form_parent_category: 'Родительская категория',
+    form_no_parent: '— нет —',
+    form_sort_order_long: 'Порядок сортировки',
+    form_url_slug: 'URL-slug',
+    form_short_description: 'Краткое описание',
+    form_body_html: 'Тело страницы (HTML)',
+    form_meta_title: 'Meta title',
+    form_meta_description: 'Meta description',
+    form_footer_sort_order: 'Порядок в подвале',
+    form_show_in_footer: 'Показать в подвале',
+    form_uzbek: 'Узбекский',
+    form_russian: 'Русский',
+    form_english: 'English',
+    pos_header: 'Шапка',
+    pos_sidebar: 'Сайдбар',
+    pos_in_article_top: 'В статье — сверху',
+    pos_in_article_bottom: 'В статье — снизу',
+    pos_footer: 'Подвал',
+    banner_new_sub: 'Создание нового баннера',
+    cat_new_sub: 'Создание новой рубрики',
+    static_new_sub: 'Страница для подвала / служебная',
+    bulk_action_label: 'Массовое действие:',
+    bulk_action_choose: '— выбрать —',
+    bulk_publish: 'Опубликовать',
+    bulk_unpublish: 'Снять с публикации',
+    bulk_archive: 'В архив',
+    bulk_apply_to_selected: 'Применить к выбранным',
+    bulk_hint_checkboxes: 'Используйте чекбоксы в таблице',
+    bulk_done_publish: 'Опубликовано',
+    bulk_done_unpublish: 'Снято с публикации',
+    bulk_done_archive: 'Перемещено в архив',
+    bulk_done_delete: 'Удалено',
+    news_create_article_btn: 'Создать статью',
+    news_count_articles: 'статей',
+    news_empty_filtered: 'Нет статей по выбранным фильтрам',
+    news_pin_homepage: 'Закрепить на главной',
+    news_unpin_homepage: 'Снять с главной',
+    news_pinned_homepage_title: 'Закреплено на главной',
+    news_unpublish_action: 'Снять с публикации',
+    news_publish_action: 'Опубликовать',
+    news_duplicate: 'Дублировать',
+    th_id: 'ID',
+    th_photo: 'Фото',
+    th_logo: 'Лого',
+    th_league: 'Турнир',
+    th_type: 'Тип',
+    th_country: 'Страна',
+    th_season: 'Сезон',
+    th_preview: 'Превью',
+    th_name: 'Название',
+    th_position: 'Позиция',
+    th_role: 'Роль',
+    th_verified: 'Подтверждён',
+    th_created: 'Создан',
+    th_url: 'URL',
+    th_in_footer: 'В подвале',
+    th_team: 'Команда',
+    th_team_home: 'Команда (хозяева)',
+    th_file: 'Файл',
+    th_target: 'Назначение',
+    th_action: 'Действие',
+    th_when: 'Когда',
+    th_actor: 'Автор',
+    th_object: 'Объект',
+    th_ip: 'IP',
+    th_revision_title: 'Заголовок снапшота',
+    th_name_url: 'Название / URL',
+    th_parent: 'Родитель',
+    th_description: 'Описание',
+    th_views: 'Просмотры',
+    th_published: 'Опубликован',
+    th_open: 'Открыть',
+    th_email_user: 'Email',
+    th_matches: 'Матчей',
+    th_impressions: 'Показы',
+    th_clicks: 'Клики',
+    th_enabled_short: 'Вкл',
+    th_ai: 'AI',
+    th_last_import: 'Послед. импорт',
+    th_score: 'Счёт',
+    th_articles_short: 'Статей',
+    th_subscribed: 'Подписан',
+    th_unsubscribed: 'Отписан',
+    th_entries: 'Записей',
+    th_size: 'Размер',
+    empty_no_records: 'Записей нет',
+    audit_search_placeholder: 'Поиск по описанию или автору…',
+    audit_action_placeholder: 'action (post.publish)',
+    audit_entity_placeholder: 'entity (post, comment)',
+    audit_count_suffix: 'последних записей',
+    settings_account: 'Аккаунт',
+    settings_name: 'Имя',
+    settings_role: 'Роль',
+    settings_change_password: 'Изменить пароль',
+    settings_password_updated: 'Пароль обновлён',
+    settings_current_password: 'Текущий пароль',
+    settings_new_password: 'Новый пароль (мин. 8 символов)',
+    settings_confirm_password: 'Повторите новый пароль',
+    settings_update_password: 'Обновить пароль',
+    settings_site_info: 'Информация о сайте',
+    settings_url: 'URL',
+    settings_site_name: 'Название',
+    settings_supported_langs: 'Поддерживаемые языки',
+    settings_cache_strategy: 'Кеш-стратегия',
+    settings_cache_strategy_text: 'Главная и категории — ISR 60 сек. Статьи — динамические. Cloudflare фронт-кэш.',
+    settings_external_feeds: 'Внешние ленты',
+    settings_err_empty: 'Заполните все поля',
+    settings_err_weak: 'Минимум 8 символов',
+    settings_err_mismatch: 'Новые пароли не совпадают',
+    settings_err_wrong: 'Текущий пароль неверный',
+    comments_pending: 'На модерации',
+    comments_approved: 'Одобрены',
+    comments_spam: 'Спам',
+    comments_rejected: 'Отклонены',
+    comments_no_in_tab: 'В этой вкладке пока ничего нет',
+    comments_anonymous: 'Аноним',
+    comments_to_post: 'К статье:',
+    comments_approve_btn: 'Одобрить',
+    comments_spam_btn: 'Спам',
+    comments_no_title: 'Нет комментариев',
+    comments_no_sub: 'В этой вкладке пока ничего нет',
     crumb_dashboard: 'Дашборд',
     crumb_news_new: 'Новая статья',
     crumb_news_edit: 'Редактирование статьи',
@@ -543,6 +813,137 @@ export const ADMIN_T: Record<AdminLang, AdminStrings> = {
     nav_audit: 'Harakatlar jurnali',
     nav_backups: 'Zaxira nusxalar',
     nav_settings: 'Sozlamalar',
+    form_internal_name: 'Nomi (ichki)',
+    form_image_url: 'Rasm URL',
+    form_link_url: 'Bosilganda havola',
+    form_alt_text: 'Alt-matn',
+    form_html_snippet: 'HTML/JS-snippet (ixtiyoriy, masalan AdSense)',
+    form_position: 'Pozitsiya',
+    form_sort_order: 'Tartib',
+    form_active: 'Faol',
+    form_slug_from_name: 'URL-slug (ixtiyoriy, nomdan avtomatik shakllanadi)',
+    form_description_seo: 'Tavsif (SEO va rubrika sahifasi uchun)',
+    form_parent_category: 'Ota-ona kategoriya',
+    form_no_parent: '— yo‘q —',
+    form_sort_order_long: 'Saralash tartibi',
+    form_url_slug: 'URL-slug',
+    form_short_description: 'Qisqa tavsif',
+    form_body_html: 'Sahifa matni (HTML)',
+    form_meta_title: 'Meta title',
+    form_meta_description: 'Meta description',
+    form_footer_sort_order: 'Saytning quyi qismida tartib',
+    form_show_in_footer: 'Sayt quyisida ko‘rsatish',
+    form_uzbek: 'O‘zbek',
+    form_russian: 'Rus',
+    form_english: 'Inglizcha',
+    pos_header: 'Tepa qism',
+    pos_sidebar: 'Yon panel',
+    pos_in_article_top: 'Maqola ichida — yuqori',
+    pos_in_article_bottom: 'Maqola ichida — pastda',
+    pos_footer: 'Sayt quyisida',
+    banner_new_sub: 'Yangi banner yaratish',
+    cat_new_sub: 'Yangi rubrika yaratish',
+    static_new_sub: 'Sayt quyi qismi / xizmat sahifasi',
+    bulk_action_label: 'Ommaviy harakat:',
+    bulk_action_choose: '— tanlang —',
+    bulk_publish: 'Nashr qilish',
+    bulk_unpublish: 'Nashrdan olib tashlash',
+    bulk_archive: 'Arxivga',
+    bulk_apply_to_selected: 'Tanlanganlarga qo‘llash',
+    bulk_hint_checkboxes: 'Jadvaldagi tanlash katakchalaridan foydalaning',
+    bulk_done_publish: 'Nashr qilindi',
+    bulk_done_unpublish: 'Nashrdan olindi',
+    bulk_done_archive: 'Arxivga ko‘chirildi',
+    bulk_done_delete: 'O‘chirildi',
+    news_create_article_btn: 'Maqola yaratish',
+    news_count_articles: 'ta maqola',
+    news_empty_filtered: 'Tanlangan filtrlar bo‘yicha maqolalar yo‘q',
+    news_pin_homepage: 'Bosh sahifaga biriktirish',
+    news_unpin_homepage: 'Bosh sahifadan olib tashlash',
+    news_pinned_homepage_title: 'Bosh sahifaga biriktirilgan',
+    news_unpublish_action: 'Nashrdan olib tashlash',
+    news_publish_action: 'Nashr qilish',
+    news_duplicate: 'Nusxa olish',
+    th_id: 'ID',
+    th_photo: 'Rasm',
+    th_logo: 'Logo',
+    th_league: 'Turnir',
+    th_type: 'Tur',
+    th_country: 'Mamlakat',
+    th_season: 'Mavsum',
+    th_preview: 'Ko‘rinish',
+    th_name: 'Nomi',
+    th_position: 'Pozitsiya',
+    th_role: 'Roli',
+    th_verified: 'Tasdiqlangan',
+    th_created: 'Yaratilgan',
+    th_url: 'URL',
+    th_in_footer: 'Quyi qismida',
+    th_team: 'Jamoa',
+    th_team_home: 'Jamoa (uy)',
+    th_file: 'Fayl',
+    th_target: 'Maqsad',
+    th_action: 'Harakat',
+    th_when: 'Qachon',
+    th_actor: 'Muallif',
+    th_object: 'Obyekt',
+    th_ip: 'IP',
+    th_revision_title: 'Snapshot sarlavhasi',
+    th_name_url: 'Nomi / URL',
+    th_parent: 'Ota-ona',
+    th_description: 'Tavsif',
+    th_views: 'Ko‘rishlar',
+    th_published: 'Nashr qilingan',
+    th_open: 'Ochish',
+    th_email_user: 'Email',
+    th_matches: 'O‘yinlar',
+    th_impressions: 'Ko‘rsatishlar',
+    th_clicks: 'Bosishlar',
+    th_enabled_short: 'Yoq',
+    th_ai: 'AI',
+    th_last_import: 'Oxirgi import',
+    th_score: 'Hisob',
+    th_articles_short: 'Maqolalar',
+    th_subscribed: 'Obuna',
+    th_unsubscribed: 'Bekor qilingan',
+    th_entries: 'Yozuvlar',
+    th_size: 'Hajmi',
+    empty_no_records: 'Yozuvlar yo‘q',
+    audit_search_placeholder: 'Tavsif yoki muallif bo‘yicha qidirish…',
+    audit_action_placeholder: 'action (post.publish)',
+    audit_entity_placeholder: 'entity (post, comment)',
+    audit_count_suffix: 'oxirgi yozuvlar',
+    settings_account: 'Hisob',
+    settings_name: 'Ism',
+    settings_role: 'Roli',
+    settings_change_password: 'Parolni o‘zgartirish',
+    settings_password_updated: 'Parol yangilandi',
+    settings_current_password: 'Joriy parol',
+    settings_new_password: 'Yangi parol (kamida 8 belgi)',
+    settings_confirm_password: 'Yangi parolni takrorlang',
+    settings_update_password: 'Parolni yangilash',
+    settings_site_info: 'Sayt haqida ma’lumot',
+    settings_url: 'URL',
+    settings_site_name: 'Nomi',
+    settings_supported_langs: 'Qo‘llab-quvvatlanadigan tillar',
+    settings_cache_strategy: 'Kesh strategiyasi',
+    settings_cache_strategy_text: 'Bosh sahifa va kategoriyalar — ISR 60 soniya. Maqolalar — dinamik. Cloudflare front-kesh.',
+    settings_external_feeds: 'Tashqi lentalar',
+    settings_err_empty: 'Barcha maydonlarni to‘ldiring',
+    settings_err_weak: 'Kamida 8 belgi',
+    settings_err_mismatch: 'Yangi parollar mos kelmaydi',
+    settings_err_wrong: 'Joriy parol noto‘g‘ri',
+    comments_pending: 'Moderatsiyada',
+    comments_approved: 'Tasdiqlangan',
+    comments_spam: 'Spam',
+    comments_rejected: 'Rad etilgan',
+    comments_no_in_tab: 'Bu yorliqda hali hech narsa yo‘q',
+    comments_anonymous: 'Anonim',
+    comments_to_post: 'Maqolaga:',
+    comments_approve_btn: 'Tasdiqlash',
+    comments_spam_btn: 'Spam',
+    comments_no_title: 'Izohlar yo‘q',
+    comments_no_sub: 'Bu yorliqda hali hech narsa yo‘q',
     crumb_dashboard: 'Boshqaruv paneli',
     crumb_news_new: 'Yangi maqola',
     crumb_news_edit: 'Maqolani tahrirlash',
@@ -677,6 +1078,137 @@ export const ADMIN_T: Record<AdminLang, AdminStrings> = {
     nav_audit: 'Audit log',
     nav_backups: 'Backups',
     nav_settings: 'Settings',
+    form_internal_name: 'Name (internal)',
+    form_image_url: 'Image URL',
+    form_link_url: 'Click-through URL',
+    form_alt_text: 'Alt text',
+    form_html_snippet: 'HTML/JS snippet (optional, e.g. AdSense)',
+    form_position: 'Position',
+    form_sort_order: 'Order',
+    form_active: 'Active',
+    form_slug_from_name: 'URL slug (optional, derived from name)',
+    form_description_seo: 'Description (for SEO and category page)',
+    form_parent_category: 'Parent category',
+    form_no_parent: '— none —',
+    form_sort_order_long: 'Sort order',
+    form_url_slug: 'URL slug',
+    form_short_description: 'Short description',
+    form_body_html: 'Page body (HTML)',
+    form_meta_title: 'Meta title',
+    form_meta_description: 'Meta description',
+    form_footer_sort_order: 'Order in footer',
+    form_show_in_footer: 'Show in footer',
+    form_uzbek: 'Uzbek',
+    form_russian: 'Russian',
+    form_english: 'English',
+    pos_header: 'Header',
+    pos_sidebar: 'Sidebar',
+    pos_in_article_top: 'In article — top',
+    pos_in_article_bottom: 'In article — bottom',
+    pos_footer: 'Footer',
+    banner_new_sub: 'Creating a new banner',
+    cat_new_sub: 'Creating a new section',
+    static_new_sub: 'Footer / utility page',
+    bulk_action_label: 'Bulk action:',
+    bulk_action_choose: '— choose —',
+    bulk_publish: 'Publish',
+    bulk_unpublish: 'Unpublish',
+    bulk_archive: 'Archive',
+    bulk_apply_to_selected: 'Apply to selected',
+    bulk_hint_checkboxes: 'Use checkboxes in the table',
+    bulk_done_publish: 'Published',
+    bulk_done_unpublish: 'Unpublished',
+    bulk_done_archive: 'Moved to archive',
+    bulk_done_delete: 'Deleted',
+    news_create_article_btn: 'Create article',
+    news_count_articles: 'articles',
+    news_empty_filtered: 'No articles match the selected filters',
+    news_pin_homepage: 'Pin to homepage',
+    news_unpin_homepage: 'Unpin from homepage',
+    news_pinned_homepage_title: 'Pinned to homepage',
+    news_unpublish_action: 'Unpublish',
+    news_publish_action: 'Publish',
+    news_duplicate: 'Duplicate',
+    th_id: 'ID',
+    th_photo: 'Photo',
+    th_logo: 'Logo',
+    th_league: 'League',
+    th_type: 'Type',
+    th_country: 'Country',
+    th_season: 'Season',
+    th_preview: 'Preview',
+    th_name: 'Name',
+    th_position: 'Position',
+    th_role: 'Role',
+    th_verified: 'Verified',
+    th_created: 'Created',
+    th_url: 'URL',
+    th_in_footer: 'In footer',
+    th_team: 'Team',
+    th_team_home: 'Team (home)',
+    th_file: 'File',
+    th_target: 'Target',
+    th_action: 'Action',
+    th_when: 'When',
+    th_actor: 'Actor',
+    th_object: 'Object',
+    th_ip: 'IP',
+    th_revision_title: 'Snapshot title',
+    th_name_url: 'Name / URL',
+    th_parent: 'Parent',
+    th_description: 'Description',
+    th_views: 'Views',
+    th_published: 'Published',
+    th_open: 'Open',
+    th_email_user: 'Email',
+    th_matches: 'Matches',
+    th_impressions: 'Impressions',
+    th_clicks: 'Clicks',
+    th_enabled_short: 'On',
+    th_ai: 'AI',
+    th_last_import: 'Last import',
+    th_score: 'Score',
+    th_articles_short: 'Articles',
+    th_subscribed: 'Subscribed',
+    th_unsubscribed: 'Unsubscribed',
+    th_entries: 'Entries',
+    th_size: 'Size',
+    empty_no_records: 'No records',
+    audit_search_placeholder: 'Search by description or actor…',
+    audit_action_placeholder: 'action (post.publish)',
+    audit_entity_placeholder: 'entity (post, comment)',
+    audit_count_suffix: 'recent records',
+    settings_account: 'Account',
+    settings_name: 'Name',
+    settings_role: 'Role',
+    settings_change_password: 'Change password',
+    settings_password_updated: 'Password updated',
+    settings_current_password: 'Current password',
+    settings_new_password: 'New password (min 8 chars)',
+    settings_confirm_password: 'Repeat new password',
+    settings_update_password: 'Update password',
+    settings_site_info: 'Site information',
+    settings_url: 'URL',
+    settings_site_name: 'Name',
+    settings_supported_langs: 'Supported languages',
+    settings_cache_strategy: 'Cache strategy',
+    settings_cache_strategy_text: 'Homepage and categories — ISR 60s. Articles — dynamic. Cloudflare front-cache.',
+    settings_external_feeds: 'External feeds',
+    settings_err_empty: 'Fill in all fields',
+    settings_err_weak: 'At least 8 characters',
+    settings_err_mismatch: 'New passwords do not match',
+    settings_err_wrong: 'Current password is wrong',
+    comments_pending: 'Pending',
+    comments_approved: 'Approved',
+    comments_spam: 'Spam',
+    comments_rejected: 'Rejected',
+    comments_no_in_tab: 'Nothing here yet',
+    comments_anonymous: 'Anonymous',
+    comments_to_post: 'On article:',
+    comments_approve_btn: 'Approve',
+    comments_spam_btn: 'Spam',
+    comments_no_title: 'No comments',
+    comments_no_sub: 'Nothing here yet',
     crumb_dashboard: 'Dashboard',
     crumb_news_new: 'New article',
     crumb_news_edit: 'Edit article',

@@ -1,6 +1,7 @@
 import { db, posts, redirects, staticPages } from '@sportlive/db';
 import { and, eq, gte, sql } from 'drizzle-orm';
 import { AdminPageHeader } from '../../_components/page-header';
+import { TH } from '../../_components/t';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,9 +65,9 @@ export default async function SeoPage() {
         <table className="table" style={{ marginTop: -12 }}>
           <thead>
             <tr>
-              <th>Файл</th>
-              <th>Назначение</th>
-              <th>Тип</th>
+              <TH tk="th_file" />
+              <TH tk="th_target" />
+              <TH tk="th_type" />
               <th />
             </tr>
           </thead>

@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { AdminPageHeader } from '../../_components/page-header';
+import { TH } from '../../_components/t';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,9 +63,9 @@ export default async function BackupsPage() {
         <table className="table">
           <thead>
             <tr>
-              <th>Файл</th>
-              <th style={{ width: 160 }}>Создан</th>
-              <th className="num" style={{ width: 110 }}>Размер</th>
+              <TH tk="th_file" />
+              <TH tk="th_created" style={{ width: 160 }} />
+              <TH tk="th_size" style={{ width: 110, textAlign: 'right' }} />
             </tr>
           </thead>
           <tbody>

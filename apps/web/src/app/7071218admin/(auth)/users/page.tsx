@@ -1,6 +1,7 @@
 import { db, users, posts } from '@sportlive/db';
 import { eq, sql, asc } from 'drizzle-orm';
 import { AdminPageHeader } from '../../_components/page-header';
+import { TH } from '../../_components/t';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,13 +54,13 @@ export default async function UsersPage() {
         <table className="table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Имя</th>
-              <th>Email</th>
-              <th>Роль</th>
-              <th>Подтверждён</th>
-              <th className="num">Статей</th>
-              <th>Создан</th>
+              <TH tk="th_id" />
+              <TH tk="settings_name" />
+              <TH tk="email" />
+              <TH tk="th_role" />
+              <TH tk="th_verified" />
+              <TH tk="th_articles_short" style={{ textAlign: 'right' }} />
+              <TH tk="th_created" />
             </tr>
           </thead>
           <tbody>

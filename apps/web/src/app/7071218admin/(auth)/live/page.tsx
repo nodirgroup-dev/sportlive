@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { db, fixtures, leagues, teams } from '@sportlive/db';
 import { and, asc, eq, gte, lt, sql } from 'drizzle-orm';
 import { AdminPageHeader } from '../../_components/page-header';
+import { TH } from '../../_components/t';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,11 +46,11 @@ export default async function LiveBlogIndex() {
         <table className="table">
           <thead>
             <tr>
-              <th>Дата</th>
-              <th>Турнир</th>
-              <th>Команда (хозяева)</th>
-              <th>Статус</th>
-              <th className="num">Записей</th>
+              <TH tk="date" />
+              <TH tk="th_league" />
+              <TH tk="th_team_home" />
+              <TH tk="status" />
+              <TH tk="th_entries" style={{ textAlign: 'right' }} />
               <th />
             </tr>
           </thead>

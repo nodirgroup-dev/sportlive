@@ -1,6 +1,7 @@
 import { db, posts, categories, comments } from '@sportlive/db';
 import { eq, sql, and, gte, desc } from 'drizzle-orm';
 import { AdminPageHeader } from '../../_components/page-header';
+import { TH, T } from '../../_components/t';
 
 export const dynamic = 'force-dynamic';
 
@@ -142,9 +143,9 @@ export default async function AnalyticsPage() {
         <table className="table">
           <thead>
             <tr>
-              <th>Категория</th>
-              <th>Slug</th>
-              <th className="num">Статей</th>
+              <TH tk="category" />
+              <TH tk="slug" />
+              <TH tk="th_articles_short" style={{ textAlign: 'right' }} />
             </tr>
           </thead>
           <tbody>
@@ -167,9 +168,9 @@ export default async function AnalyticsPage() {
         <table className="table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Заголовок</th>
-              <th className="num">Просмотры</th>
+              <TH tk="th_id" />
+              <TH tk="title" />
+              <TH tk="th_views" style={{ textAlign: 'right' }} />
               <th />
             </tr>
           </thead>
@@ -181,7 +182,7 @@ export default async function AnalyticsPage() {
                 <td className="num">{(p.viewCount ?? 0).toLocaleString('ru-RU')}</td>
                 <td style={{ textAlign: 'right' }}>
                   <a href={`/7071218admin/news/${p.id}/edit`} className="btn" style={{ height: 28, fontSize: 11.5 }}>
-                    Открыть
+                    <T tk="th_open" />
                   </a>
                 </td>
               </tr>

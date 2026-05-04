@@ -4,6 +4,7 @@ import { asc, sql } from 'drizzle-orm';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { deleteCategory } from '../_actions/categories';
 import { AdminPageHeader } from '../../_components/page-header';
+import { TH } from '../../_components/t';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,13 +76,13 @@ export default async function CategoriesPage({
         <table className="table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Название</th>
-              <th>Slug</th>
-              <th>Родитель</th>
-              <th>Язык</th>
-              <th className="num">Порядок</th>
-              <th className="num">Статей</th>
+              <TH tk="th_id" />
+              <TH tk="th_name" />
+              <TH tk="slug" />
+              <TH tk="th_parent" />
+              <TH tk="language" />
+              <TH tk="form_sort_order" style={{ textAlign: 'right' }} />
+              <TH tk="th_articles_short" style={{ textAlign: 'right' }} />
               <th />
             </tr>
           </thead>

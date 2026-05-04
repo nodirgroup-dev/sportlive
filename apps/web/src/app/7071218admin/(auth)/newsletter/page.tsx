@@ -2,6 +2,7 @@ import { db, newsletterSubscribers } from '@sportlive/db';
 import { desc, sql } from 'drizzle-orm';
 import { Download } from 'lucide-react';
 import { AdminPageHeader } from '../../_components/page-header';
+import { TH } from '../../_components/t';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,11 +57,11 @@ export default async function NewsletterPage() {
         <table className="table">
           <thead>
             <tr>
-              <th>Email</th>
-              <th style={{ width: 80 }}>Язык</th>
-              <th style={{ width: 130 }}>Подписан</th>
-              <th style={{ width: 130 }}>Отписан</th>
-              <th style={{ width: 130 }}>IP</th>
+              <TH tk="email" />
+              <TH tk="language" style={{ width: 80 }} />
+              <TH tk="th_subscribed" style={{ width: 130 }} />
+              <TH tk="th_unsubscribed" style={{ width: 130 }} />
+              <TH tk="th_ip" style={{ width: 130 }} />
             </tr>
           </thead>
           <tbody>

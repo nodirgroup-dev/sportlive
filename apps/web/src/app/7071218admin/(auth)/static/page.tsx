@@ -4,6 +4,7 @@ import { asc } from 'drizzle-orm';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { deleteStaticPage } from '../_actions/static';
 import { AdminPageHeader } from '../../_components/page-header';
+import { TH } from '../../_components/t';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,11 +43,11 @@ export default async function StaticPagesList({
         <table className="table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Заголовок</th>
-              <th>URL</th>
-              <th>Язык</th>
-              <th>В подвале</th>
+              <TH tk="th_id" />
+              <TH tk="title" />
+              <TH tk="th_url" />
+              <TH tk="language" />
+              <TH tk="th_in_footer" />
               <th />
             </tr>
           </thead>

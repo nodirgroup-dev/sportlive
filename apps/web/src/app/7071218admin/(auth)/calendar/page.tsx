@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { db, posts } from '@sportlive/db';
 import { and, gte, lt, desc } from 'drizzle-orm';
 import { AdminPageHeader } from '../../_components/page-header';
+import { TH } from '../../_components/t';
 
 export const dynamic = 'force-dynamic';
 
@@ -183,10 +184,10 @@ export default async function EditorialCalendar({
         <table className="table">
           <thead>
             <tr>
-              <th>Дата</th>
-              <th>Заголовок</th>
-              <th>Язык</th>
-              <th>Статус</th>
+              <TH tk="date" />
+              <TH tk="title" />
+              <TH tk="language" />
+              <TH tk="status" />
               <th />
             </tr>
           </thead>

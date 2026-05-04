@@ -3,6 +3,7 @@ import { db, posts, categories, staticPages } from '@sportlive/db';
 import { eq, sql } from 'drizzle-orm';
 import { Plus } from 'lucide-react';
 import { AdminPageHeader } from '../_components/page-header';
+import { TH, T } from '../_components/t';
 
 export const dynamic = 'force-dynamic';
 
@@ -137,9 +138,9 @@ export default async function Dashboard() {
           <thead>
             <tr>
               <th style={{ width: 50 }}>#</th>
-              <th>Заголовок</th>
-              <th style={{ width: 100 }}>Просмотры</th>
-              <th style={{ width: 130 }}>Опубликован</th>
+              <TH tk="title" />
+              <TH tk="th_views" style={{ width: 100 }} />
+              <TH tk="th_published" style={{ width: 130 }} />
               <th />
             </tr>
           </thead>
@@ -158,7 +159,7 @@ export default async function Dashboard() {
                 </td>
                 <td style={{ textAlign: 'right' }}>
                   <Link href={`/7071218admin/news/${p.id}/edit`} className="btn" style={{ height: 26, fontSize: 11 }}>
-                    Открыть
+                    <T tk="th_open" />
                   </Link>
                 </td>
               </tr>
@@ -188,11 +189,11 @@ export default async function Dashboard() {
         <table className="table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Заголовок</th>
-              <th>Категория</th>
-              <th>Язык</th>
-              <th>Дата</th>
+              <TH tk="th_id" />
+              <TH tk="title" />
+              <TH tk="category" />
+              <TH tk="language" />
+              <TH tk="date" />
               <th />
             </tr>
           </thead>

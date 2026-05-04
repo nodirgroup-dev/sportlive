@@ -8,6 +8,7 @@ import {
   importRssNow,
 } from '../_actions/rss';
 import { AdminPageHeader } from '../../_components/page-header';
+import { TH } from '../../_components/t';
 
 export const dynamic = 'force-dynamic';
 
@@ -111,12 +112,12 @@ export default async function RssPage({
         <table className="table">
           <thead>
             <tr>
-              <th style={{ width: 60 }}>Вкл</th>
-              <th>Название / URL</th>
-              <th style={{ width: 80 }}>Язык</th>
-              <th style={{ width: 60 }}>AI</th>
-              <th style={{ width: 130 }}>Категория</th>
-              <th style={{ width: 130 }}>Послед. импорт</th>
+              <TH tk="th_enabled_short" style={{ width: 60 }} />
+              <TH tk="th_name_url" />
+              <TH tk="language" style={{ width: 80 }} />
+              <TH tk="th_ai" style={{ width: 60 }} />
+              <TH tk="category" style={{ width: 130 }} />
+              <TH tk="th_last_import" style={{ width: 130 }} />
               <th style={{ width: 250 }} />
             </tr>
           </thead>

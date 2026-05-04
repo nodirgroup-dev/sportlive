@@ -4,6 +4,7 @@ import { asc } from 'drizzle-orm';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { deleteBanner } from '../_actions/banners';
 import { AdminPageHeader } from '../../_components/page-header';
+import { TH } from '../../_components/t';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,14 +56,14 @@ export default async function BannersPage({
           <table className="table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Превью</th>
-                <th>Название</th>
-                <th>Позиция</th>
-                <th className="num">Порядок</th>
-                <th>Статус</th>
-                <th className="num">Показы</th>
-                <th className="num">Клики</th>
+                <TH tk="th_id" />
+                <TH tk="th_preview" />
+                <TH tk="th_name" />
+                <TH tk="th_position" />
+                <TH tk="form_sort_order" style={{ textAlign: 'right' }} />
+                <TH tk="status" />
+                <TH tk="th_impressions" style={{ textAlign: 'right' }} />
+                <TH tk="th_clicks" style={{ textAlign: 'right' }} />
                 <th />
               </tr>
             </thead>

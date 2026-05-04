@@ -1,6 +1,7 @@
 import { db, fixtures, leagues, teams } from '@sportlive/db';
 import { desc, eq, sql } from 'drizzle-orm';
 import { AdminPageHeader } from '../../_components/page-header';
+import { TH } from '../../_components/t';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,11 +65,11 @@ export default async function MatchesPage() {
           <table className="table">
             <thead>
               <tr>
-                <th>Дата</th>
-                <th>Турнир</th>
-                <th>Команда</th>
-                <th className="num">Счёт</th>
-                <th>Статус</th>
+                <TH tk="date" />
+                <TH tk="th_league" />
+                <TH tk="th_team" />
+                <TH tk="th_score" style={{ textAlign: 'right' }} />
+                <TH tk="status" />
               </tr>
             </thead>
             <tbody>
